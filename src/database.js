@@ -5,7 +5,7 @@ const DB_NAME = 'MinistryScribeDB';
 const DB_VERSION = 4;
 let db;
 
-function initDB() {
+export function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -139,7 +139,7 @@ function initDB() {
 
 
 // --- GENERIC CRUD FUNCTIONS ---
-function addToStore(storeName, item) {
+export function addToStore(storeName, item) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
@@ -149,7 +149,7 @@ function addToStore(storeName, item) {
     });
 }
 
-function getAllFromStore(storeName) {
+export function getAllFromStore(storeName) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readonly');
         const store = transaction.objectStore(storeName);
@@ -159,7 +159,7 @@ function getAllFromStore(storeName) {
     });
 }
 
-function getFromStore(storeName, id) {
+export function getFromStore(storeName, id) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readonly');
         const store = transaction.objectStore(storeName);
@@ -169,7 +169,7 @@ function getFromStore(storeName, id) {
     });
 }
 
-function updateInStore(storeName, item) {
+export function updateInStore(storeName, item) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
@@ -179,7 +179,7 @@ function updateInStore(storeName, item) {
     });
 }
 
-function deleteFromStore(storeName, id) {
+export function deleteFromStore(storeName, id) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
@@ -189,7 +189,7 @@ function deleteFromStore(storeName, id) {
     });
 }
 
-function getByIndex(storeName, indexName, value) {
+export function getByIndex(storeName, indexName, value) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readonly');
         const store = transaction.objectStore(storeName);
@@ -200,7 +200,7 @@ function getByIndex(storeName, indexName, value) {
     });
 }
 
-async function clearAllStores() {
+export async function clearAllStores() {
     const storeNames = ['territories', 'streets', 'houses', 'visits', 'people', 'studies', 'studyHistory'];
     const transaction = db.transaction(storeNames, 'readwrite');
     for (const storeName of storeNames) {
