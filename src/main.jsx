@@ -28,7 +28,6 @@ async function main() {
       if (backupData.meta?.appName === 'MinistryScribe') {
         console.log("Backup file is valid. Importing data...");
         // 3. Wait for the entire import to finish
-        await clearAllStores(); // Remove this later!!!
         await executeMerge(backupData.data);
         console.log("Data successfully imported from backup.");
       } else {

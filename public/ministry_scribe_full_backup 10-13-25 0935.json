@@ -7077,23 +7077,3 @@
     "studyHistory": []
   }
 }
-
-// Temporary development data for streets
-
-"streets": [
-  {
-    "id": 1,
-    "territoryId": 1,
-    "name": "Maple Street"
-  },
-  {
-    "id": 2,
-    "territoryId": 1,
-    "name": "Oak Avenue"
-  },
-  {
-    "id": 3,
-    "territoryId": 2,
-    "name": "Pine Lane"
-  }
-],

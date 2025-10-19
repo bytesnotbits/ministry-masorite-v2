@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { getByIndex } from '../database.js';
-import './StreetList.css'; // Import the new CSS file
+import './StreetList.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onBack }) {
+function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet }) {
   const [streets, setStreets] = useState([]);
 
   useEffect(() => {
@@ -20,7 +20,10 @@ function StreetList({ territoryId, onStreetSelect, onBack }) {
   return (
     <div>
       <button onClick={onBack}>&larr; Back to Territories</button>
-      <h2>Streets</h2>
+      <div className="view-header">
+        <h2>Streets</h2>
+        <button className="primary-action-btn" onClick={onAddStreet}>+ Add New Street</button>
+      </div>
 
       {/* Add the className and onClick handler */}
       <ul className="street-list">
