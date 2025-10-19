@@ -1,10 +1,11 @@
 // src/components/StreetList.jsx
 
 import { useState, useEffect } from 'react';
-import { getByIndex } from '../database.js'; // We need getByIndex this time
+import { getByIndex } from '../database.js';
+import './StreetList.css'; // Import the new CSS file
 
-// 1. Accept the 'onBack' prop here
-function StreetList({ territoryId, onBack }) {
+// Accept the new onStreetSelect prop
+function StreetList({ territoryId, onStreetSelect, onBack }) {
   const [streets, setStreets] = useState([]);
 
   useEffect(() => {
@@ -18,13 +19,17 @@ function StreetList({ territoryId, onBack }) {
 
   return (
     <div>
-      {/* 2. Add the back button */}
       <button onClick={onBack}>&larr; Back to Territories</button>
-      
       <h2>Streets</h2>
-      <ul>
+
+      {/* Add the className and onClick handler */}
+      <ul className="street-list">
         {streets.map(street => (
-          <li key={street.id}>
+          <li
+            key={street.id}
+            className="street-item"
+            onClick={() => onStreetSelect(street.id)}
+          >
             {street.name}
           </li>
         ))}
