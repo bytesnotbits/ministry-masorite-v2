@@ -1,29 +1,20 @@
-// src/components/TerritoryList.jsx
-
-import { useState, useEffect } from 'react';
-import { getAllFromStore } from '../database.js';
 import './TerritoryList.css';
 
-// 1. Add { onTerritorySelect } here to accept the prop
-function TerritoryList({ onTerritorySelect }) { 
-  const [territories, setTerritories] = useState([]);
-
-  useEffect(() => {
-    const fetchTerritories = async () => {
-      const data = await getAllFromStore('territories');
-      setTerritories(data);
-    };
-    fetchTerritories();
-  }, []);
-
+// This is now a "dumb" component. It just receives props and displays them.
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory }) {
   return (
     <div className="territory-list-container">
-      <h2>Territories</h2>
+      <div className="view-header">
+        <h2>Territories</h2>
+        <button className="primary-action-btn" onClick={onAddTerritory}>
+          + Add New Territory
+        </button>
+      </div>
+
       <ul className="territory-list">
         {territories.map(territory => (
-          // 2. Add the onClick handler to the <li>
-          <li 
-            key={territory.id} 
+          <li
+            key={territory.id}
             className="territory-item"
             onClick={() => onTerritorySelect(territory.id)}
           >

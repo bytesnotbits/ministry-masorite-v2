@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { initDB, getAllFromStore } from './database.js';
+import { initDB, getAllFromStore, clearAllStores } from './database.js';
 import { executeMerge } from './database-api.js';
 
 const BACKUP_FILE_NAME = 'ministry_scribe_full_backup 10-13-25 0935.json';
@@ -28,6 +28,7 @@ async function main() {
       if (backupData.meta?.appName === 'MinistryScribe') {
         console.log("Backup file is valid. Importing data...");
         // 3. Wait for the entire import to finish
+        await clearAllStores(); // Remove this later!!!
         await executeMerge(backupData.data);
         console.log("Data successfully imported from backup.");
       } else {

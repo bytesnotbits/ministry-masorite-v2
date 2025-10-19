@@ -1,0 +1,76 @@
+/* src/components/AddTerritoryModal.css */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 90%;
+  max-width: 500px;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box; /* Important for padding and width */
+}
+
+.modal-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* We can reuse our primary button style from App.css, but let's make it specific here */
+.modal-actions .btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+.modal-actions .btn-primary:hover {
+  background-color: #3a5d9a;
+}
+
+.modal-actions .btn-secondary {
+  background-color: #e9e9ed;
+  color: var(--dark-text);
+}
+.modal-actions .btn-secondary:hover {
+  background-color: #d1d1d6;
+}
