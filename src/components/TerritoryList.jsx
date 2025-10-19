@@ -18,12 +18,13 @@ function TerritoryList() {
   console.log('Territories loaded into state:', territories);
 
   return (
-    <div>
+    <div className="territory-list-container">
         <h2>Territories</h2>
-        <ul>
+        <ul className="territory-list">
         {territories.map(territory => (
-            <li key={territory.id}>
-            Territory #{territory.number}: {territory.description}
+            <li key={territory.id} className="territory-item">
+            <div className="territory-number">Territory #{territory.number}</div>
+            <div className="territory-description">{territory.description}</div>
             </li>
         ))}
         </ul>

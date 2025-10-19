@@ -1,0 +1,35 @@
+/* src/components/TerritoryList.css */
+
+.territory-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.territory-item {
+  background-color: var(--white);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.territory-item:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.territory-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--dark-text);
+}
+
+.territory-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
