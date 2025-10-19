@@ -1,35 +1,39 @@
-import { useState, useEffect } from 'react';
-import { getAllFromStore } from '../database.js'; // Note the path change
+// src/components/TerritoryList.jsx
 
-function TerritoryList() {
+import { useState, useEffect } from 'react';
+import { getAllFromStore } from '../database.js';
+import './TerritoryList.css';
+
+// 1. Add { onTerritorySelect } here to accept the prop
+function TerritoryList({ onTerritorySelect }) { 
   const [territories, setTerritories] = useState([]);
 
   useEffect(() => {
-    // This function is defined inside useEffect to use async/await
     const fetchTerritories = async () => {
       const data = await getAllFromStore('territories');
       setTerritories(data);
     };
-
     fetchTerritories();
-  }, []); // The empty array means this effect runs only once
-
-  // For now, let's just log the data to see if it worked
-  console.log('Territories loaded into state:', territories);
+  }, []);
 
   return (
     <div className="territory-list-container">
-        <h2>Territories</h2>
-        <ul className="territory-list">
+      <h2>Territories</h2>
+      <ul className="territory-list">
         {territories.map(territory => (
-            <li key={territory.id} className="territory-item">
+          // 2. Add the onClick handler to the <li>
+          <li 
+            key={territory.id} 
+            className="territory-item"
+            onClick={() => onTerritorySelect(territory.id)}
+          >
             <div className="territory-number">Territory #{territory.number}</div>
             <div className="territory-description">{territory.description}</div>
-            </li>
+          </li>
         ))}
-        </ul>
+      </ul>
     </div>
-    );
+  );
 }
 
 export default TerritoryList;
