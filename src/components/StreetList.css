@@ -23,3 +23,31 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
+
+.street-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.street-name {
+  flex-grow: 1; /* Allows the name to take up available space */
+  padding: 1rem 0; /* Add vertical padding to make the click area bigger */
+}
+
+.edit-btn {
+  background-color: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: 1rem; /* Add space between name and button */
+}
+
+.edit-btn:hover {
+  background-color: #cbd5e0;
+}

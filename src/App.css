@@ -41,3 +41,51 @@ h1 {
 .primary-action-btn:hover {
   background-color: #3a5d9a;
 }
+
+.back-button {
+  display: block; 
+  width: fit-content; 
+  margin-bottom: 1rem; 
+  
+  /* THIS IS THE FIX: Explicitly pin it to the left */
+  margin-left: 0;
+  margin-right: auto;
+  
+  /* All the styling we just added */
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem; /* Creates space between the buttons */
+}
+
+.secondary-action-btn {
+  background-color: #e9e9ed;
+  color: var(--dark-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.secondary-action-btn:hover {
+  background-color: #d1d1d6;
+}

@@ -5,7 +5,7 @@ import { getByIndex } from '../database.js';
 import './HouseList.css';
 
 // Note the new 'onHouseSelect' prop
-function HouseList({ streetId, onBack, onAddHouse, onHouseSelect }) {
+function HouseList({ streetId, onBack, onAddHouse, onHouseSelect, onEditStreet }) {
   const [houses, setHouses] = useState([]);
 
   useEffect(() => {
@@ -20,14 +20,19 @@ function HouseList({ streetId, onBack, onAddHouse, onHouseSelect }) {
 
   return (
     <div>
-      <button onClick={onBack}>&larr; Back to Streets</button>
+      <button onClick={onBack} className="back-button">&larr; Streets</button>
       
       <div className="view-header">
-        <h2>Houses</h2>
-        <button className="primary-action-btn" onClick={onAddHouse}>
-          + Add New House
-        </button>
-      </div>
+            <h2>Houses</h2>
+            <div className="header-actions">
+                <button className="secondary-action-btn" onClick={() => onEditStreet(streetId)}>
+                Edit Street
+                </button>
+                <button className="primary-action-btn" onClick={onAddHouse}>
+                + Add New House
+                </button>
+            </div>
+        </div>
 
       <ul className="house-list">
         {houses.map(house => (

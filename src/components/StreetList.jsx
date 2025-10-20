@@ -5,7 +5,7 @@ import { getByIndex } from '../database.js';
 import './StreetList.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet }) {
+function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet, onEditTerritory }) {
   const [streets, setStreets] = useState([]);
 
   useEffect(() => {
@@ -19,11 +19,19 @@ function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet }) {
 
   return (
     <div>
-      <button onClick={onBack}>&larr; Back to Territories</button>
+      <button onClick={onBack} className="back-button">&larr; Territories</button>
       <div className="view-header">
         <h2>Streets</h2>
-        <button className="primary-action-btn" onClick={onAddStreet}>+ Add New Street</button>
-      </div>
+        <div className="header-actions">
+            <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
+            Edit Territory
+            </button>
+            <button className="primary-action-btn" onClick={onAddStreet}>
+            + Add New Street
+            </button>
+        </div>
+    </div>
+
 
       {/* Add the className and onClick handler */}
       <ul className="street-list">
@@ -32,10 +40,10 @@ function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet }) {
             key={street.id}
             className="street-item"
             onClick={() => onStreetSelect(street.id)}
-          >
+            >
             {street.name}
-          </li>
-        ))}
+            </li>
+          ))}
       </ul>
     </div>
   );

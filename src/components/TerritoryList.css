@@ -33,3 +33,14 @@
   color: #666;
   margin-top: 0.25rem;
 }
+
+.territory-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.territory-details {
+  /* This makes the details section grow to fill the available space */
+  flex-grow: 1;
+}

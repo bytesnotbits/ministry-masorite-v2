@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'; // We now need useEffect here
 import './App.css';
-import { getAllFromStore, addToStore, updateInStore, deleteFromStore } from './database.js'; // Import addToStore
+import { getAllFromStore, addToStore, updateInStore, deleteFromStore, getByIndex, getFromStore } from './database.js';
+import StreetDetail from './components/StreetDetail.jsx';
 import TerritoryList from './components/TerritoryList.jsx';
 import StreetList from './components/StreetList.jsx';
 import HouseList from './components/HouseList.jsx';
@@ -8,19 +9,48 @@ import AddTerritoryModal from './components/AddTerritoryModal.jsx';
 import AddStreetModal from './components/AddStreetModal.jsx';
 import AddHouseModal from './components/AddHouseModal.jsx';
 import HouseDetail from './components/HouseDetail.jsx';
+import TerritoryDetail from './components/TerritoryDetail.jsx';
 
 function App() {
   // --- STATE ---
   const [territories, setTerritories] = useState([]); // Master list of territories now lives here
   const [selectedTerritoryId, setSelectedTerritoryId] = useState(null);
-  const [selectedStreetId, setSelectedStreetId] = useState(null);
+  const [selectedStreetId, setSelectedStreetId] = useState(null); // We still need this for now
   const [isAddTerritoryModalOpen, setIsAddTerritoryModalOpen] = useState(false);
   const [isAddStreetModalOpen, setIsAddStreetModalOpen] = useState(false);
   const [isAddHouseModalOpen, setIsAddHouseModalOpen] = useState(false);
   const [houseListKey, setHouseListKey] = useState(0);
   const [streetListKey, setStreetListKey] = useState(0);
   const [selectedHouse, setSelectedHouse] = useState(null);
-  
+  const [selectedStreet, setSelectedStreet] = useState(null);
+  const [selectedTerritory, setSelectedTerritory] = useState(null);
+  const handleUpdateTerritory = async (updatedTerritoryData) => {
+    await updateInStore('territories', updatedTerritoryData);
+    setSelectedTerritory(null); // Return to the territory list
+    await fetchTerritories(); // Re-fetch all territories to show the change
+  };
+
+  const handleDeleteTerritory = async (territoryId) => {
+    // This is a full cascading delete. We must delete all children first.
+    const streetsToDelete = await getByIndex('streets', 'territoryId', territoryId);
+    for (const street of streetsToDelete) {
+      const housesToDelete = await getByIndex('houses', 'streetId', street.id);
+      for (const house of housesToDelete) {
+        // Later we'll also delete visits/people here
+        await deleteFromStore('houses', house.id);
+      }
+      await deleteFromStore('streets', street.id);
+    }
+    await deleteFromStore('territories', territoryId); // Finally, delete the territory
+
+    setSelectedTerritory(null);
+    await fetchTerritories();
+  };
+
+  const handleBackToTerritoryList = () => {
+    setSelectedTerritory(null);
+  };
+
 
   // --- DATA FETCHING ---
   // This useEffect runs once to load the initial territory list
@@ -34,11 +64,53 @@ function App() {
   };
 
   // --- HANDLERS ---
+  const handleEditTerritory = async (territoryId) => {
+    const territoryObject = await getFromStore('territories', territoryId);
+    if (territoryObject) {
+      setSelectedTerritory(territoryObject);
+    } else {
+      console.error("Could not find territory to edit with ID:", territoryId);
+    }
+  };
+
+
+  const handleUpdateStreet = async (updatedStreetData) => {
+    await updateInStore('streets', updatedStreetData);
+    setSelectedStreet(null); // Go back to the list
+    setStreetListKey(prevKey => prevKey + 1); // Refresh the list
+  };
+
+  const handleDeleteStreet = async (streetId) => {
+    // This is a "cascading" delete. We must delete the children before the parent.
+    const housesToDelete = await getByIndex('houses', 'streetId', streetId);
+    for (const house of housesToDelete) {
+      // In the future, we would also delete visits/people associated with each house here.
+      await deleteFromStore('houses', house.id);
+    }
+    await deleteFromStore('streets', streetId); // Now delete the street itself
+    setSelectedStreet(null);
+    setStreetListKey(prevKey => prevKey + 1);
+  };
+
+  const handleBackToStreetList = () => {
+    setSelectedStreet(null);
+  };
+
   const handleSaveTerritory = async (newTerritory) => {
     await addToStore('territories', newTerritory); // Save to the database
     await fetchTerritories(); // Re-fetch the list to include the new one
     setIsAddTerritoryModalOpen(false); // Close the modal
   };
+
+  const handleEditStreet = async (streetId) => {
+    const streetObject = await getFromStore('streets', streetId);
+    if (streetObject) {
+      setSelectedStreet(streetObject);
+    } else {
+      console.error("Could not find street to edit with ID:", streetId);
+    }
+  };
+
 
   const handleSaveStreet = async (streetData) => {
     // 1. Combine the street name from the modal with the currently selected territory ID
@@ -79,6 +151,7 @@ function App() {
   const handleCloseHouseModal = () => setIsAddHouseModalOpen(false);
 
   const handleStreetSelect = (streetId) => setSelectedStreetId(streetId);
+  
   const handleHouseSelect = (houseObject) => {
     console.log('House selected:', houseObject); // For testing!
     setSelectedHouse(houseObject);
@@ -107,6 +180,7 @@ function App() {
   };
 
   const handleGoBack = () => {
+    setSelectedStreet(null);
     if (selectedStreetId) setSelectedStreetId(null);
     else if (selectedTerritoryId) setSelectedTerritoryId(null);
   };
@@ -129,12 +203,33 @@ function App() {
         onDelete={handleDeleteHouse}
       />
     );
+  } else if (selectedStreet) {
+  currentView = (
+    <StreetDetail
+      street={selectedStreet}
+      onBack={handleBackToStreetList}
+      onSave={handleUpdateStreet}
+      onDelete={handleDeleteStreet}
+    />
+  );
+
+  } else if (selectedTerritory) {
+    currentView = (
+      <TerritoryDetail
+        territory={selectedTerritory}
+        onBack={handleBackToTerritoryList}
+        onSave={handleUpdateTerritory}
+        onDelete={handleDeleteTerritory}
+      />
+    );
+
   } else if (selectedStreetId) {
     currentView = <HouseList 
       streetId={selectedStreetId} 
       onBack={handleGoBack} 
       onAddHouse={handleOpenAddHouseModal}
       onHouseSelect={handleHouseSelect}
+      onEditStreet={handleEditStreet}
       key={houseListKey} 
     />;
 
@@ -144,6 +239,7 @@ function App() {
       onStreetSelect={handleStreetSelect} 
       onBack={handleGoBack} 
       onAddStreet={handleOpenAddStreetModal} 
+      onEditTerritory={handleEditTerritory}
       key={streetListKey}
       />;
   } else {
