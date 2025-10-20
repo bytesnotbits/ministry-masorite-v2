@@ -2,36 +2,43 @@
 
 import { useState, useEffect } from 'react';
 import { getByIndex } from '../database.js';
-import './HouseList.css'; // 1. Import our new CSS
+import './HouseList.css';
 
-// 2. Accept the props from App.jsx
-function HouseList({ streetId, onBack }) {
+// Note the new 'onHouseSelect' prop
+function HouseList({ streetId, onBack, onAddHouse, onHouseSelect }) {
   const [houses, setHouses] = useState([]);
 
-  // 3. Use useEffect to fetch houses when streetId changes
   useEffect(() => {
     const fetchHouses = async () => {
       const data = await getByIndex('houses', 'streetId', streetId);
-      // Let's sort the houses numerically by address
       data.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
       setHouses(data);
     };
 
     fetchHouses();
-  }, [streetId]); // The dependency array ensures this runs when the street changes
+  }, [streetId]);
 
   return (
     <div>
-      {/* 4. Use the onBack prop for the button */}
       <button onClick={onBack}>&larr; Back to Streets</button>
-      <h2>Houses</h2>
+      
+      <div className="view-header">
+        <h2>Houses</h2>
+        <button className="primary-action-btn" onClick={onAddHouse}>
+          + Add New House
+        </button>
+      </div>
 
-      {/* 5. Map over the houses state to display the list */}
       <ul className="house-list">
         {houses.map(house => (
-          <li key={house.id} className="house-item">
+          <li 
+            key={house.id} 
+            className="house-item"
+            onClick={() => onHouseSelect(house)}
+          >
             <div className="house-address">{house.address}</div>
-            {/* We will add more details here later */}
+            {/* This is the new part: a conditional span */}
+            {house.isNotInterested && <span className="dnc-tag">Not Interested</span>}
           </li>
         ))}
       </ul>

@@ -26,3 +26,23 @@
   font-size: 1.2rem;
   font-weight: bold;
 }
+
+
+.house-item {
+  /* Allow positioning the tag relative to the item */
+  position: relative;
+  padding-right: 110px; /* Make space for the tag */
+}
+
+.dnc-tag {
+  position: absolute;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
+  background-color: #fbeaea;
+  color: #c53030;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}

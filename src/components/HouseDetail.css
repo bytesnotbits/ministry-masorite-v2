@@ -1,0 +1,71 @@
+/* src/components/HouseDetail.css */
+
+.house-detail-container {
+  text-align: left;
+}
+
+.house-form {
+  margin-top: 1.5rem;
+}
+
+.house-form label {
+  display: block;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.house-form input[type="text"],
+.house-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box; /* Ensures padding is included in the width */
+}
+
+.house-form textarea {
+  resize: vertical; /* Allows user to resize the textarea vertically */
+}
+
+.checkbox-group {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group label {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 0.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.btn-danger {
+  /* Reset some default button styles */
+  border: none;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  
+  /* Custom styles */
+  background-color: #e53e3e; /* A strong red */
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  margin-top: 2rem; /* Add some space above it */
+  width: 100%; /* Make it full-width */
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: #c53030; /* A darker red for hover */
+}
