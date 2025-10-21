@@ -1,33 +1,59 @@
 // src/components/AddVisitModal.jsx
 
-import { useState } from 'react';
-import './AddTerritoryModal.css'; // We can reuse the same CSS for a consistent look!
+import { useState, useEffect } from 'react'; // <-- Make sure useEffect is imported
+import './AddTerritoryModal.css';
 
-function AddVisitModal({ onSave, onClose }) {
-  // Default the date to today in the YYYY-MM-DD format required by the input
-  const today = new Date().toISOString().split('T')[0];
+function AddVisitModal({ onSave, onClose, visitToEdit }) { // <-- Accept the new prop
   
-  const [date, setDate] = useState(today);
+  // State for the form fields
+  const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
 
-  const handleSaveClick = () => {
-    // Basic validation
+  // This effect runs when the modal opens or when the visitToEdit prop changes
+  useEffect(() => {
+    if (visitToEdit) {
+      // EDIT MODE: We have a visit to edit, so pre-fill the form.
+      // We only take the YYYY-MM-DD part of the string to avoid any time/timezone data.
+      setDate(visitToEdit.date.substring(0, 10)); 
+      setNotes(visitToEdit.notes || '');
+    } else {
+      // ADD MODE: No visit to edit, so set defaults for a new visit.
+      
+      // --- The 100% Reliable Time Zone Fix ---
+      const today = new Date(); // Creates a date object using the user's local clock.
+    
+      const year = today.getFullYear();
+      // getMonth() is 0-indexed (0-11), so we add 1.
+      // String().padStart(2, '0') ensures we have a leading '0' for single-digit months/days.
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      
+      // Manually build the string. This is immune to time zone conversion.
+      const todayString = `${year}-${month}-${day}`;
+      
+      setDate(todayString);
+      setNotes('');
+    }
+  }, [visitToEdit]); // This effect depends on the visitToEdit prop
+
+    const handleSaveClick = () => {
     if (!date) {
-      alert('Please select a date for the visit.');
-      return;
+        alert('Please select a date for the visit.');
+        return;
     }
 
-    // This is the new visit object.
-    // The houseId will be added later in App.jsx.
-    const newVisit = {
-      date: date,
-      notes: notes,
+    // Create the visit data object from the form
+    const visitData = {
+        date: date,
+        notes: notes,
     };
 
-    onSave(newVisit);
-  };
+    // Call the onSave function passed from App.jsx
+    // If we are editing, visitToEdit will be an object. If we are adding, it will be null.
+    onSave(visitData, visitToEdit); 
+    };
 
-  return (
+  return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>Add New Visit</h3>

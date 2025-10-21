@@ -72,3 +72,26 @@
   background-color: #e53e3e; /* Red on hover */
   color: white;
 }
+
+.visit-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* This creates space between the Edit and Delete buttons */
+}
+
+.edit-visit-btn {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-visit-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}

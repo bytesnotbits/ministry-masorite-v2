@@ -25,6 +25,7 @@ function App() {
   const [visitListKey, setVisitListKey] = useState(0);
   const [streetListKey, setStreetListKey] = useState(0);
   const [selectedHouse, setSelectedHouse] = useState(null);
+  const [visitToEdit, setVisitToEdit] = useState(null);
   const [selectedStreet, setSelectedStreet] = useState(null);
   const [selectedTerritory, setSelectedTerritory] = useState(null);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
@@ -56,7 +57,7 @@ function App() {
   };
 
 
-  // --- DATA FETCHING ---
+  // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
   // This useEffect runs once to load the initial territory list
   useEffect(() => {
     fetchTerritories();
@@ -67,7 +68,7 @@ function App() {
     setTerritories(data);
   };
 
-  // --- HANDLERS ---
+  // --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---
   const handleEditTerritory = async (territoryId) => {
     const territoryObject = await getFromStore('territories', territoryId);
     if (territoryObject) {
@@ -153,7 +154,10 @@ function App() {
   const handleCloseHouseModal = () => setIsAddHouseModalOpen(false);
 
   const handleOpenVisitModal = () => setIsAddVisitModalOpen(true);
-  const handleCloseVisitModal = () => setIsAddVisitModalOpen(false);
+  const handleCloseVisitModal = () => {
+    setIsAddVisitModalOpen(false);
+    setVisitToEdit(null); // Also reset the state on cancel/close
+  };
 
   const handleStreetSelect = (streetId) => setSelectedStreetId(streetId);
   
@@ -196,27 +200,33 @@ function App() {
   const handleOpenAddStreetModal = () => setIsAddStreetModalOpen(true);
   const handleCloseStreetModal = () => setIsAddStreetModalOpen(false);
 
-  const handleSaveVisit = async (visitData) => {
-    // 1. Ensure a house is actually selected
-    if (!selectedHouse) {
-      console.error("Cannot save visit: no house is selected.");
-      return;
+  const handleSaveVisit = async (visitData, visitToEdit) => {
+    // Check if we are editing an existing visit or adding a new one
+    if (visitToEdit) {
+      // --- UPDATE LOGIC ---
+      // Combine the original visit's ID and houseId with the new form data
+      const updatedVisit = { 
+        ...visitToEdit, // a.k.a the original visit
+        ...visitData    // a.k.a the new date and notes from the form
+      };
+      await updateInStore('visits', updatedVisit);
+    } else {
+      // --- ADD (CREATE) LOGIC ---
+      if (!selectedHouse) {
+        console.error("Cannot save visit: no house is selected.");
+        return;
+      }
+      const newVisit = {
+        ...visitData,
+        houseId: selectedHouse.id,
+      };
+      await addToStore('visits', newVisit);
     }
-
-    // 2. Combine the visit data from the modal with the selected house's ID
-    const newVisit = {
-      ...visitData,
-      houseId: selectedHouse.id,
-    };
-
-    // 3. Save the complete visit object to the database
-    await addToStore('visits', newVisit);
-
-    // Refresh the visit list by updating the key
-    setVisitListKey(prevKey => prevKey + 1);
-
-    // 4. Close the modal
-    setIsAddVisitModalOpen(false);
+    
+    // --- This runs for both adds and updates ---
+    setVisitListKey(prevKey => prevKey + 1); // Force a refresh
+    setIsAddVisitModalOpen(false); // Close the modal
+    setVisitToEdit(null); // IMPORTANT: Reset the visitToEdit state
   };
   
   const handleDeleteVisit = async (visitId) => {
@@ -230,8 +240,14 @@ function App() {
     }
   };
 
+  const handleEditVisit = (visitObject) => {
+    setVisitToEdit(visitObject);      // Store the visit we want to edit
+    setIsAddVisitModalOpen(true); // Open the modal
+  };
 
-  // --- RENDER LOGIC ---
+
+
+  // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
   if (selectedHouse) {
     currentView = (
@@ -243,6 +259,7 @@ function App() {
         onDelete={handleDeleteHouse}
         onAddVisit={handleOpenVisitModal}
         onDeleteVisit={handleDeleteVisit}
+        onEditVisit={handleEditVisit}
       />
     );
   } else if (selectedStreet) {
@@ -294,7 +311,7 @@ function App() {
     );
   }
 
-  return (
+  return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
     <>
       <h1>Ministry Masorite v2</h1>
       {currentView}
@@ -317,7 +334,6 @@ function App() {
     />
   )}
 
-  {/* Add this new block here */}
   {isAddHouseModalOpen && (
     <AddHouseModal
       onSave={handleSaveHouse}
@@ -328,6 +344,7 @@ function App() {
     <AddVisitModal
       onSave={handleSaveVisit}
       onClose={handleCloseVisitModal}
+      visitToEdit={visitToEdit}
     />
   )}
     </>

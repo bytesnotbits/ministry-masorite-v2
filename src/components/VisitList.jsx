@@ -2,7 +2,7 @@
 
 import './VisitList.css'; // We will create this file next
 
-function VisitList({ visits, onDelete }) {
+function VisitList({ visits, onDelete, onEdit }) {
   return (
     <div className="visit-list-container">
       <h3>Visit History</h3>
@@ -11,16 +11,27 @@ function VisitList({ visits, onDelete }) {
         <ul className="visit-list">
           {visits.map(visit => (
             <li key={visit.id} className="visit-item">
-              <div className="visit-header"> {/* New wrapper div */}
+              <div className="visit-header">
                 <div className="visit-date">
-                  {new Date(visit.date).toLocaleDateString()}
+                    {(() => {
+                        const [year, month, day] = visit.date.substring(0, 10).split('-');
+                        return `${month}/${day}/${year}`;
+                    })()}
                 </div>
-                <button 
-                className="delete-visit-btn"
-                onClick={() => onDelete(visit.id)} // <-- ADD THIS onClick HANDLER
-                >
+                <div className="visit-item-actions">
+                  <button 
+                    className="edit-visit-btn"
+                    onClick={() => onEdit(visit)} // <-- ADD THIS onClick HANDLER
+                    >
+                    Edit
+                    </button>
+                  <button 
+                    className="delete-visit-btn"
+                    onClick={() => onDelete(visit.id)}
+                  >
                     &times;
-                </button>
+                  </button>
+                </div>
               </div>
               <p className="visit-notes">
                 {visit.notes || <em>No notes for this visit.</em>}
