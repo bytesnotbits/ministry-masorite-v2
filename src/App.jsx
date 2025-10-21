@@ -8,6 +8,7 @@ import HouseList from './components/HouseList.jsx';
 import AddTerritoryModal from './components/AddTerritoryModal.jsx';
 import AddStreetModal from './components/AddStreetModal.jsx';
 import AddHouseModal from './components/AddHouseModal.jsx';
+import AddVisitModal from './components/AddVisitModal.jsx';
 import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
 
@@ -19,7 +20,9 @@ function App() {
   const [isAddTerritoryModalOpen, setIsAddTerritoryModalOpen] = useState(false);
   const [isAddStreetModalOpen, setIsAddStreetModalOpen] = useState(false);
   const [isAddHouseModalOpen, setIsAddHouseModalOpen] = useState(false);
+  const [isAddVisitModalOpen, setIsAddVisitModalOpen] = useState(false);
   const [houseListKey, setHouseListKey] = useState(0);
+  const [visitListKey, setVisitListKey] = useState(0);
   const [streetListKey, setStreetListKey] = useState(0);
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [selectedStreet, setSelectedStreet] = useState(null);
@@ -29,6 +32,7 @@ function App() {
     setSelectedTerritory(null); // Return to the territory list
     await fetchTerritories(); // Re-fetch all territories to show the change
   };
+  
 
   const handleDeleteTerritory = async (territoryId) => {
     // This is a full cascading delete. We must delete all children first.
@@ -73,7 +77,6 @@ function App() {
     }
   };
 
-
   const handleUpdateStreet = async (updatedStreetData) => {
     await updateInStore('streets', updatedStreetData);
     setSelectedStreet(null); // Go back to the list
@@ -110,7 +113,6 @@ function App() {
       console.error("Could not find street to edit with ID:", streetId);
     }
   };
-
 
   const handleSaveStreet = async (streetData) => {
     // 1. Combine the street name from the modal with the currently selected territory ID
@@ -150,6 +152,9 @@ function App() {
   const handleOpenAddHouseModal = () => setIsAddHouseModalOpen(true);
   const handleCloseHouseModal = () => setIsAddHouseModalOpen(false);
 
+  const handleOpenVisitModal = () => setIsAddVisitModalOpen(true);
+  const handleCloseVisitModal = () => setIsAddVisitModalOpen(false);
+
   const handleStreetSelect = (streetId) => setSelectedStreetId(streetId);
   
   const handleHouseSelect = (houseObject) => {
@@ -185,22 +190,47 @@ function App() {
     else if (selectedTerritoryId) setSelectedTerritoryId(null);
   };
 
-
   const handleOpenAddTerritoryModal = () => setIsAddTerritoryModalOpen(true);
   const handleCloseTerritoryModal = () => setIsAddTerritoryModalOpen(false);
 
   const handleOpenAddStreetModal = () => setIsAddStreetModalOpen(true);
   const handleCloseStreetModal = () => setIsAddStreetModalOpen(false);
 
+  const handleSaveVisit = async (visitData) => {
+    // 1. Ensure a house is actually selected
+    if (!selectedHouse) {
+      console.error("Cannot save visit: no house is selected.");
+      return;
+    }
+
+    // 2. Combine the visit data from the modal with the selected house's ID
+    const newVisit = {
+      ...visitData,
+      houseId: selectedHouse.id,
+    };
+
+    // 3. Save the complete visit object to the database
+    await addToStore('visits', newVisit);
+
+    // Refresh the visit list by updating the key
+    setVisitListKey(prevKey => prevKey + 1);
+
+    // 4. Close the modal
+    setIsAddVisitModalOpen(false);
+  };
+
+
   // --- RENDER LOGIC ---
   let currentView;
   if (selectedHouse) {
     currentView = (
       <HouseDetail 
+        key={visitListKey}
         house={selectedHouse} 
         onBack={() => setSelectedHouse(null)}
         onSave={handleUpdateHouse}
         onDelete={handleDeleteHouse}
+        onAddVisit={handleOpenVisitModal}
       />
     );
   } else if (selectedStreet) {
@@ -280,6 +310,12 @@ function App() {
     <AddHouseModal
       onSave={handleSaveHouse}
       onClose={handleCloseHouseModal}
+    />
+  )}
+  {isAddVisitModalOpen && (
+    <AddVisitModal
+      onSave={handleSaveVisit}
+      onClose={handleCloseVisitModal}
     />
   )}
     </>

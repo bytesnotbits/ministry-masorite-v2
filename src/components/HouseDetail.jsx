@@ -4,7 +4,7 @@ import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
 
 
-function HouseDetail({ house, onBack, onSave, onDelete }) {
+function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
   // It starts as 'false' (view mode).
   const [isEditing, setIsEditing] = useState(false);
@@ -115,7 +115,10 @@ function HouseDetail({ house, onBack, onSave, onDelete }) {
         <>
           <div className="view-header">
             {/* The address is now the main header */}
-            <h2>{house.address}</h2> 
+            <h2>{house.address}</h2>
+            <button className="primary-action-btn" onClick={onAddVisit}>
+                + Add Visit
+              </button>
             <button className="secondary-action-btn" onClick={() => setIsEditing(true)}>
                 Edit House
             </button>
