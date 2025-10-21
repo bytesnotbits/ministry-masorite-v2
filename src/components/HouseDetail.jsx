@@ -4,7 +4,7 @@ import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
 
 
-function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit }) {
+function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit, onDeleteVisit }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
   // It starts as 'false' (view mode).
   const [isEditing, setIsEditing] = useState(false);
@@ -132,7 +132,7 @@ function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit }) {
             <p>{house.isNotInterested ? 'Not Interested' : 'Unvisited'}</p>
           </div>
 
-          <VisitList visits={visits} />
+          <VisitList visits={visits} onDelete={onDeleteVisit} />
         </>
       )}
     </div>

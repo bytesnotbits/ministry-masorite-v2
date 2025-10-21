@@ -218,6 +218,17 @@ function App() {
     // 4. Close the modal
     setIsAddVisitModalOpen(false);
   };
+  
+  const handleDeleteVisit = async (visitId) => {
+    // Show a confirmation dialog before deleting
+    if (window.confirm('Are you sure you want to permanently delete this visit?')) {
+      // 1. Delete the visit from the database using its ID
+      await deleteFromStore('visits', visitId);
+
+      // 2. Increment the key to force the component to re-fetch and show the updated list
+      setVisitListKey(prevKey => prevKey + 1);
+    }
+  };
 
 
   // --- RENDER LOGIC ---
@@ -231,6 +242,7 @@ function App() {
         onSave={handleUpdateHouse}
         onDelete={handleDeleteHouse}
         onAddVisit={handleOpenVisitModal}
+        onDeleteVisit={handleDeleteVisit}
       />
     );
   } else if (selectedStreet) {

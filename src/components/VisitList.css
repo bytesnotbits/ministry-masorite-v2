@@ -41,3 +41,34 @@
   color: #444;
   white-space: pre-wrap; /* This makes line breaks in notes appear correctly */
 }
+
+.visit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.visit-date {
+  margin-bottom: 0; /* Remove the margin that's now on the parent */
+}
+
+.delete-visit-btn {
+  background-color: #f1f1f4;
+  color: #999;
+  border: none;
+  border-radius: 50%; /* This makes it a perfect circle */
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 28px; /* Helps vertically center the '×' */
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.delete-visit-btn:hover {
+  background-color: #e53e3e; /* Red on hover */
+  color: white;
+}
