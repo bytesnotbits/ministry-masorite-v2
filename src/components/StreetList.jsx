@@ -5,7 +5,7 @@ import { getByIndex } from '../database.js';
 import './StreetList.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet, onEditTerritory }) {
+function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory }) {
   const [streets, setStreets] = useState([]);
 
   useEffect(() => {
@@ -19,9 +19,7 @@ function StreetList({ territoryId, onStreetSelect, onBack, onAddStreet, onEditTe
 
   return (
     <div>
-      <button onClick={onBack} className="back-button">&larr; Territories</button>
       <div className="view-header">
-        <h2>Streets</h2>
         <div className="header-actions">
             <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
             Edit Territory

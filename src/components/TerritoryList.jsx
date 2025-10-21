@@ -5,7 +5,6 @@ function TerritoryList({ territories, onTerritorySelect, onAddTerritory, }) {
   return (
     <div className="territory-list-container">
       <div className="view-header">
-        <h2>Territories</h2>
         <button className="primary-action-btn" onClick={onAddTerritory}>
           + Add New Territory
         </button>

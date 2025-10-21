@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // We can reuse the same styles for consistency!
 
-function StreetDetail({ street, onBack, onSave, onDelete }) {
+function StreetDetail({ street, onSave, onDelete }) {
   const [formData, setFormData] = useState(null);
 
   useEffect(() => {
@@ -37,7 +37,6 @@ function StreetDetail({ street, onBack, onSave, onDelete }) {
 
   return (
     <div className="house-detail-container">
-      <button onClick={onBack} className="back-button">&larr; Streets</button>
       <div className="view-header">
         <h2>Edit Street</h2>
         <button className="primary-action-btn" onClick={handleSave}>

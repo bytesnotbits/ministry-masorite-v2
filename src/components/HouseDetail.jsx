@@ -4,7 +4,7 @@ import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
 
 
-function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit }) {
+function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
   // It starts as 'false' (view mode).
   const [isEditing, setIsEditing] = useState(false);
@@ -62,8 +62,6 @@ function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit, onDeleteVisi
   // --- NEW RENDER LOGIC ---
   return (
     <div className="house-detail-container">
-      <button onClick={onBack} className="back-button">&larr; Houses</button>
-      
       {/* This is a ternary operator. It checks if we are in "editing" mode. */}
       {isEditing ? (
         /* If isEditing is TRUE, render the EDITING VIEW (the form) */
@@ -115,7 +113,6 @@ function HouseDetail({ house, onBack, onSave, onDelete, onAddVisit, onDeleteVisi
         <>
           <div className="view-header">
             {/* The address is now the main header */}
-            <h2>{house.address}</h2>
             <button className="primary-action-btn" onClick={onAddVisit}>
                 + Add Visit
               </button>

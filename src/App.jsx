@@ -11,6 +11,8 @@ import AddHouseModal from './components/AddHouseModal.jsx';
 import AddVisitModal from './components/AddVisitModal.jsx';
 import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
+import Breadcrumbs from './components/Breadcrumbs.jsx';
+
 
 function App() {
   // --- STATE ---
@@ -28,13 +30,14 @@ function App() {
   const [visitToEdit, setVisitToEdit] = useState(null);
   const [selectedStreet, setSelectedStreet] = useState(null);
   const [selectedTerritory, setSelectedTerritory] = useState(null);
+  const [selectedTerritoryDetails, setSelectedTerritoryDetails] = useState(null);
+  const [selectedStreetDetails, setSelectedStreetDetails] = useState(null);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
     await fetchTerritories(); // Re-fetch all territories to show the change
   };
   
-
   const handleDeleteTerritory = async (territoryId) => {
     // This is a full cascading delete. We must delete all children first.
     const streetsToDelete = await getByIndex('streets', 'territoryId', territoryId);
@@ -159,10 +162,13 @@ function App() {
     setVisitToEdit(null); // Also reset the state on cancel/close
   };
 
-  const handleStreetSelect = (streetId) => setSelectedStreetId(streetId);
-  
+  const handleStreetSelect = async (streetId) => {
+    const street = await getFromStore('streets', streetId);
+    setSelectedStreetDetails(street);
+    setSelectedStreetId(streetId);
+  };
+
   const handleHouseSelect = (houseObject) => {
-    console.log('House selected:', houseObject); // For testing!
     setSelectedHouse(houseObject);
   };
 
@@ -228,6 +234,12 @@ function App() {
     setIsAddVisitModalOpen(false); // Close the modal
     setVisitToEdit(null); // IMPORTANT: Reset the visitToEdit state
   };
+
+    const handleTerritorySelect = async (territoryId) => {
+      const territory = await getFromStore('territories', territoryId);
+      setSelectedTerritoryDetails(territory);
+      setSelectedTerritoryId(territoryId);
+    };
   
   const handleDeleteVisit = async (visitId) => {
     // Show a confirmation dialog before deleting
@@ -250,23 +262,21 @@ function App() {
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
   if (selectedHouse) {
-    currentView = (
-      <HouseDetail 
-        key={visitListKey}
-        house={selectedHouse} 
-        onBack={() => setSelectedHouse(null)}
-        onSave={handleUpdateHouse}
-        onDelete={handleDeleteHouse}
-        onAddVisit={handleOpenVisitModal}
-        onDeleteVisit={handleDeleteVisit}
-        onEditVisit={handleEditVisit}
-      />
-    );
+      currentView = (
+        <HouseDetail 
+          key={visitListKey}
+          house={selectedHouse} 
+          onSave={handleUpdateHouse}
+          onDelete={handleDeleteHouse}
+          onAddVisit={handleOpenVisitModal}
+          onDeleteVisit={handleDeleteVisit}
+          onEditVisit={handleEditVisit}
+        />
+      );
   } else if (selectedStreet) {
   currentView = (
     <StreetDetail
       street={selectedStreet}
-      onBack={handleBackToStreetList}
       onSave={handleUpdateStreet}
       onDelete={handleDeleteStreet}
     />
@@ -276,77 +286,108 @@ function App() {
     currentView = (
       <TerritoryDetail
         territory={selectedTerritory}
-        onBack={handleBackToTerritoryList}
         onSave={handleUpdateTerritory}
         onDelete={handleDeleteTerritory}
       />
     );
 
   } else if (selectedStreetId) {
-    currentView = <HouseList 
-      streetId={selectedStreetId} 
-      onBack={handleGoBack} 
-      onAddHouse={handleOpenAddHouseModal}
-      onHouseSelect={handleHouseSelect}
-      onEditStreet={handleEditStreet}
-      key={houseListKey} 
-    />;
+      currentView = <HouseList 
+        streetId={selectedStreetId} 
+        onAddHouse={handleOpenAddHouseModal}
+        onHouseSelect={handleHouseSelect}
+        onEditStreet={handleEditStreet}
+        key={houseListKey} 
+      />;
 
   } else if (selectedTerritoryId) {
-    currentView = <StreetList 
-      territoryId={selectedTerritoryId} 
-      onStreetSelect={handleStreetSelect} 
-      onBack={handleGoBack} 
-      onAddStreet={handleOpenAddStreetModal} 
-      onEditTerritory={handleEditTerritory}
-      key={streetListKey}
-      />;
+      currentView = <StreetList 
+        territoryId={selectedTerritoryId} 
+        onStreetSelect={handleStreetSelect} 
+        onAddStreet={handleOpenAddStreetModal} 
+        onEditTerritory={handleEditTerritory}
+        key={streetListKey}
+        />;
   } else {
     currentView = (
       <TerritoryList
         territories={territories} // Pass the list down as a prop
-        onTerritorySelect={setSelectedTerritoryId}
+        onTerritorySelect={handleTerritorySelect}
         onAddTerritory={handleOpenAddTerritoryModal}
       />
     );
   }
 
+  // --- BREADCRUMB LOGIC ---
+  let crumbs = [];
+  if (selectedTerritoryDetails) {
+    crumbs.push({
+      label: `Territory #${selectedTerritoryDetails.number}`,
+      onClick: () => {
+        setSelectedTerritoryId(null);
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedTerritoryDetails(null);
+        setSelectedStreetDetails(null);
+      }
+    });
+  }
+
+  if (selectedStreetDetails) {
+    crumbs.push({
+      label: selectedStreetDetails.name,
+      onClick: () => {
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedStreetDetails(null);
+      }
+    });
+  }
+
+  if (selectedHouse) {
+    crumbs.push({
+      label: selectedHouse.address,
+      onClick: () => {
+        setSelectedHouse(null);
+      }
+    });
+  }
+  // --- END BREADCRUMB LOGIC ---
+
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
     <>
       <h1>Ministry Masorite v2</h1>
+      <Breadcrumbs crumbs={crumbs} />
       {currentView}
+      
       {isAddTerritoryModalOpen && (
         <AddTerritoryModal
           onSave={handleSaveTerritory}
           onClose={handleCloseTerritoryModal}
         />
       )}
+      
       {isAddStreetModalOpen && (
-      <AddStreetModal
-        onSave={handleSaveStreet}
-        onClose={handleCloseStreetModal}
-      />
-    )}
-    {isAddStreetModalOpen && (
-  <AddStreetModal
-    onSave={handleSaveStreet}
-    onClose={handleCloseStreetModal}
-    />
-  )}
+        <AddStreetModal
+          onSave={handleSaveStreet}
+          onClose={handleCloseStreetModal}
+        />
+      )}
 
-  {isAddHouseModalOpen && (
-    <AddHouseModal
-      onSave={handleSaveHouse}
-      onClose={handleCloseHouseModal}
-    />
-  )}
-  {isAddVisitModalOpen && (
-    <AddVisitModal
-      onSave={handleSaveVisit}
-      onClose={handleCloseVisitModal}
-      visitToEdit={visitToEdit}
-    />
-  )}
+      {isAddHouseModalOpen && (
+        <AddHouseModal
+          onSave={handleSaveHouse}
+          onClose={handleCloseHouseModal}
+        />
+      )}
+      
+      {isAddVisitModalOpen && (
+        <AddVisitModal
+          onSave={handleSaveVisit}
+          onClose={handleCloseVisitModal}
+          visitToEdit={visitToEdit}
+        />
+      )}
     </>
   );
 }

@@ -1,0 +1,32 @@
+/* src/components/Breadcrumbs.css (Version 2) */
+
+.breadcrumbs-nav {
+  display: flex;
+  flex-direction: row; /* This is the fix for the direction */
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.breadcrumb-button {
+  background-color: #f0f0f0; /* Added background for a button look */
+  border: 1px solid #ccc;    /* Added a border */
+  color: var(--primary-color);
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.5rem 1rem;      /* Increased padding */
+  border-radius: 6px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.breadcrumb-button:hover {
+  background-color: #e0e0e0; /* Darker hover, no underline */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.breadcrumb-separator {
+  color: #a0aec0;
+  font-weight: bold;
+  margin: 0 0.5rem; /* Increased margin for spacing */
+  font-size: 1.2rem;
+}

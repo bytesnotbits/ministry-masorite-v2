@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // Reusing styles for a consistent look!
 
-function TerritoryDetail({ territory, onBack, onSave, onDelete }) {
+function TerritoryDetail({ territory, onSave, onDelete }) {
   const [formData, setFormData] = useState(null);
 
   useEffect(() => {
@@ -37,7 +37,6 @@ function TerritoryDetail({ territory, onBack, onSave, onDelete }) {
 
   return (
     <div className="house-detail-container">
-      <button onClick={onBack} className="back-button">&larr; Territories</button>
       <div className="view-header">
         <h2>Edit Territory</h2>
         <button className="primary-action-btn" onClick={handleSave}>
