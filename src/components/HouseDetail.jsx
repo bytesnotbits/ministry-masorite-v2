@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import './HouseDetail.css';
+import VisitList from './VisitList.jsx';
+import { getByIndex } from '../database.js';
+
 
 function HouseDetail({ house, onBack, onSave, onDelete }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
@@ -7,10 +10,25 @@ function HouseDetail({ house, onBack, onSave, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState(null);
+  const [visits, setVisits] = useState([]);
 
   useEffect(() => {
     setFormData(house);
   }, [house]);
+
+  useEffect(() => {
+    // This function fetches the visits for the current house
+    const fetchVisits = async () => {
+      if (house?.id) {
+        const visitData = await getByIndex('visits', 'houseId', house.id);
+        // We'll sort them so the most recent visit is at the top
+        visitData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setVisits(visitData);
+      }
+    };
+
+    fetchVisits();
+  }, [house?.id]); // Re-run this effect if the house ID changes
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -108,8 +126,10 @@ function HouseDetail({ house, onBack, onSave, onDelete }) {
             <p>{house.notes || <em>No notes recorded.</em>}</p> 
             
             <h3>Status</h3>
-            <p>{house.isNotInterested ? 'Not Interested' : 'Willing to talk'}</p>
+            <p>{house.isNotInterested ? 'Not Interested' : 'Unvisited'}</p>
           </div>
+
+          <VisitList visits={visits} />
         </>
       )}
     </div>
