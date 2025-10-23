@@ -36,6 +36,7 @@ function App() {
   const [selectedTerritory, setSelectedTerritory] = useState(null);
   const [selectedTerritoryDetails, setSelectedTerritoryDetails] = useState(null);
   const [selectedStreetDetails, setSelectedStreetDetails] = useState(null);
+  const [peopleForSelectedHouse, setPeopleForSelectedHouse] = useState([]);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -204,8 +205,15 @@ function App() {
     setSelectedStreetId(streetId);
   };
 
-  const handleHouseSelect = (houseObject) => {
+  const handleHouseSelect = async (houseObject) => {
     setSelectedHouse(houseObject);
+    if (houseObject) {
+      const peopleData = await getByIndex('people', 'houseId', houseObject.id);
+      setPeopleForSelectedHouse(peopleData);
+    } else {
+      // If we are deselecting a house, clear the list
+      setPeopleForSelectedHouse([]);
+    }
   };
 
   const handleUpdateHouse = async (updatedHouseData) => {
@@ -330,6 +338,7 @@ function App() {
           onAddPerson={handleAddPerson}
           onDeletePerson={handleDeletePerson}
           onEditPerson={handleEditPerson}
+          visitListKey={visitListKey}
         />
       );
   } else if (selectedStreet) {
@@ -445,6 +454,7 @@ function App() {
           onSave={handleSaveVisit}
           onClose={handleCloseVisitModal}
           visitToEdit={visitToEdit}
+          people={peopleForSelectedHouse}
         />
       )}
 

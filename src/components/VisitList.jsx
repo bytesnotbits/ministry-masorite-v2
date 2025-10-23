@@ -2,7 +2,7 @@
 
 import './VisitList.css'; // We will create this file next
 
-function VisitList({ visits, onDelete, onEdit }) {
+function VisitList({ visits, onDelete, onEdit, people }) {
   return (
     <div className="visit-list-container">
       <h3>Visit History</h3>
@@ -21,7 +21,7 @@ function VisitList({ visits, onDelete, onEdit }) {
                 <div className="visit-item-actions">
                   <button 
                     className="edit-visit-btn"
-                    onClick={() => onEdit(visit)} // <-- ADD THIS onClick HANDLER
+                    onClick={() => onEdit(visit)}
                     >
                     Edit
                     </button>
@@ -33,9 +33,16 @@ function VisitList({ visits, onDelete, onEdit }) {
                   </button>
                 </div>
               </div>
-              <p className="visit-notes">
-                {visit.notes || <em>No notes for this visit.</em>}
-              </p>
+              <div className="visit-person-notes-container">
+                {visit.personId && (
+                  <div className="visit-person-name">
+                    👤 {people.find(p => p.id === visit.personId)?.name || 'Unknown Person'}
+                  </div>
+                )}
+                <p className="visit-notes">
+                  {visit.notes || <em>No notes for this visit.</em>}
+                </p>
+              </div>              
             </li>
           ))}
         </ul>

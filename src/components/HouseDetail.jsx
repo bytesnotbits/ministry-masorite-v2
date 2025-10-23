@@ -5,7 +5,7 @@ import { getByIndex } from '../database.js';
 import PeopleList from './PeopleList.jsx';
 
 
-function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson }) {
+function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
   // It starts as 'false' (view mode).
   const [isEditing, setIsEditing] = useState(false);
@@ -30,7 +30,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
     };
 
     fetchVisits();
-  }, [house?.id]); // Re-run this effect if the house ID changes
+  }, [house?.id, visitListKey]); // Re-run this effect if the house ID changes
 
     useEffect(() => {
     const fetchPeople = async () => {
@@ -152,6 +152,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
             visits={visits} 
             onDelete={onDeleteVisit} 
             onEdit={onEditVisit} 
+            people={people}
         />
 
         <PeopleList

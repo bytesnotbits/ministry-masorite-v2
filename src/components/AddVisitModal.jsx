@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react'; // <-- Make sure useEffect is imported
 import './AddTerritoryModal.css';
 
-function AddVisitModal({ onSave, onClose, visitToEdit }) { // <-- Accept the new prop
+function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept the new prop
   
   // State for the form fields
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [personId, setPersonId] = useState('');
 
   // This effect runs when the modal opens or when the visitToEdit prop changes
   useEffect(() => {
@@ -33,6 +34,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit }) { // <-- Accept the new
       
       setDate(todayString);
       setNotes('');
+      setPersonId('');
     }
   }, [visitToEdit]); // This effect depends on the visitToEdit prop
 
@@ -44,8 +46,9 @@ function AddVisitModal({ onSave, onClose, visitToEdit }) { // <-- Accept the new
 
     // Create the visit data object from the form
     const visitData = {
-        date: date,
-        notes: notes,
+        date: date, // Date is required
+        notes: notes, // Notes can be empty
+        personId: personId ? parseInt(personId, 10) : null, // Convert to integer or null
     };
 
     // Call the onSave function passed from App.jsx
@@ -75,6 +78,26 @@ function AddVisitModal({ onSave, onClose, visitToEdit }) { // <-- Accept the new
           rows="4"
           autoFocus
         />
+
+        {/* --- START: New Person Dropdown --- */}
+        {people && people.length > 0 && (
+          <>
+            <label htmlFor="visit-person">Link Visit To (Optional)</label>
+            <select
+              id="visit-person"
+              value={personId}
+              onChange={(e) => setPersonId(e.target.value)}
+            >
+              <option value="">General Visit (No Specific Person)</option>
+              {people.map(person => (
+                <option key={person.id} value={person.id}>
+                  {person.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+        {/* --- END: New Person Dropdown --- */}
 
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
