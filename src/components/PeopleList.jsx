@@ -9,9 +9,17 @@ function PeopleList({ people, onEdit, onDelete }) {
         <ul className="people-list">
           {people.map(person => (
             <li key={person.id} className="person-item">
-              <div className="person-name">
-                {person.name}
-              </div>
+                <div className="person-details">
+                <div className="person-name">
+                    {person.name}
+                </div>
+                {/* Conditionally render notes only if they exist */}
+                {person.notes && (
+                    <p className="person-notes">
+                    {person.notes}
+                    </p>
+                )}
+                </div>
               <div className="person-item-actions">
                 <button 
                   className="edit-person-btn"

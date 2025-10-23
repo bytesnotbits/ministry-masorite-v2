@@ -77,3 +77,14 @@
   background-color: #e53e3e;
   color: white;
 }
+
+person-details {
+  flex-grow: 1;
+}
+
+.person-notes {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+  white-space: pre-wrap; /* Ensures line breaks in notes are displayed */
+}

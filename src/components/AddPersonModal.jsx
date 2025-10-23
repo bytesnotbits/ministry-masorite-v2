@@ -2,15 +2,19 @@ import { useState, useEffect } from 'react';
 import './AddTerritoryModal.css'; // Reuse the same CSS for consistency
 
 function AddPersonModal({ onSave, onClose, personToEdit }) {
+  // --- CHANGE 1: Add state for notes ---
   const [name, setName] = useState('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (personToEdit) {
-      // Edit mode: pre-fill the form
+      // Edit mode: pre-fill the form with name and notes
       setName(personToEdit.name);
+      setNotes(personToEdit.notes || ''); // Use existing notes or an empty string
     } else {
       // Add mode: clear the form
       setName('');
+      setNotes('');
     }
   }, [personToEdit]);
 
@@ -20,15 +24,15 @@ function AddPersonModal({ onSave, onClose, personToEdit }) {
       return;
     }
 
+    // --- CHANGE 2: Add notes to the saved data ---
     const personData = {
       name: name.trim(),
+      notes: notes.trim(), // Include the notes
     };
 
-    // Pass both the data and the original object (if editing)
     onSave(personData, personToEdit);
   };
 
-  // Determine the title based on whether we are adding or editing
   const modalTitle = personToEdit ? 'Edit Person' : 'Add New Person';
 
   return (
@@ -46,7 +50,15 @@ function AddPersonModal({ onSave, onClose, personToEdit }) {
           autoFocus
         />
 
-        {/* We can add more fields here later, like phone number or notes */}
+        {/* --- CHANGE 3: Add the textarea for notes --- */}
+        <label htmlFor="person-notes">Notes</label>
+        <textarea
+          id="person-notes"
+          placeholder="e.g., Works nights, interested in..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows="4"
+        />
 
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
