@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import './HouseDetail.css';
 import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
+import PeopleList from './PeopleList.jsx';
 
 
-function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit }) {
+function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson }) {
   // NEW STATE: This will control whether we are in "view" or "edit" mode.
   // It starts as 'false' (view mode).
   const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
+  const [people, setPeople] = useState([]);
 
   useEffect(() => {
     setFormData(house);
@@ -29,6 +31,19 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
 
     fetchVisits();
   }, [house?.id]); // Re-run this effect if the house ID changes
+
+    useEffect(() => {
+    const fetchPeople = async () => {
+      if (house?.id) {
+        const peopleData = await getByIndex('people', 'houseId', house.id);
+        // Sort people alphabetically by name for consistent order
+        peopleData.sort((a, b) => a.name.localeCompare(b.name));
+        setPeople(peopleData);
+      }
+    };
+
+    fetchPeople();
+  }, [house?.id]); // This also runs when the house ID changes
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -59,7 +74,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
     return <p>Loading house details...</p>;
   }
 
-  // --- NEW RENDER LOGIC ---
+  // --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC ---
   return (
     <div className="house-detail-container">
       {/* This is a ternary operator. It checks if we are in "editing" mode. */}
@@ -112,10 +127,14 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
         /* If isEditing is FALSE, render the READ-ONLY VIEW */
         <>
           <div className="view-header">
-            {/* The address is now the main header */}
-            <button className="primary-action-btn" onClick={onAddVisit}>
+            <div className="header-actions">
+              <button className="primary-action-btn" onClick={onAddPerson}>
+                + Add Person
+              </button>
+              <button className="primary-action-btn" onClick={onAddVisit}>
                 + Add Visit
               </button>
+            </div>
             <button className="secondary-action-btn" onClick={() => setIsEditing(true)}>
                 Edit House
             </button>
@@ -133,6 +152,12 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
             visits={visits} 
             onDelete={onDeleteVisit} 
             onEdit={onEditVisit} 
+        />
+
+        <PeopleList
+            people={people}
+            onDelete={onDeletePerson}
+            onEdit={onEditPerson}
         />
         </>
       )}

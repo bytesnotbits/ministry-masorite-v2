@@ -9,6 +9,7 @@ import AddTerritoryModal from './components/AddTerritoryModal.jsx';
 import AddStreetModal from './components/AddStreetModal.jsx';
 import AddHouseModal from './components/AddHouseModal.jsx';
 import AddVisitModal from './components/AddVisitModal.jsx';
+import AddPersonModal from './components/AddPersonModal.jsx';
 import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
 import Breadcrumbs from './components/Breadcrumbs.jsx';
@@ -26,6 +27,9 @@ function App() {
   const [houseListKey, setHouseListKey] = useState(0);
   const [visitListKey, setVisitListKey] = useState(0);
   const [streetListKey, setStreetListKey] = useState(0);
+  const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
+  const [personToEdit, setPersonToEdit] = useState(null);
+  const [peopleListKey, setPeopleListKey] = useState(0);
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [visitToEdit, setVisitToEdit] = useState(null);
   const [selectedStreet, setSelectedStreet] = useState(null);
@@ -162,6 +166,38 @@ function App() {
     setVisitToEdit(null); // Also reset the state on cancel/close
   };
 
+  const handleClosePersonModal = () => {
+    setIsAddPersonModalOpen(false);
+    setPersonToEdit(null); // Always reset personToEdit when closing
+  };
+
+  const handleSavePerson = async (personData, personToEdit) => {
+    // Check if we are editing or adding
+    if (personToEdit) {
+      // --- UPDATE (EDIT) LOGIC ---
+      const updatedPerson = { 
+        ...personToEdit, // The original person object
+        ...personData    // The new data from the form (just the name for now)
+      };
+      await updateInStore('people', updatedPerson);
+    } else {
+      // --- ADD (CREATE) LOGIC ---
+      if (!selectedHouse) {
+        console.error("Cannot save person: no house is selected.");
+        return; // Safety check
+      }
+      const newPerson = {
+        ...personData,
+        houseId: selectedHouse.id,
+      };
+      await addToStore('people', newPerson);
+    }
+    
+    // --- This runs for BOTH adds and updates ---
+    setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
+    handleClosePersonModal();                   // Close the modal
+  };
+
   const handleStreetSelect = async (streetId) => {
     const street = await getFromStore('streets', streetId);
     setSelectedStreetDetails(street);
@@ -235,6 +271,26 @@ function App() {
     setVisitToEdit(null); // IMPORTANT: Reset the visitToEdit state
   };
 
+    const handleAddPerson = () => {
+      setIsAddPersonModalOpen(true);
+    };
+
+    const handleDeletePerson = async (personId) => {
+      // Show a confirmation dialog to prevent accidental deletion
+      if (window.confirm('Are you sure you want to permanently delete this person?')) {
+        // 1. Delete the person from the database using their ID
+        await deleteFromStore('people', personId);
+        
+        // 2. Increment the key to force the component to re-render
+        setPeopleListKey(prevKey => prevKey + 1);
+      }
+    };
+
+    const handleEditPerson = (personObject) => {
+      setPersonToEdit(personObject); // 1. Store the person we want to edit
+      setIsAddPersonModalOpen(true);    // 2. Open the modal
+    };
+
     const handleTerritorySelect = async (territoryId) => {
       const territory = await getFromStore('territories', territoryId);
       setSelectedTerritoryDetails(territory);
@@ -264,13 +320,16 @@ function App() {
   if (selectedHouse) {
       currentView = (
         <HouseDetail 
-          key={visitListKey}
+          key={peopleListKey}
           house={selectedHouse} 
           onSave={handleUpdateHouse}
           onDelete={handleDeleteHouse}
           onAddVisit={handleOpenVisitModal}
           onDeleteVisit={handleDeleteVisit}
           onEditVisit={handleEditVisit}
+          onAddPerson={handleAddPerson}
+          onDeletePerson={handleDeletePerson}
+          onEditPerson={handleEditPerson}
         />
       );
   } else if (selectedStreet) {
@@ -386,6 +445,14 @@ function App() {
           onSave={handleSaveVisit}
           onClose={handleCloseVisitModal}
           visitToEdit={visitToEdit}
+        />
+      )}
+
+      {isAddPersonModalOpen && (
+        <AddPersonModal
+          onSave={handleSavePerson}
+          onClose={handleClosePersonModal}
+          personToEdit={personToEdit}
         />
       )}
     </>
