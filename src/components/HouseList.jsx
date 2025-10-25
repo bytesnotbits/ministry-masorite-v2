@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getByIndex, getFromStore } from '../database.js';
 import './HouseList.css';
+import Icon from './Icon.jsx';
 
     // Note the new 'onHouseSelect' prop
     function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet }) {
@@ -49,15 +50,15 @@ import './HouseList.css';
                     >
                     <div className="house-address">{house.address}</div>
                     
-                    {/* --- START: Updated Tag Logic --- */}
+                    {/* --- START: Updated Icon Logic --- */}
                     <div className="house-status-tags">
-                        {house.isCurrentlyNH && <span className="status-tag nh-tag">NH</span>}
-                        {house.isNotInterested && <span className="status-tag dnc-tag">NI</span>}
-                        {house.hasMailbox && <span className="status-tag info-tag">MBox</span>}
-                        {house.noTrespassing && <span className="status-tag warning-tag">NT</span>}
-                        {house.hasGate && <span className="status-tag warning-tag">Gate</span>}
+                        {house.isCurrentlyNH && <Icon name="notAtHome" className="house-tag-icon icon-nh" />}
+                        {house.isNotInterested && <Icon name="notInterested" className="house-tag-icon icon-ni" />}
+                        {house.hasMailbox && <Icon name="mailbox" className="house-tag-icon icon-mailbox" />}
+                        {house.noTrespassing && <Icon name="noTrespassing" className="house-tag-icon icon-no-trespassing" />}
+                        {house.hasGate && <Icon name="gate" className="house-tag-icon icon-gate" />}
                     </div>
-                    {/* --- END: Updated Tag Logic --- */}
+                    {/* --- END: Updated Icon Logic --- */}
                 </li>
             ))}
             </ul>

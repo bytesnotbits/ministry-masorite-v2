@@ -43,31 +43,30 @@
   justify-content: flex-end; /* Aligns tags to the right */
 }
 
-.status-tag {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  /* font-weight: bold; */
-  white-space: nowrap; /* Prevents text like "Not Interested" from wrapping */
+/* Base style for all house tag icons */
+.house-tag-icon {
+  width: 1.5rem;   /* 24px */
+  height: 1.5rem;  /* 24px */
+  fill: currentColor; /* This makes the SVG take on the color property */
 }
 
-/* Tag-specific colors */
-.dnc-tag {
-  background-color: #fbeaea;
-  color: #c53030;
+/* Icon-specific colors */
+.icon-nh {
+  color: #b7791f; /* A gold/brown color */
 }
 
-.nh-tag {
-  background-color: #fefcbf;
-  color: #b7791f;
+.icon-ni {
+  color: #c53030; /* A strong red */
 }
 
-.info-tag {
-  background-color: #ebf8ff;
-  color: #3182ce;
+.icon-mailbox {
+  color: #3182ce; /* A nice blue */
 }
 
-.warning-tag {
-  background-color: #fed7d7;
-  color: #9b2c2c;
+.icon-no-trespassing {
+  color: #9b2c2c; /* A darker, more serious red */
+}
+
+.icon-gate {
+  color: #7a4a28; /* A brown color, like a wooden gate */
 }
