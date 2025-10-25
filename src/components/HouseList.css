@@ -1,4 +1,4 @@
-/* src/components/HouseList.css */
+/* src/components/HouseList.css (Version 2) */
 
 .house-list {
   list-style-type: none;
@@ -9,12 +9,19 @@
 
 .house-item {
   background-color: var(--white);
-  padding: 1rem 1.5rem;
+  padding: .1rem .5rem; /* The space between the content (the address and tags) and the edge of the white card. default: 1rem(top/bottom) 1.5rem(left/right) */
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   border-radius: 8px;
-  margin-bottom: 1rem;
+  margin-bottom: .75rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allows tags to wrap to next line if needed */
+  gap: .3rem; /* Space between address and tags */
 }
 
 .house-item:hover {
@@ -23,26 +30,44 @@
 }
 
 .house-address {
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.1rem; /* Font size, Adjust as needed */
+  font-weight: bold; /* Default: bold */
+  flex-grow: 1; /* Allows address to take up space */
 }
 
-
-.house-item {
-  /* Allow positioning the tag relative to the item */
-  position: relative;
-  padding-right: 110px; /* Make space for the tag */
+.house-status-tags {
+  display: flex;
+  gap: 0.1rem; /* Default: 0.5rem. Space between individual tags */
+  /* flex-shrink: 0; /* Prevents tags from shrinking on small screens */
+  flex-wrap: wrap; /* Allows tags to wrap to next line if needed */
+  justify-content: flex-end; /* Aligns tags to the right */
 }
 
-.dnc-tag {
-  position: absolute;
-  top: 50%;
-  right: 1.5rem;
-  transform: translateY(-50%);
-  background-color: #fbeaea;
-  color: #c53030;
+.status-tag {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
-  font-weight: bold;
+  /* font-weight: bold; */
+  white-space: nowrap; /* Prevents text like "Not Interested" from wrapping */
+}
+
+/* Tag-specific colors */
+.dnc-tag {
+  background-color: #fbeaea;
+  color: #c53030;
+}
+
+.nh-tag {
+  background-color: #fefcbf;
+  color: #b7791f;
+}
+
+.info-tag {
+  background-color: #ebf8ff;
+  color: #3182ce;
+}
+
+.warning-tag {
+  background-color: #fed7d7;
+  color: #9b2c2c;
 }

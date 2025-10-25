@@ -119,3 +119,70 @@
 .btn-secondary:hover {
   background-color: #d1d1d6;
 }
+
+/* --- START: Styles for the Details Toggle Buttons --- */
+
+.details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  background-color: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* This is the main button styling for the 'off' state */
+.detail-toggle-button {
+  display: flex;
+  align-items: center;
+  background-color: #e9e9ed; /* Light gray */
+  color: var(--dark-text);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+}
+
+/* This hides the actual checkbox input */
+.detail-toggle-button input {
+  display: none;
+}
+
+/* Styles for the 'on' state */
+.detail-toggle-button:has(input:checked) {
+  background-color: var(--primary-color); /* Blue */
+  color: white;
+  font-weight: bold;
+}
+
+/* Hover effect for the 'off' state */
+.detail-toggle-button:not(:has(input:checked)):hover {
+  background-color: #d1d1d6;
+}
+
+.detail-toggle-button span {
+  flex-grow: 1; /* Pushes the icon to the right */
+}
+
+.detail-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 1rem;
+  fill: currentColor; /* Inherits the 'color' property */
+}
+
+/* --- Icon Specific Colors (Off State) --- */
+.icon-mailbox { color: #3182ce; }
+.icon-no-trespassing { color: #c53030; }
+.icon-gate { color: #7a4a28; }
+
+/* --- Icon Color for the 'On' State --- */
+/* This rule forces the icon's color to be white when the button is active */
+.detail-toggle-button:has(input:checked) .detail-icon {
+  color: white;
+}
+/* --- END: Final Styles for the Details Toggle Buttons --- */

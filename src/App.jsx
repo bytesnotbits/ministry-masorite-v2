@@ -216,16 +216,22 @@ function App() {
     }
   };
 
-  const handleUpdateHouse = async (updatedHouseData) => {
-    // 1. Save the updated object to the database
-    await updateInStore('houses', updatedHouseData);
-  
-    // 2. Clear the selected house to return to the list view
-    setSelectedHouse(null);
-  
-    // 3. Increment the key to force the HouseList to re-fetch and show the new data
-    setHouseListKey(prevKey => prevKey + 1);
-  };
+  const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
+      // 1. Save the updated object to the database
+      await updateInStore('houses', updatedHouseData);
+      
+      // 2. Force the HouseList to update in the background for next time
+      setHouseListKey(prevKey => prevKey + 1);
+
+      if (stayOnPage) {
+          // If we're staying, just refresh the data for the current view
+          const refreshedHouse = await getFromStore('houses', updatedHouseData.id);
+          setSelectedHouse(refreshedHouse);
+      } else {
+          // If we're not staying (default behavior), go back to the list
+          setSelectedHouse(null);
+      }
+    };
 
   const handleDeleteHouse = async (houseId) => {
     // 1. Delete the item from the database using its ID

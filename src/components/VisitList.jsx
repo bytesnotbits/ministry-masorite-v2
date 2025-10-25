@@ -42,7 +42,7 @@ function VisitList({ visits, onDelete, onEdit, people }) {
                 <p className="visit-notes">
                   {visit.notes || <em>No notes for this visit.</em>}
                 </p>
-              </div>              
+              </div>
             </li>
           ))}
         </ul>

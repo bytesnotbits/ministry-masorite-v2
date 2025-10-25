@@ -10,6 +10,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept
   const [notes, setNotes] = useState('');
   const [personId, setPersonId] = useState('');
 
+
   // This effect runs when the modal opens or when the visitToEdit prop changes
   useEffect(() => {
     if (visitToEdit) {
@@ -17,10 +18,9 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept
       // We only take the YYYY-MM-DD part of the string to avoid any time/timezone data.
       setDate(visitToEdit.date.substring(0, 10)); 
       setNotes(visitToEdit.notes || '');
+      setPersonId(visitToEdit.personId || '');
     } else {
       // ADD MODE: No visit to edit, so set defaults for a new visit.
-      
-      // --- The 100% Reliable Time Zone Fix ---
       const today = new Date(); // Creates a date object using the user's local clock.
     
       const year = today.getFullYear();
@@ -98,7 +98,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept
           </>
         )}
         {/* --- END: New Person Dropdown --- */}
-
+        
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
           <button className="btn-primary" onClick={handleSaveClick}>Save Visit</button>

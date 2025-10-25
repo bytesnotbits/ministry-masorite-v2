@@ -74,6 +74,19 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
     return <p>Loading house details...</p>;
   }
 
+  const handleToggleChange = (e) => {
+      const { name, checked } = e.target;
+      
+      // Create a new, updated version of the house data
+      const updatedHouse = {
+        ...house, // Copy all existing properties from the original house
+        [name]: checked // Overwrite the specific property that was changed
+      };
+      
+      // Call the onSave function from App.jsx, passing true to stay on the page
+      onSave(updatedHouse, true);
+    };
+  
   // --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC --- NEW RENDER LOGIC ---
   return (
     <div className="house-detail-container">
@@ -115,6 +128,69 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
                 Not Interested
               </label>
             </div>
+
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="isCurrentlyNH"
+                  checked={formData.isCurrentlyNH || false}
+                  onChange={handleChange}
+                />
+                Not at Home
+              </label>
+            </div>
+
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="hasMailbox"
+                  checked={formData.hasMailbox || false}
+                  onChange={handleChange}
+                />
+                Mailbox
+              </label>
+            </div>
+
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="noTrespassing"
+                  checked={formData.noTrespassing || false}
+                  onChange={handleChange}
+                />
+                No Trespassing
+              </label>
+            </div>
+
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="hasGate"
+                  checked={formData.hasGate || false}
+                  onChange={handleChange}
+                />
+                Gated
+              </label>
+            </div>
+
+            {/* --- START: New Checkbox --- */}
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="isCurrentlyNH"
+                  checked={formData.isCurrentlyNH || false}
+                  onChange={handleChange}
+                />
+                Currently Not at Home
+              </label>
+            </div>
+            {/* --- END: New Checkbox --- */}
+
             <div className="form-actions">
               <button type="button" className="btn-secondary" onClick={handleCancel}>Cancel</button>
               <button type="button" className="btn-danger" onClick={handleDelete}>
@@ -144,9 +220,60 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
             {/* Show a message if notes are empty */}
             <p>{house.notes || <em>No notes recorded.</em>}</p> 
             
-            <h3>Status</h3>
-            <p>{house.isNotInterested ? 'Not Interested' : 'Unvisited'}</p>
-          </div>
+            <h3>Details</h3>
+                <label className="detail-toggle-button">
+                    <input
+                      type="checkbox"
+                      name="isCurrentlyNH"
+                      checked={house.isCurrentlyNH || false}
+                      onChange={handleToggleChange}
+                    />
+                    <span>Not at Home</span>
+                  </label>
+
+                  <label className="detail-toggle-button">
+                    <input
+                      type="checkbox"
+                      name="isNotInterested"
+                      checked={house.isNotInterested || false}
+                      onChange={handleToggleChange}
+                    />
+                    <span>Not Interested</span>
+                  </label>
+
+                  <label className="detail-toggle-button">
+                    <input
+                      type="checkbox"
+                      name="hasMailbox"
+                      checked={house.hasMailbox || false}
+                      onChange={handleToggleChange}
+                    />
+                    <span>Mailbox Available</span>
+                    <svg className="detail-icon icon-mailbox" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"></path></svg>
+                  </label>
+
+                  <label className="detail-toggle-button">
+                    <input
+                      type="checkbox"
+                      name="noTrespassing"
+                      checked={house.noTrespassing || false}
+                      onChange={handleToggleChange}
+                    />
+                    <span>No Trespassing</span>
+                    <svg className="detail-icon icon-no-trespassing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7v-2z"></path></svg>
+                  </label>
+
+                  <label className="detail-toggle-button">
+                    <input
+                      type="checkbox"
+                      name="hasGate"
+                      checked={house.hasGate || false}
+                      onChange={handleToggleChange}
+                    />
+                    <span>Gated Property</span>
+                    <svg className="detail-icon icon-gate" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7v10h-2v-2h-2v2h-2v-2h-2v2h-2v-2H9v2H7v-2H5v2H3V7h2v2h2V7h2v2h2V7h2v2h2V7h2v2h2V7h2M5 5v2H3V5h2m16 0v2h-2V5h2m-4 0v2h-2V5h2m-4 0v2h-2V5h2m-4 0v2H7V5h2Z"></path></svg>
+                  </label>
+                </div>
 
         <VisitList 
             visits={visits} 

@@ -43,13 +43,21 @@ import './HouseList.css';
             <ul className="house-list">
             {houses.map(house => (
                 <li 
-                key={house.id} 
-                className="house-item"
-                onClick={() => onHouseSelect(house)}
-                >
-                <div className="house-address">{house.address}</div>
-                {/* This is the new part: a conditional span */}
-                {house.isNotInterested && <span className="dnc-tag">Not Interested</span>}
+                    key={house.id} 
+                    className="house-item"
+                    onClick={() => onHouseSelect(house)}
+                    >
+                    <div className="house-address">{house.address}</div>
+                    
+                    {/* --- START: Updated Tag Logic --- */}
+                    <div className="house-status-tags">
+                        {house.isCurrentlyNH && <span className="status-tag nh-tag">NH</span>}
+                        {house.isNotInterested && <span className="status-tag dnc-tag">NI</span>}
+                        {house.hasMailbox && <span className="status-tag info-tag">MBox</span>}
+                        {house.noTrespassing && <span className="status-tag warning-tag">NT</span>}
+                        {house.hasGate && <span className="status-tag warning-tag">Gate</span>}
+                    </div>
+                    {/* --- END: Updated Tag Logic --- */}
                 </li>
             ))}
             </ul>
