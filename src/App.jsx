@@ -115,7 +115,13 @@ function App() {
   };
 
   const handleEditStreet = async (streetId) => {
+    
+    console.log("handleEditStreet was called with ID:", streetId);
+    
     const streetObject = await getFromStore('streets', streetId);
+    
+    console.log("Found street object:", streetObject);
+    
     if (streetObject) {
       setSelectedStreet(streetObject);
     } else {
@@ -380,7 +386,16 @@ function App() {
         onStreetSelect={handleStreetSelect} 
         onAddStreet={handleOpenAddStreetModal} 
         onEditTerritory={handleEditTerritory}
-        key={streetListKey}
+        /* We added `key={streetListKey}` a while back to force the street list to re-render when we added or 
+        deleted a street. However, it looks like it might be interfering with the natural re-render cycle now 
+        that we're fetching and setting the `territoryDetails` state. When the key changes, React tears down 
+        the old component and creates a brand new one, which can sometimes cause state updates to get lost or 
+        behave unpredictably.
+
+        By removing it, we let React handle the updates more naturally. The component will still re-render 
+        when you add/delete a street because the `onStreetSelect` and other handlers correctly update the 
+        state in `App.jsx`, which triggers a re-render anyway. */
+        // key={streetListKey}
         />;
   } else {
     currentView = (
@@ -394,9 +409,12 @@ function App() {
 
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
-  if (selectedTerritoryDetails) {
+
+  // We only show breadcrumbs if we have navigated away from the home screen
+  if (selectedTerritoryId) {
+    // 1. The "Home" crumb
     crumbs.push({
-      label: `Territory #${selectedTerritoryDetails.number}`,
+      label: 'Territories',
       onClick: () => {
         setSelectedTerritoryId(null);
         setSelectedStreetId(null);
@@ -405,32 +423,36 @@ function App() {
         setSelectedStreetDetails(null);
       }
     });
-  }
 
-  if (selectedStreetDetails) {
-    crumbs.push({
-      label: selectedStreetDetails.name,
-      onClick: () => {
-        setSelectedStreetId(null);
-        setSelectedHouse(null);
-        setSelectedStreetDetails(null);
-      }
-    });
-  }
+    // 2. The "Territory" crumb (shows when you're on a street or house)
+    if (selectedStreetDetails) {
+      crumbs.push({
+        label: `${selectedTerritoryDetails.number}`,
+        onClick: () => {
+          setSelectedStreetId(null);
+          setSelectedHouse(null);
+          setSelectedStreetDetails(null);
+        }
+      });
+    }
 
-  if (selectedHouse) {
-    crumbs.push({
-      label: selectedHouse.address,
-      onClick: () => {
-        setSelectedHouse(null);
-      }
-    });
+    // 3. The "Street" crumb (shows only when you're on a house)
+    if (selectedHouse) {
+      crumbs.push({
+        label: selectedStreetDetails.name,
+        onClick: () => {
+          setSelectedHouse(null);
+        }
+      });
+    }
   }
   // --- END BREADCRUMB LOGIC ---
 
+  console.log('App state before render:', { selectedStreet, selectedStreetId });
+
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
     <>
-      <h1>Ministry Masorite v2</h1>
+      {!selectedTerritoryId && <h1>Ministry Masorite v2</h1>}
       <Breadcrumbs crumbs={crumbs} />
       {currentView}
       

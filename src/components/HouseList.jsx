@@ -7,6 +7,9 @@ import Icon from './Icon.jsx';
 
     // Note the new 'onHouseSelect' prop
     function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet }) {
+        
+        console.log('onEditStreet prop received in HouseList:', onEditStreet);
+
         const [houses, setHouses] = useState([]);
         const [streetName, setStreetName] = useState('');
 
@@ -15,6 +18,7 @@ import Icon from './Icon.jsx';
     const fetchData = async () => {
         // Fetch the street object itself to get its name
         const streetObject = await getFromStore('streets', streetId);
+        console.log('Street object fetched in HouseList:', streetObject);
         if (streetObject) {
         setStreetName(streetObject.name);
         }
@@ -31,9 +35,12 @@ import Icon from './Icon.jsx';
     return (
         <div>
             <div className="view-header">
+                {streetName && <h2>{streetName}</h2>}
                 <div className="header-actions">
-                    <button className="secondary-action-btn" onClick={() => onEditStreet(streetId)}>
-                    Edit Street
+                    <button 
+                    className="secondary-action-btn" 
+                        onClick={() => onEditStreet(streetId)}>
+                            Edit Street
                     </button>
                     <button className="primary-action-btn" onClick={onAddHouse}>
                     + Add New House
@@ -50,7 +57,7 @@ import Icon from './Icon.jsx';
                     >
                     <div className="house-address">{house.address}</div>
                     
-                    {/* --- START: Updated Icon Logic --- */}
+                    {/* --- START: Icon Logic --- */}
                     <div className="house-status-tags">
                         {house.isCurrentlyNH && <Icon name="notAtHome" className="house-tag-icon icon-nh" />}
                         {house.isNotInterested && <Icon name="notInterested" className="house-tag-icon icon-ni" />}
@@ -58,7 +65,7 @@ import Icon from './Icon.jsx';
                         {house.noTrespassing && <Icon name="noTrespassing" className="house-tag-icon icon-no-trespassing" />}
                         {house.hasGate && <Icon name="gate" className="house-tag-icon icon-gate" />}
                     </div>
-                    {/* --- END: Updated Icon Logic --- */}
+                    {/* --- END: Icon Logic --- */}
                 </li>
             ))}
             </ul>

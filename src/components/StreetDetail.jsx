@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // We can reuse the same styles for consistency!
 
 function StreetDetail({ street, onSave, onDelete }) {
+  console.log('Street prop in StreetDetail:', street);
+
   const [formData, setFormData] = useState(null);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ function StreetDetail({ street, onSave, onDelete }) {
   if (!formData) {
     return <p>Loading street details...</p>;
   }
+
 
   return (
     <div className="house-detail-container">

@@ -81,6 +81,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
   
   return (
     <div className="house-detail-container">
+      <h2>{house.address}</h2>
       {/* --- RENDER LOGIC --- */}
       {/* Check if we are in "editing" mode. */}
       {isEditing ? (

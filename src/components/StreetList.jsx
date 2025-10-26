@@ -1,15 +1,23 @@
 // src/components/StreetList.jsx
 
 import { useState, useEffect } from 'react';
-import { getByIndex } from '../database.js';
+import { getByIndex, getFromStore } from '../database.js';
 import './StreetList.css';
 
 // Accept the new onStreetSelect prop
 function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory }) {
   const [streets, setStreets] = useState([]);
+  const [territoryDetails, setTerritoryDetails] = useState(null);
+
 
   useEffect(() => {
     const fetchStreets = async () => {
+      // Get the territory object and store it in state
+      const territoryObject = await getFromStore('territories', territoryId);
+      console.log('Territory Object:', territoryObject);
+      setTerritoryDetails(territoryObject);
+
+      // Get the streets for that territory
       const data = await getByIndex('streets', 'territoryId', territoryId);
       setStreets(data);
     };
@@ -20,6 +28,7 @@ function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory 
   return (
     <div>
       <div className="view-header">
+        {territoryDetails && <h2>Territory #{territoryDetails.number}</h2>}
         <div className="header-actions">
             <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
             Edit Territory
