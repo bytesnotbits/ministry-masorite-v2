@@ -4,6 +4,7 @@ import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
 import PeopleList from './PeopleList.jsx';
 import Icon from './Icon.jsx';
+import ViewHeader from './ViewHeader.jsx';
 
 
 function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey }) {
@@ -88,17 +89,14 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
         
         /* If isEditing is TRUE, render the EDITING VIEW (the form) */
         <>
-          <div className="view-header">
-            <h3>Editing House</h3>
-            <div className="header-actions">
-              <button className="secondary-action-btn" onClick={handleCancel}>
-                Cancel
-              </button>
-              <button className="primary-action-btn" onClick={handleSave}>
-                Save Changes
-              </button>
-            </div>
-          </div>
+        <ViewHeader title="Editing House">
+          <button className="secondary-action-btn" onClick={handleCancel}>
+            Cancel
+          </button>
+          <button className="primary-action-btn" onClick={handleSave}>
+            Save Changes
+          </button>
+        </ViewHeader>
           
           {/* A simple form for editing */}
           <div className="house-details-form">
@@ -132,19 +130,19 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
 
         /* If isEditing is FALSE, render the VIEWING VIEW (the details) */
         <>
-          <div className="view-header">
-            <div className="header-actions">
-              <button className="primary-action-btn" onClick={onAddPerson}>
-                + Add Person
-              </button>
-              <button className="primary-action-btn" onClick={onAddVisit}>
-                + Add Visit
-              </button>
-            </div>
-            <button className="secondary-action-btn" onClick={() => setIsEditing(true)}>
-                Edit House
+        <ViewHeader>
+          <div className="header-actions">
+            <button className="primary-action-btn" onClick={onAddPerson}>
+              + Add Person
+            </button>
+            <button className="primary-action-btn" onClick={onAddVisit}>
+              + Add Visit
             </button>
           </div>
+          <button className="secondary-action-btn" onClick={() => setIsEditing(true)}>
+              Edit House
+          </button>
+        </ViewHeader>
 
           <div className="house-details-readonly">
             <h3>Notes</h3>

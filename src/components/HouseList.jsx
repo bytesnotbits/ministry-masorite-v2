@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getByIndex, getFromStore } from '../database.js';
 import './HouseList.css';
 import Icon from './Icon.jsx';
+import ViewHeader from './ViewHeader.jsx';
 
     // Note the new 'onHouseSelect' prop
     function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet }) {
@@ -34,19 +35,17 @@ import Icon from './Icon.jsx';
 
     return (
         <div>
-            {streetName && <h2>{streetName}</h2>}
-            <div className="view-header">
-                <div className="header-actions">
-                    <button 
+            <ViewHeader title={streetName || 'Loading...'}>
+                <button 
                     className="secondary-action-btn" 
-                        onClick={() => onEditStreet(streetId)}>
-                            Edit Street
-                    </button>
-                    <button className="primary-action-btn" onClick={onAddHouse}>
+                    onClick={() => onEditStreet(streetId)}
+                >
+                    Edit Street
+                </button>
+                <button className="primary-action-btn" onClick={onAddHouse}>
                     + Add New House
-                    </button>
-                </div>
-            </div>
+                </button>
+                </ViewHeader>
 
             <ul className="house-list">
             {houses.map(house => (

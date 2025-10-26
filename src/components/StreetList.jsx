@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getByIndex, getFromStore } from '../database.js';
 import './StreetList.css';
+import ViewHeader from './ViewHeader.jsx';
 
 // Accept the new onStreetSelect prop
 function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory }) {
@@ -27,18 +28,14 @@ function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory 
 
   return (
     <div>
-      {territoryDetails && <h2>Territory #{territoryDetails.number}</h2>}
-      <div className="view-header">
-        <div className="header-actions">
-            <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
-            Edit Territory
-            </button>
-            <button className="primary-action-btn" onClick={onAddStreet}>
-            + Add New Street
-            </button>
-        </div>
-    </div>
-
+      <ViewHeader title={territoryDetails ? `Territory #${territoryDetails.number}` : 'Loading...'}>
+        <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
+          Edit Territory
+        </button>
+        <button className="primary-action-btn" onClick={onAddStreet}>
+          + Add New Street
+        </button>
+      </ViewHeader>
 
       {/* Add the className and onClick handler */}
       <ul className="street-list">

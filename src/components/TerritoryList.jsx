@@ -1,14 +1,16 @@
 import './TerritoryList.css';
+import ViewHeader from './ViewHeader.jsx';
+
 
 // This is now a "dumb" component. It just receives props and displays them.
 function TerritoryList({ territories, onTerritorySelect, onAddTerritory, }) {
   return (
     <div className="territory-list-container">
-      <div className="view-header">
+      <ViewHeader>
         <button className="primary-action-btn" onClick={onAddTerritory}>
           + Add New Territory
         </button>
-      </div>
+      </ViewHeader>
 
       <ul className="territory-list">
         {territories.map(territory => (
