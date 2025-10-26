@@ -27,8 +27,8 @@ function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory 
 
   return (
     <div>
+      {territoryDetails && <h2>Territory #{territoryDetails.number}</h2>}
       <div className="view-header">
-        {territoryDetails && <h2>Territory #{territoryDetails.number}</h2>}
         <div className="header-actions">
             <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
             Edit Territory
@@ -55,5 +55,4 @@ function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory 
     </div>
   );
 }
-
 export default StreetList;

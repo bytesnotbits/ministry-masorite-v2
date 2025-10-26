@@ -1,5 +1,9 @@
 /* src/components/HouseDetail.css */
 
+.house-detail-container h2 {
+  text-align: center;
+}
+
 .house-detail-container {
   text-align: left;
 }

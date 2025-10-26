@@ -34,8 +34,8 @@ import Icon from './Icon.jsx';
 
     return (
         <div>
+            {streetName && <h2>{streetName}</h2>}
             <div className="view-header">
-                {streetName && <h2>{streetName}</h2>}
                 <div className="header-actions">
                     <button 
                     className="secondary-action-btn" 
