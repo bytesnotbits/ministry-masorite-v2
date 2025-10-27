@@ -15,39 +15,37 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
-  font-size: 1.2rem;
-  font-weight: bold;
+  
+  /* --- This brings back the stacked layout --- */
+  display: flex;
+  flex-direction: column;   /* Stack children vertically */
+  align-items: flex-start;  /* Align them to the left */
+  gap: 0.75rem;             /* Add space between name and the stats row */
 }
-
 .street-item:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
 
-.street-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .street-name {
-  flex-grow: 1; /* Allows the name to take up available space */
-  padding: 1rem 0; /* Add vertical padding to make the click area bigger */
-}
-
-.edit-btn {
-  background-color: #e2e8f0;
-  color: #4a5568;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: 1rem; /* Add space between name and button */
 }
 
-.edit-btn:hover {
-  background-color: #cbd5e0;
+/* This is the new container for ALL stats */
+.street-stats-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Space between the 'Visited' text and the icons */
+}
+
+/* This is the 'pill' for the 'X of Y Visited' text */
+.street-stats {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  background-color: #f0f4f8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  white-space: nowrap; /* Prevents text like "Visited" from wrapping */
 }

@@ -28,3 +28,24 @@ body {
   justify-content: center;
   padding: 2rem;
 }
+
+/* Icon-specific colors */
+.icon-notAtHome {
+  color: #b7791f; /* A gold/brown color */
+}
+
+.icon-notInterested {
+  color: #c53030; /* A strong red */
+}
+
+.icon-mailbox {
+  color: #3182ce; /* A nice blue */
+}
+
+.icon-noTrespassing {
+  color: #9b2c2c; /* A darker, more serious red */
+}
+
+.icon-gate {
+  color: #7a4a28; /* A brown color, like a wooden gate */
+}

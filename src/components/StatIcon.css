@@ -1,0 +1,31 @@
+/* src/components/StatIcon.css */
+
+/* Why this CSS?
+.stat-icon-wrapper uses display: flex and align-items: center to make sure the icon and the number are perfectly aligned 
+on the same line. gap adds a little breathing room between them.
+
+.stat-icon sets the size of the icon. We're making it a little smaller than the ones on the detail page so it fits nicely 
+in the list.
+
+.stat-count styles the number to be bold and a specific font size. */
+
+.stat-icon-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* Space between icon and number */
+  /* The 'color' property has been removed from here! */
+}
+
+.stat-icon {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem;
+  /* 'currentColor' now correctly inherits from the specific icon color class */
+  fill: currentColor; 
+}
+
+.stat-count {
+  font-size: 0.9rem;
+  font-weight: bold;
+  /* We give the number its own specific color */
+  color: #4a5568; 
+}

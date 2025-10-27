@@ -63,19 +63,89 @@ function App() {
   const handleBackToTerritoryList = () => {
     setSelectedTerritory(null);
   };
+  const [isLoading, setIsLoading] = useState(true);
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+
 
 
   // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
   // This useEffect runs once to load the initial territory list
+  // EFFECT 1: This runs ONCE when the app loads to fetch the initial data.
   useEffect(() => {
     fetchTerritories();
   }, []);
 
-  const fetchTerritories = async () => {
-    const data = await getAllFromStore('territories');
-    setTerritories(data);
+  // EFFECT 2: This runs whenever `isLoading` changes, to manage the delayed indicator.
+  useEffect(() => {
+    let timer;
+
+    if (isLoading) {
+      // If we are loading, start a timer that will show the indicator after 500ms.
+      timer = setTimeout(() => {
+        setShowLoadingIndicator(true);
+      }, 500); // 500 milliseconds = half a second
+
+    } else {
+      // If loading is finished, immediately hide the indicator.
+      setShowLoadingIndicator(false);
+    }
+
+    // Cleanup function: This is crucial to prevent bugs.
+    // It runs before the effect runs again, or when the component unmounts.
+    return () => {
+      clearTimeout(timer); // It cancels the timer if loading finishes before 500ms.
+    };
+  }, [isLoading]); // The dependency array: this effect depends on `isLoading`.
+
+/* This function fetches the list of territories and enriches each with its houses 
+Finding all its child streets.
+Then, for all of those streets, we find all their child houses.
+Finally, we bundle all of those houses together into a single houses array and attach it directly to the territory object.
+This gives our TerritoryList component all the data it will need to calculate the territory-wide stats.
+*/  
+const fetchTerritories = async () => {
+    setIsLoading(true); // Explicitly set loading to true when we start.
+
+    try {
+      // 1. Get the base list of all territories
+      const territoryData = await getAllFromStore('territories');
+
+      // 2. Create a promise for each territory to go find all its houses
+      const territoriesWithStatsPromises = territoryData.map(async (territory) => {
+        // a. Find all streets in this territory
+        const streetsForTerritory = await getByIndex('streets', 'territoryId', territory.id);
+        
+        // b. For each of those streets, create another promise to get its houses
+        const housePromises = streetsForTerritory.map(street => 
+          getByIndex('houses', 'streetId', street.id)
+        );
+
+        // c. Wait for all the house lookups for this territory to complete
+        const housesByStreet = await Promise.all(housePromises);
+        
+        // d. Flatten the array of arrays into a single list of all houses
+        const allHousesForTerritory = housesByStreet.flat();
+
+        // e. Return a new object combining the original territory with its complete list of houses
+        return { ...territory, houses: allHousesForTerritory };
+      });
+
+      // 3. Wait for all the territory promises to complete
+      const enrichedTerritories = await Promise.all(territoriesWithStatsPromises);
+
+      // 4. Set the final, enriched data into state
+      setTerritories(enrichedTerritories);
+
+    } catch (error) {
+      console.error("Failed to fetch and process territories:", error);
+      // In a real app, you might want to set an error state here
+    } finally {
+      // 5. THIS IS THE KEY: This will run after everything else is done.
+      setIsLoading(false); 
+    }
   };
 
+  
   // --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---
   const handleEditTerritory = async (territoryId) => {
     const territoryObject = await getFromStore('territories', territoryId);
@@ -448,53 +518,62 @@ function App() {
   }
   // --- END BREADCRUMB LOGIC ---
 
-  console.log('App state before render:', { selectedStreet, selectedStreetId });
 
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
-    <>
-      {!selectedTerritoryId && <h1>Ministry Masorite v2</h1>}
-      <Breadcrumbs crumbs={crumbs} />
-      {currentView}
-      
-      {isAddTerritoryModalOpen && (
-        <AddTerritoryModal
-          onSave={handleSaveTerritory}
-          onClose={handleCloseTerritoryModal}
-        />
-      )}
-      
-      {isAddStreetModalOpen && (
-        <AddStreetModal
-          onSave={handleSaveStreet}
-          onClose={handleCloseStreetModal}
-        />
-      )}
+      <>
+        {/* --- START: NEW LOADING CHECK --- */}
+        {showLoadingIndicator ? (
+            <p>Loading data...</p>
+        ) : (
+          // --- START: This fragment is the single wrapper for the "else" case ---
+          <> 
+            {!selectedTerritoryId && <h1>Ministry Masorite v2</h1>}
+            <Breadcrumbs crumbs={crumbs} />
+            {currentView}
+            
+            {isAddTerritoryModalOpen && (
+              <AddTerritoryModal
+                onSave={handleSaveTerritory}
+                onClose={handleCloseTerritoryModal}
+              />
+            )}
+            
+            {isAddStreetModalOpen && (
+              <AddStreetModal
+                onSave={handleSaveStreet}
+                onClose={handleCloseStreetModal}
+              />
+            )}
 
-      {isAddHouseModalOpen && (
-        <AddHouseModal
-          onSave={handleSaveHouse}
-          onClose={handleCloseHouseModal}
-        />
-      )}
-      
-      {isAddVisitModalOpen && (
-        <AddVisitModal
-          onSave={handleSaveVisit}
-          onClose={handleCloseVisitModal}
-          visitToEdit={visitToEdit}
-          people={peopleForSelectedHouse}
-        />
-      )}
+            {isAddHouseModalOpen && (
+              <AddHouseModal
+                onSave={handleSaveHouse}
+                onClose={handleCloseHouseModal}
+              />
+            )}
+            
+            {isAddVisitModalOpen && (
+              <AddVisitModal
+                onSave={handleSaveVisit}
+                onClose={handleCloseVisitModal}
+                visitToEdit={visitToEdit}
+                people={peopleForSelectedHouse}
+              />
+            )}
 
-      {isAddPersonModalOpen && (
-        <AddPersonModal
-          onSave={handleSavePerson}
-          onClose={handleClosePersonModal}
-          personToEdit={personToEdit}
-        />
-      )}
-    </>
-  );
+            {isAddPersonModalOpen && (
+              <AddPersonModal
+                onSave={handleSavePerson}
+                onClose={handleClosePersonModal}
+                personToEdit={personToEdit}
+              />
+            )}
+          </>
+          // --- END: This fragment is the single wrapper ---
+        )}
+        {/* --- END: NEW LOADING CHECK --- */}
+      </>
+    );
 }
 
 export default App;

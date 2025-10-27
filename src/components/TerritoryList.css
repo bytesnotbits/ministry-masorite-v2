@@ -15,12 +15,25 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
+  
+  /* --- Key Changes for Layout --- */
+  display: flex;
+  flex-direction: column; /* Stack details and stats vertically */
+  align-items: flex-start; /* Align everything to the left */
+  gap: 0.75rem;           /* Add space between the two rows */
 }
 
 .territory-item:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
+
+/*
+.territory-details {
+  /* This container doesn't need special styles right now, but it's useful for structure */
+/*
+}
+*/
 
 .territory-number {
   font-size: 1.2rem;
@@ -34,13 +47,19 @@
   margin-top: 0.25rem;
 }
 
-.territory-item {
+/* --- NEW: Styles for the Stats Row --- */
+.territory-stats-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem; /* Space between the pill and the icons */
 }
 
-.territory-details {
-  /* This makes the details section grow to fill the available space */
-  flex-grow: 1;
+.territory-stat-pill {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+  background-color: #f0f4f8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  white-space: nowrap;
 }
