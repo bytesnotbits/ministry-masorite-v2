@@ -80,14 +80,26 @@ export async function handleJsonExport(scope = 'full', id = null) {
         const bundle = await bundleDataForExport(scope, id);
         const jsonString = JSON.stringify(bundle, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
+
+        // --- START: DATE/TIME LOGIC ---
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Add 1 because it's 0-indexed
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+
+        const dateTimeString = `${year}-${month}-${day}_${hours}-${minutes}`;
+        // --- END: DATE/TIME LOGIC ---
         
-        let filename = `ministry_scribe_full_backup.json`;
+        let filename = `mm_full_backup_${dateTimeString}.json`;
+
         if (scope === 'territory') {
             const t = bundle.data.territories[0];
-            filename = `ms_territory_${t.number}.json`;
+            filename = `mm_territory_${t.number}_${dateTimeString}.json`;
         } else if (scope === 'street') {
             const s = bundle.data.streets[0];
-            filename = `ms_street_${s.name.replace(/\s/g, '_')}.json`;
+            filename = `mm_street_${s.name.replace(/\s/g, '_')}_${dateTimeString}.json`;
         }
 
         const file = new File([blob], filename, { type: 'application/json' });

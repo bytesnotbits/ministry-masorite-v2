@@ -14,6 +14,7 @@ import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
 import Breadcrumbs from './components/Breadcrumbs.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
+import { executeMerge, handleJsonExport, handleFileImport } from './database-api.js';
 
 
 function App() {
@@ -187,6 +188,7 @@ const fetchTerritories = async () => {
   };
 
   const handleEditStreet = async (streetId) => {
+    const streetObject = await getFromStore('streets', streetId);
     
    if (streetObject) {
       setSelectedStreet(streetObject);
@@ -324,6 +326,29 @@ const fetchTerritories = async () => {
 
   const handleOpenSettings = () => setIsSettingsVisible(true);
     const handleCloseSettings = () => setIsSettingsVisible(false);
+  
+    const handleExportData = () => {
+    handleJsonExport('full'); // We pass 'full' to tell it we want a complete backup
+  };
+
+  const handleImportData = (event) => {
+    // This is the callback function. It will run AFTER the import is successful.
+    const onImportComplete = () => {
+      console.log("Import complete! Reloading app state...");
+      // Reset all navigation state to go back to the home screen
+      setSelectedTerritoryId(null);
+      setSelectedStreetId(null);
+      setSelectedHouse(null);
+      setSelectedTerritory(null);
+      setSelectedStreet(null);
+      setIsSettingsVisible(false); // Close the settings page
+      fetchTerritories(); // Re-fetch all data from the database
+    };
+
+    // Call the main import function from the API, passing it the file event and our callback
+    handleFileImport(event, onImportComplete);
+  };
+
 
   const handleOpenAddTerritoryModal = () => setIsAddTerritoryModalOpen(true);
   const handleCloseTerritoryModal = () => setIsAddTerritoryModalOpen(false);
@@ -408,7 +433,11 @@ const fetchTerritories = async () => {
   let currentView;
   if (isSettingsVisible) { // <-- START OF NEW LOGIC
     currentView = (
-      <SettingsPage onBack={handleCloseSettings} />
+      <SettingsPage 
+      onBack={handleCloseSettings} 
+      onExport={handleExportData} 
+      onImport={handleImportData}
+    />
     );
   } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
     if (selectedHouse) {
