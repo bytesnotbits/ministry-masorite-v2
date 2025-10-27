@@ -1,15 +1,11 @@
-// src/components/StreetDetail.jsx
-
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // We can reuse the same styles for consistency!
 
-function StreetDetail({ street, onSave, onDelete }) {
-  console.log('Street prop in StreetDetail:', street);
-
+// CHANGE 1: Accept the 'onCancel' prop
+function StreetDetail({ street, onSave, onDelete, onCancel }) {
   const [formData, setFormData] = useState(null);
 
   useEffect(() => {
-    // When the 'street' prop changes, update our local form state
     setFormData(street);
   }, [street]);
 
@@ -26,25 +22,28 @@ function StreetDetail({ street, onSave, onDelete }) {
   };
 
   const handleDelete = () => {
-    // Show a confirmation dialog before deleting
     if (window.confirm('Are you sure you want to permanently delete this street and all the houses within it? This cannot be undone.')) {
       onDelete(street.id);
     }
   };
 
-  // Don't render the form until the data is loaded
   if (!formData) {
     return <p>Loading street details...</p>;
   }
-
 
   return (
     <div className="house-detail-container">
       <div className="view-header">
         <h2>Edit Street</h2>
-        <button className="primary-action-btn" onClick={handleSave}>
-          Save Changes
-        </button>
+        {/* CHANGE 2: Add the header-actions wrapper and the Cancel button */}
+        <div className="header-actions">
+          <button className="secondary-action-btn" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="primary-action-btn" onClick={handleSave}>
+            Save Changes
+          </button>
+        </div>
       </div>
 
       <form className="house-form">
@@ -57,9 +56,14 @@ function StreetDetail({ street, onSave, onDelete }) {
           onChange={handleChange}
         />
 
-        <button type="button" className="btn-danger" onClick={handleDelete}>
-          Delete Street
-        </button>
+        {/* CHANGE 3: Move the delete button into a styled Danger Zone */}
+        <div className="danger-zone">
+            <h3>Danger Zone</h3>
+            <p>This action is permanent and cannot be undone.</p>
+            <button type="button" className="danger-action-btn" onClick={handleDelete}>
+                Delete Street
+            </button>
+        </div>
       </form>
     </div>
   );

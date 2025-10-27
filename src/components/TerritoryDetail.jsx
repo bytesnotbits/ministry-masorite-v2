@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // Reusing styles for a consistent look!
 
-function TerritoryDetail({ territory, onSave, onDelete }) {
+function TerritoryDetail({ territory, onSave, onDelete, onCancel }) {
   const [formData, setFormData] = useState(null);
 
   useEffect(() => {
@@ -39,9 +39,15 @@ function TerritoryDetail({ territory, onSave, onDelete }) {
     <div className="house-detail-container">
       <div className="view-header">
         <h2>Edit Territory</h2>
+        <div className="header-actions">
+          <button className="secondary-action-btn" onClick={onCancel}>
+            Cancel
+          </button>
+
         <button className="primary-action-btn" onClick={handleSave}>
           Save Changes
         </button>
+        </div>
       </div>
 
       <form className="house-form">
@@ -63,9 +69,19 @@ function TerritoryDetail({ territory, onSave, onDelete }) {
           onChange={handleChange}
         />
 
-        <button type="button" className="btn-danger" onClick={handleDelete}>
+        {/* This button has been moved to the header, so it can be removed from here */}
+        {/* <button type="button" className="btn-danger" onClick={handleDelete}>
           Delete Territory
-        </button>
+        </button> */}
+
+        {/* It is good practice to put destructive actions in a separate, clearly marked section */}
+        <div className="danger-zone">
+            <h3>Danger Zone</h3>
+            <p>This action is permanent and cannot be undone.</p>
+            <button type="button" className="danger-action-btn" onClick={handleDelete}>
+                Delete Territory
+            </button>
+        </div>
       </form>
     </div>
   );

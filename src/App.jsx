@@ -67,8 +67,8 @@ function App() {
     setSelectedTerritory(null);
   };
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
 
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
 
 
   // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
@@ -462,6 +462,7 @@ const fetchTerritories = async () => {
         street={selectedStreet}
         onSave={handleUpdateStreet}
         onDelete={handleDeleteStreet}
+        onCancel={handleBackToStreetList}
       />
     );
 
@@ -471,6 +472,7 @@ const fetchTerritories = async () => {
           territory={selectedTerritory}
           onSave={handleUpdateTerritory}
           onDelete={handleDeleteTerritory}
+          onCancel={handleBackToTerritoryList}
         />
       );
 
@@ -511,22 +513,35 @@ const fetchTerritories = async () => {
     crumbs.push({
       label: 'Territories',
       onClick: () => {
+        // ADD a check: ONLY show the alert if they were in an edit mode.
+        if (selectedTerritory || selectedStreet) {
+          alert("Canceling edit. No changes saved.");
+        }
         setSelectedTerritoryId(null);
         setSelectedStreetId(null);
         setSelectedHouse(null);
         setSelectedTerritoryDetails(null);
         setSelectedStreetDetails(null);
+        // ADDED: Ensure we exit any edit mode when going home
+        setSelectedTerritory(null);
+        setSelectedStreet(null);
       }
     });
 
     // 2. The "Territory" crumb (shows when you're on a street or house)
-    if (selectedStreetDetails) {
+    if (selectedStreetDetails || selectedStreet) { // Condition updated to include edit mode
       crumbs.push({
         label: `${selectedTerritoryDetails.number}`,
         onClick: () => {
+          // ADD a check: ONLY show the alert if they were editing a street.
+          if (selectedStreet) {
+            alert("Canceling edit. No changes saved.");
+          }
           setSelectedStreetId(null);
           setSelectedHouse(null);
           setSelectedStreetDetails(null);
+          // ADDED: Ensure we exit street edit mode when going back to territory
+          setSelectedStreet(null); 
         }
       });
     }

@@ -190,3 +190,39 @@
   color: white;
 }
 /* --- END: Final Styles for the Details Toggle Buttons --- */
+
+/* --- START: Styles for Danger Zone --- */
+.danger-zone {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #fed7d7; /* A light red border */
+  text-align: left;
+}
+
+.danger-zone h3 {
+  color: #c53030; /* A strong red */
+  margin-top: 0;
+}
+
+.danger-zone p {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.danger-action-btn {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.danger-action-btn:hover {
+  background-color: #c53030; /* A darker red */
+}
+/* --- END: Styles for Danger Zone --- */
