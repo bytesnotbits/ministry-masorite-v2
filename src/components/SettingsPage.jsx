@@ -3,7 +3,7 @@ import './SettingsPage.css';
 import ViewHeader from './ViewHeader.jsx';
 
 // We now accept onImport as a prop
-function SettingsPage({ onBack, onExport, onImport }) {
+function SettingsPage({ onBack, onExport, onImport, onClearAllData }) {
   // 1. Create the ref for our hidden file input
   const fileInputRef = useRef(null);
 
@@ -53,6 +53,20 @@ function SettingsPage({ onBack, onExport, onImport }) {
           accept=".json" // Only allow .json files to be selected
         />
       </div>
+
+      {/* --- START: DANGER ZONE SECTION --- */}
+      {/* This is the correct placement, right after the Import section's closing div */}
+      <div className="danger-zone">
+        <h3>Danger Zone</h3>
+        <p>
+          This will permanently delete all territories, streets, houses, and visits from your device. This cannot be undone.
+        </p>
+        <button className="danger-action-btn" onClick={onClearAllData}>
+          Clear All Data
+        </button>
+      </div>
+      {/* --- END: DANGER ZONE SECTION --- */}
+
     </div>
   );
 }

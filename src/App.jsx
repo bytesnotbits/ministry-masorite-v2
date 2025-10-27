@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'; // We now need useEffect here
 import './App.css';
-import { getAllFromStore, addToStore, updateInStore, deleteFromStore, getByIndex, getFromStore } from './database.js';
+import { getAllFromStore, addToStore, updateInStore, deleteFromStore, getByIndex, getFromStore, clearAllStores } from './database.js';
 import StreetDetail from './components/StreetDetail.jsx';
 import TerritoryList from './components/TerritoryList.jsx';
 import StreetList from './components/StreetList.jsx';
@@ -349,6 +349,30 @@ const fetchTerritories = async () => {
     handleFileImport(event, onImportComplete);
   };
 
+  const handleClearAllData = async () => {
+    if (window.confirm("ARE YOU ABSOLUTELY SURE?\n\nThis will permanently delete ALL data. This action cannot be undone.")) {
+      try {
+        // 1. Call the function to wipe the IndexedDB database
+        await clearAllStores();
+
+        // 2. Reset all state variables to their initial, empty values
+        setTerritories([]);
+        setSelectedTerritoryId(null);
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedTerritory(null);
+        setSelectedStreet(null);
+        setIsSettingsVisible(false); // Go back to the main screen
+
+        // 3. Notify the user
+        alert("All data has been successfully cleared. The app will now be in its initial state.");
+
+      } catch (error) {
+        console.error("Failed to clear all data:", error);
+        alert("An error occurred while trying to clear the data. Please check the console.");
+      }
+    }
+  };
 
   const handleOpenAddTerritoryModal = () => setIsAddTerritoryModalOpen(true);
   const handleCloseTerritoryModal = () => setIsAddTerritoryModalOpen(false);
@@ -437,6 +461,7 @@ const fetchTerritories = async () => {
       onBack={handleCloseSettings} 
       onExport={handleExportData} 
       onImport={handleImportData}
+      onClearAllData={handleClearAllData}
     />
     );
   } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
