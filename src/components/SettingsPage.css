@@ -1,0 +1,25 @@
+/* src/components/SettingsPage.css */
+
+.settings-page-container {
+  text-align: left;
+}
+
+.settings-section {
+  background-color: var(--white);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.settings-section h3 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.settings-section p {
+  color: #555;
+  margin-bottom: 1.5rem;
+}

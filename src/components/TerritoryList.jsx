@@ -5,10 +5,13 @@ import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, }) {
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings }) {
   return (
     <div className="territory-list-container">
       <ViewHeader>
+        <button className="secondary-action-btn" onClick={onOpenSettings}>
+          Settings
+        </button>
         <button className="primary-action-btn" onClick={onAddTerritory}>
           + Add New Territory
         </button>

@@ -13,11 +13,13 @@ import AddPersonModal from './components/AddPersonModal.jsx';
 import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
 import Breadcrumbs from './components/Breadcrumbs.jsx';
+import SettingsPage from './components/SettingsPage.jsx';
 
 
 function App() {
   // --- STATE ---
   const [territories, setTerritories] = useState([]); // Master list of territories now lives here
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState(null);
   const [selectedStreetId, setSelectedStreetId] = useState(null); // We still need this for now
   const [isAddTerritoryModalOpen, setIsAddTerritoryModalOpen] = useState(false);
@@ -186,13 +188,7 @@ const fetchTerritories = async () => {
 
   const handleEditStreet = async (streetId) => {
     
-    console.log("handleEditStreet was called with ID:", streetId);
-    
-    const streetObject = await getFromStore('streets', streetId);
-    
-    console.log("Found street object:", streetObject);
-    
-    if (streetObject) {
+   if (streetObject) {
       setSelectedStreet(streetObject);
     } else {
       console.error("Could not find street to edit with ID:", streetId);
@@ -326,6 +322,9 @@ const fetchTerritories = async () => {
     else if (selectedTerritoryId) setSelectedTerritoryId(null);
   };
 
+  const handleOpenSettings = () => setIsSettingsVisible(true);
+    const handleCloseSettings = () => setIsSettingsVisible(false);
+
   const handleOpenAddTerritoryModal = () => setIsAddTerritoryModalOpen(true);
   const handleCloseTerritoryModal = () => setIsAddTerritoryModalOpen(false);
 
@@ -407,76 +406,73 @@ const fetchTerritories = async () => {
 
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
-  if (selectedHouse) {
+  if (isSettingsVisible) { // <-- START OF NEW LOGIC
+    currentView = (
+      <SettingsPage onBack={handleCloseSettings} />
+    );
+  } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
+    if (selectedHouse) {
+        currentView = (
+          <HouseDetail 
+            key={peopleListKey}
+            house={selectedHouse} 
+            onSave={handleUpdateHouse}
+            onDelete={handleDeleteHouse}
+            onAddVisit={handleOpenVisitModal}
+            onDeleteVisit={handleDeleteVisit}
+            onEditVisit={handleEditVisit}
+            onAddPerson={handleAddPerson}
+            onDeletePerson={handleDeletePerson}
+            onEditPerson={handleEditPerson}
+            visitListKey={visitListKey}
+          />
+        );
+    } else if (selectedStreet) {
+    currentView = (
+      <StreetDetail
+        street={selectedStreet}
+        onSave={handleUpdateStreet}
+        onDelete={handleDeleteStreet}
+      />
+    );
+
+    } else if (selectedTerritory) {
       currentView = (
-        <HouseDetail 
-          key={peopleListKey}
-          house={selectedHouse} 
-          onSave={handleUpdateHouse}
-          onDelete={handleDeleteHouse}
-          onAddVisit={handleOpenVisitModal}
-          onDeleteVisit={handleDeleteVisit}
-          onEditVisit={handleEditVisit}
-          onAddPerson={handleAddPerson}
-          onDeletePerson={handleDeletePerson}
-          onEditPerson={handleEditPerson}
-          visitListKey={visitListKey}
+        <TerritoryDetail
+          territory={selectedTerritory}
+          onSave={handleUpdateTerritory}
+          onDelete={handleDeleteTerritory}
         />
       );
-  } else if (selectedStreet) {
-  currentView = (
-    <StreetDetail
-      street={selectedStreet}
-      onSave={handleUpdateStreet}
-      onDelete={handleDeleteStreet}
-    />
-  );
 
-  } else if (selectedTerritory) {
-    currentView = (
-      <TerritoryDetail
-        territory={selectedTerritory}
-        onSave={handleUpdateTerritory}
-        onDelete={handleDeleteTerritory}
-      />
-    );
-
-  } else if (selectedStreetId) {
-      currentView = <HouseList 
-        streetId={selectedStreetId} 
-        onAddHouse={handleOpenAddHouseModal}
-        onHouseSelect={handleHouseSelect}
-        onEditStreet={handleEditStreet}
-        key={houseListKey} 
-      />;
-
-  } else if (selectedTerritoryId) {
-      currentView = <StreetList 
-        territoryId={selectedTerritoryId} 
-        onStreetSelect={handleStreetSelect} 
-        onAddStreet={handleOpenAddStreetModal} 
-        onEditTerritory={handleEditTerritory}
-        /* We added `key={streetListKey}` a while back to force the street list to re-render when we added or 
-        deleted a street. However, it looks like it might be interfering with the natural re-render cycle now 
-        that we're fetching and setting the `territoryDetails` state. When the key changes, React tears down 
-        the old component and creates a brand new one, which can sometimes cause state updates to get lost or 
-        behave unpredictably.
-
-        By removing it, we let React handle the updates more naturally. The component will still re-render 
-        when you add/delete a street because the `onStreetSelect` and other handlers correctly update the 
-        state in `App.jsx`, which triggers a re-render anyway. */
-        // key={streetListKey}
+    } else if (selectedStreetId) {
+        currentView = <HouseList 
+          streetId={selectedStreetId} 
+          onAddHouse={handleOpenAddHouseModal}
+          onHouseSelect={handleHouseSelect}
+          onEditStreet={handleEditStreet}
+          key={houseListKey} 
         />;
-  } else {
-    currentView = (
-      <TerritoryList
-        territories={territories} // Pass the list down as a prop
-        onTerritorySelect={handleTerritorySelect}
-        onAddTerritory={handleOpenAddTerritoryModal}
-      />
-    );
-  }
 
+    } else if (selectedTerritoryId) {
+        currentView = <StreetList 
+          territoryId={selectedTerritoryId} 
+          onStreetSelect={handleStreetSelect} 
+          onAddStreet={handleOpenAddStreetModal} 
+          onEditTerritory={handleEditTerritory}
+          />;
+    } else {
+      currentView = (
+        <TerritoryList
+          territories={territories} 
+          onTerritorySelect={handleTerritorySelect}
+          onAddTerritory={handleOpenAddTerritoryModal}
+          onOpenSettings={handleOpenSettings}
+        />
+      );
+    }
+  }
+  
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
 
