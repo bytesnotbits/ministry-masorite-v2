@@ -5,10 +5,13 @@ import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings }) {
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies }) {
   return (
     <div className="territory-list-container">
       <ViewHeader>
+        <button className="secondary-action-btn" onClick={onOpenBibleStudies}>
+          Bible Studies
+        </button>
         <button className="secondary-action-btn" onClick={onOpenSettings}>
           Settings
         </button>

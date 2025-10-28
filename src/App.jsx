@@ -15,6 +15,8 @@ import TerritoryDetail from './components/TerritoryDetail.jsx';
 import Breadcrumbs from './components/Breadcrumbs.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import { executeMerge, handleJsonExport, handleFileImport } from './database-api.js';
+import BibleStudiesPage from './components/BibleStudiesPage.jsx';
+
 
 
 function App() {
@@ -67,8 +69,8 @@ function App() {
     setSelectedTerritory(null);
   };
   const [isLoading, setIsLoading] = useState(true);
-
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
+  const [isBibleStudiesVisible, setIsBibleStudiesVisible] = useState(false);
 
 
   // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
@@ -326,6 +328,9 @@ const fetchTerritories = async () => {
 
   const handleOpenSettings = () => setIsSettingsVisible(true);
     const handleCloseSettings = () => setIsSettingsVisible(false);
+
+  const handleOpenBibleStudies = () => setIsBibleStudiesVisible(true);
+    const handleCloseBibleStudies = () => setIsBibleStudiesVisible(false);
   
     const handleExportData = () => {
     handleJsonExport('full'); // We pass 'full' to tell it we want a complete backup
@@ -455,7 +460,13 @@ const fetchTerritories = async () => {
 
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
-  if (isSettingsVisible) { // <-- START OF NEW LOGIC
+  if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
+    currentView = (
+      <BibleStudiesPage 
+        onBack={handleCloseBibleStudies} 
+      />
+    );
+  } else if (isSettingsVisible) {
     currentView = (
       <SettingsPage 
       onBack={handleCloseSettings} 
@@ -524,6 +535,7 @@ const fetchTerritories = async () => {
           onTerritorySelect={handleTerritorySelect}
           onAddTerritory={handleOpenAddTerritoryModal}
           onOpenSettings={handleOpenSettings}
+          onOpenBibleStudies={handleOpenBibleStudies}
         />
       );
     }
