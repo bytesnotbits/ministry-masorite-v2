@@ -538,6 +538,8 @@ const fetchTerritories = async () => {
       <StudyDetail 
         study={selectedStudy}
         onBack={() => setSelectedStudy(null)} 
+        onDeleteVisit={handleDeleteVisit}
+        onEditVisit={handleEditVisit}
       />
     );
   } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
