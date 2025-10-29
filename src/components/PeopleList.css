@@ -58,6 +58,38 @@
   color: white;
 }
 
+.start-study-btn {
+  background-color: #2b6cb0; /* A slightly darker blue */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.start-study-btn:hover {
+  background-color: #2c5282; /* Even darker blue on hover */
+}
+
+.view-study-btn {
+  background-color: #2f855a; /* A nice green */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-study-btn:hover {
+  background-color: #276749; /* Darker green on hover */
+}
+
 .delete-person-btn {
   background-color: #f1f1f4;
   color: #999;

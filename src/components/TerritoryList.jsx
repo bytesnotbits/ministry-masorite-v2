@@ -10,7 +10,7 @@ function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenS
     <div className="territory-list-container">
       <ViewHeader>
         <button className="secondary-action-btn" onClick={onOpenBibleStudies}>
-          Bible Studies
+          RVs / Bible Studies
         </button>
         <button className="secondary-action-btn" onClick={onOpenSettings}>
           Settings

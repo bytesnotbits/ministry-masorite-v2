@@ -16,6 +16,7 @@ import Breadcrumbs from './components/Breadcrumbs.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import { executeMerge, handleJsonExport, handleFileImport } from './database-api.js';
 import BibleStudiesPage from './components/BibleStudiesPage.jsx';
+import AddStudyModal from './components/AddStudyModal.jsx';
 
 
 
@@ -71,6 +72,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [isBibleStudiesVisible, setIsBibleStudiesVisible] = useState(false);
+  const [isAddStudyModalOpen, setIsAddStudyModalOpen] = useState(false);
+  const [personForStudy, setPersonForStudy] = useState(null);
+  const handleCloseStudyModal = () => {
+    setIsAddStudyModalOpen(false);
+    setPersonForStudy(null);
+  };
+  const [studies, setStudies] = useState([]);
+
 
 
   // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
@@ -78,6 +87,7 @@ function App() {
   // EFFECT 1: This runs ONCE when the app loads to fetch the initial data.
   useEffect(() => {
     fetchTerritories();
+    fetchStudies();
   }, []);
 
   // EFFECT 2: This runs whenever `isLoading` changes, to manage the delayed indicator.
@@ -148,6 +158,11 @@ const fetchTerritories = async () => {
       // 5. THIS IS THE KEY: This will run after everything else is done.
       setIsLoading(false); 
     }
+  };
+
+  const fetchStudies = async () => {
+    const studiesData = await getAllFromStore('studies');
+    setStudies(studiesData);
   };
 
   
@@ -284,10 +299,24 @@ const fetchTerritories = async () => {
   const handleHouseSelect = async (houseObject) => {
     setSelectedHouse(houseObject);
     if (houseObject) {
+      // 1. Get the people for the house (same as before)
       const peopleData = await getByIndex('people', 'houseId', houseObject.id);
-      setPeopleForSelectedHouse(peopleData);
+
+      // 2. NEW: Check each person to see if they have a study
+      const peopleWithStudyStatus = peopleData.map(person => {
+        // The .some() method checks if any item in the 'studies' array
+        // meets the condition. It's very efficient.
+        const hasStudy = studies.some(study => study.personId === person.id);
+        
+        // Return a new person object with the 'hasStudy' property
+        return { ...person, hasStudy: hasStudy };
+      });
+
+      // 3. Set the enhanced list of people into state
+      setPeopleForSelectedHouse(peopleWithStudyStatus);
+
     } else {
-      // If we are deselecting a house, clear the list
+      // If we are deselecting a house, clear the list (same as before)
       setPeopleForSelectedHouse([]);
     }
   };
@@ -325,6 +354,12 @@ const fetchTerritories = async () => {
     if (selectedStreetId) setSelectedStreetId(null);
     else if (selectedTerritoryId) setSelectedTerritoryId(null);
   };
+
+  const handleStartStudy = (person) => {
+    setPersonForStudy(person); // Store the person we're starting a study with
+    setIsAddStudyModalOpen(true); // Open the modal
+  };
+
 
   const handleOpenSettings = () => setIsSettingsVisible(true);
     const handleCloseSettings = () => setIsSettingsVisible(false);
@@ -414,6 +449,37 @@ const fetchTerritories = async () => {
     setVisitToEdit(null); // IMPORTANT: Reset the visitToEdit state
   };
 
+  const handleSaveStudy = async (studyData) => {
+    // 1. Save the new study to the database
+    await addToStore('studies', studyData);
+    
+    // 2. Ensure the person is marked as an RV
+    const person = await getFromStore('people', studyData.personId);
+    if (person && !person.isRV) {
+      person.isRV = true; // Directly modify the object we already have
+      await updateInStore('people', person);
+    }
+
+    // 3. Re-fetch the studies to update the app's state
+    await fetchStudies();
+
+    // 4. THE FIX: Manually refresh the people list for the current house
+    if (selectedHouse) {
+      // We re-run the logic from handleHouseSelect right here
+      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
+      const refreshedStudies = await getAllFromStore('studies'); // Get the absolute latest
+      const peopleWithStudyStatus = peopleData.map(p => {
+        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
+        return { ...p, hasStudy: hasStudy };
+      });
+      setPeopleForSelectedHouse(peopleWithStudyStatus);
+    }
+    
+    // 5. Close the modal and notify the user
+    handleCloseStudyModal();
+    alert(`Study started successfully with ${person.name}!`);
+  };
+
     const handleAddPerson = () => {
       setIsAddPersonModalOpen(true);
     };
@@ -479,7 +545,7 @@ const fetchTerritories = async () => {
     if (selectedHouse) {
         currentView = (
           <HouseDetail 
-            key={peopleListKey}
+            people={peopleForSelectedHouse}
             house={selectedHouse} 
             onSave={handleUpdateHouse}
             onDelete={handleDeleteHouse}
@@ -490,6 +556,7 @@ const fetchTerritories = async () => {
             onDeletePerson={handleDeletePerson}
             onEditPerson={handleEditPerson}
             visitListKey={visitListKey}
+            onStartStudy={handleStartStudy}
           />
         );
     } else if (selectedStreet) {
@@ -643,6 +710,14 @@ const fetchTerritories = async () => {
                 onSave={handleSavePerson}
                 onClose={handleClosePersonModal}
                 personToEdit={personToEdit}
+              />
+            )}
+
+            {isAddStudyModalOpen && (
+              <AddStudyModal
+                onSave={handleSaveStudy} // We will create this function next
+                onClose={handleCloseStudyModal}
+                person={personForStudy}
               />
             )}
           </>

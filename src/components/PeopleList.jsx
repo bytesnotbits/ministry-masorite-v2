@@ -1,6 +1,6 @@
 import './PeopleList.css';
 
-function PeopleList({ people, onEdit, onDelete }) {
+function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy }) {
   return (
     <div className="people-list-container">
       <h3>People</h3>
@@ -21,7 +21,21 @@ function PeopleList({ people, onEdit, onDelete }) {
                 )}
                 </div>
               <div className="person-item-actions">
-                <button 
+                {person.hasStudy ? (
+                  <button 
+                    className="view-study-btn" // A new class for styling
+                    onClick={() => onViewStudy(person)} // A new handler we'll wire up later
+                  >
+                    View Study
+                  </button>
+                ) : (
+                  <button 
+                    className="start-study-btn"
+                    onClick={() => onStartStudy(person)}
+                  >
+                    Start Study
+                  </button>
+                )}                <button 
                   className="edit-person-btn"
                   onClick={() => onEdit(person)}
                 >

@@ -7,11 +7,10 @@ import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 
 
-function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey }) {
+function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
-  const [people, setPeople] = useState([]);
 
   useEffect(() => {
     setFormData(house);
@@ -31,17 +30,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
     fetchVisits();
   }, [house?.id, visitListKey]);
 
-  useEffect(() => {
-    const fetchPeople = async () => {
-      if (house?.id) {
-        const peopleData = await getByIndex('people', 'houseId', house.id);
-        peopleData.sort((a, b) => a.name.localeCompare(b.name));
-        setPeople(peopleData);
-      }
-    };
 
-    fetchPeople();
-  }, [house?.id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -218,6 +207,7 @@ function HouseDetail({ house, onSave, onDelete, onAddVisit, onDeleteVisit, onEdi
               people={people}
               onDelete={onDeletePerson}
               onEdit={onEditPerson}
+              onStartStudy={onStartStudy}
           />
         </>
       )}

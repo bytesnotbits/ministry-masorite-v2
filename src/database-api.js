@@ -27,13 +27,8 @@ export async function bundleDataForExport(scope = 'full', id = null) {
         bundle.data.territories = await getAllFromStore('territories');
         bundle.data.streets = await getAllFromStore('streets');
         bundle.data.houses = await getAllFromStore('houses');
-        bundle.data.people = await getAllFromStore('people'); // This line is the critical fix
+        bundle.data.people = await getAllFromStore('people');
         bundle.data.visits = await getAllFromStore('visits');
-        bundle.data.studies = await getAllFromStore('studies');
-        bundle.data.studyHistory = await getAllFromStore('studyHistory');
-        
-        // --- CORRECT PLACEMENT ---
-        // This runs only ONCE, after all other data is gathered.
         bundle.data.studies = await getAllFromStore('studies');
         bundle.data.studyHistory = await getAllFromStore('studyHistory');
 
