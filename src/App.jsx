@@ -360,6 +360,10 @@ const fetchTerritories = async () => {
     setIsAddStudyModalOpen(true); // Open the modal
   };
 
+  const handleViewStudy = (person) => {
+    console.log('Viewing study for:', person);
+  };
+
 
   const handleOpenSettings = () => setIsSettingsVisible(true);
     const handleCloseSettings = () => setIsSettingsVisible(false);
@@ -557,6 +561,7 @@ const fetchTerritories = async () => {
             onEditPerson={handleEditPerson}
             visitListKey={visitListKey}
             onStartStudy={handleStartStudy}
+            onViewStudy={handleViewStudy}
           />
         );
     } else if (selectedStreet) {

@@ -7,7 +7,7 @@ import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 
 
-function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy }) {
+function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
@@ -208,6 +208,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
               onDelete={onDeletePerson}
               onEdit={onEditPerson}
               onStartStudy={onStartStudy}
+              onViewStudy={onViewStudy}
           />
         </>
       )}
