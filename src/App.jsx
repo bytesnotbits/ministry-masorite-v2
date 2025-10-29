@@ -17,6 +17,7 @@ import SettingsPage from './components/SettingsPage.jsx';
 import { executeMerge, handleJsonExport, handleFileImport } from './database-api.js';
 import BibleStudiesPage from './components/BibleStudiesPage.jsx';
 import AddStudyModal from './components/AddStudyModal.jsx';
+import StudyDetail from './components/StudyDetail.jsx';
 
 
 
@@ -79,6 +80,7 @@ function App() {
     setPersonForStudy(null);
   };
   const [studies, setStudies] = useState([]);
+  const [selectedStudy, setSelectedStudy] = useState(null);
 
 
 
@@ -361,7 +363,8 @@ const fetchTerritories = async () => {
   };
 
   const handleViewStudy = (person) => {
-    console.log('Viewing study for:', person);
+    const study = studies.find(s => s.personId === person.id);
+    setSelectedStudy({ ...study, person });
   };
 
 
@@ -530,7 +533,14 @@ const fetchTerritories = async () => {
 
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
-  if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
+  if (selectedStudy) {
+    currentView = (
+      <StudyDetail 
+        study={selectedStudy}
+        onBack={() => setSelectedStudy(null)} 
+      />
+    );
+  } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
     currentView = (
       <BibleStudiesPage 
         onBack={handleCloseBibleStudies} 
