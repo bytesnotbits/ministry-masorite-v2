@@ -2,7 +2,7 @@
 
 // --- DATABASE INITIALIZATION ---
 const DB_NAME = 'MinistryScribeDB';
-const DB_VERSION = 5;
+const DB_VERSION = 7;
 let db;
 
 export function initDB() {
@@ -44,9 +44,15 @@ export function initDB() {
             }
 
 // Create other stores if they don't exist
+            let visitsStore;
             if (!db.objectStoreNames.contains('visits')) {
-                const visitsStore = db.createObjectStore('visits', { keyPath: 'id', autoIncrement: true });
+                visitsStore = db.createObjectStore('visits', { keyPath: 'id', autoIncrement: true });
                 visitsStore.createIndex('houseId', 'houseId', { unique: false });
+            } else {
+                visitsStore = transaction.objectStore('visits');
+            }
+            if (!visitsStore.indexNames.contains('personId')) {
+                visitsStore.createIndex('personId', 'personId', { unique: false });
             }
             if (!db.objectStoreNames.contains('people')) {
                 const peopleStore = db.createObjectStore('people', { keyPath: 'id', autoIncrement: true });

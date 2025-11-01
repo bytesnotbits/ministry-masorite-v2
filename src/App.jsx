@@ -18,6 +18,8 @@ import { executeMerge, handleJsonExport, handleFileImport } from './database-api
 import BibleStudiesPage from './components/BibleStudiesPage.jsx';
 import AddStudyModal from './components/AddStudyModal.jsx';
 import StudyDetail from './components/StudyDetail.jsx';
+import EditStudyModal from './components/EditStudyModal.jsx';
+import AssociatePersonModal from './components/AssociatePersonModal.jsx';
 
 
 
@@ -79,8 +81,43 @@ function App() {
     setIsAddStudyModalOpen(false);
     setPersonForStudy(null);
   };
+
+  const handleOpenEditStudyModal = (study) => {
+    setStudyToEdit(study);
+    setIsEditStudyModalOpen(true);
+  };
+
+  const handleCloseEditStudyModal = () => {
+    setStudyToEdit(null);
+    setIsEditStudyModalOpen(false);
+  };
   const [studies, setStudies] = useState([]);
   const [selectedStudy, setSelectedStudy] = useState(null);
+  const [personForVisit, setPersonForVisit] = useState(null);
+  const [studyVisitListKey, setStudyVisitListKey] = useState(0);
+  const [isEditStudyModalOpen, setIsEditStudyModalOpen] = useState(false);
+  const [studyToEdit, setStudyToEdit] = useState(null);
+  const [isAssociatePersonModalOpen, setIsAssociatePersonModalOpen] = useState(false);
+  const [personToAssociate, setPersonToAssociate] = useState(null);
+
+  const handleOpenAssociatePersonModal = (person) => {
+    setPersonToAssociate(person);
+    setIsAssociatePersonModalOpen(true);
+  };
+
+  const handleCloseAssociatePersonModal = () => {
+    setPersonToAssociate(null);
+    setIsAssociatePersonModalOpen(false);
+  };
+
+  const handleAssociatePerson = async (person, houseId) => {
+    const updatedPerson = { ...person, houseId };
+    await updateInStore('people', updatedPerson);
+    handleCloseAssociatePersonModal();
+    // Optionally, refresh the BibleStudiesPage to reflect the change
+    setIsBibleStudiesVisible(false); // Force a re-mount of the page
+    setTimeout(() => setIsBibleStudiesVisible(true), 0);
+  };
 
 
 
@@ -254,10 +291,14 @@ const fetchTerritories = async () => {
   const handleOpenAddHouseModal = () => setIsAddHouseModalOpen(true);
   const handleCloseHouseModal = () => setIsAddHouseModalOpen(false);
 
-  const handleOpenVisitModal = () => setIsAddVisitModalOpen(true);
+  const handleOpenVisitModal = (person = null) => {
+    setPersonForVisit(person);
+    setIsAddVisitModalOpen(true);
+  };
   const handleCloseVisitModal = () => {
     setIsAddVisitModalOpen(false);
     setVisitToEdit(null); // Also reset the state on cancel/close
+    setPersonForVisit(null);
   };
 
   const handleClosePersonModal = () => {
@@ -288,6 +329,16 @@ const fetchTerritories = async () => {
     }
     
     // --- This runs for BOTH adds and updates ---
+    // Re-run the logic from handleHouseSelect to update peopleForSelectedHouse
+    if (selectedHouse) {
+      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
+      const refreshedStudies = await getAllFromStore('studies');
+      const peopleWithStudyStatus = peopleData.map(p => {
+        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
+        return { ...p, hasStudy: hasStudy };
+      });
+      setPeopleForSelectedHouse(peopleWithStudyStatus);
+    }
     setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
     handleClosePersonModal();                   // Close the modal
   };
@@ -431,29 +482,39 @@ const fetchTerritories = async () => {
     // Check if we are editing an existing visit or adding a new one
     if (visitToEdit) {
       // --- UPDATE LOGIC ---
-      // Combine the original visit's ID and houseId with the new form data
       const updatedVisit = { 
-        ...visitToEdit, // a.k.a the original visit
-        ...visitData    // a.k.a the new date and notes from the form
+        ...visitToEdit,
+        ...visitData
       };
       await updateInStore('visits', updatedVisit);
     } else {
       // --- ADD (CREATE) LOGIC ---
-      if (!selectedHouse) {
-        console.error("Cannot save visit: no house is selected.");
+      let newVisit;
+      if (personForVisit) {
+        // Case 1: Visit added from StudyDetail view
+        newVisit = {
+          ...visitData,
+          personId: personForVisit.id,
+          houseId: personForVisit.houseId,
+        };
+      } else if (selectedHouse) {
+        // Case 2: Visit added from HouseDetail view
+        newVisit = {
+          ...visitData,
+          houseId: selectedHouse.id,
+        };
+      } else {
+        console.error("Cannot save visit: no house or person is selected.");
         return;
       }
-      const newVisit = {
-        ...visitData,
-        houseId: selectedHouse.id,
-      };
       await addToStore('visits', newVisit);
     }
     
     // --- This runs for both adds and updates ---
-    setVisitListKey(prevKey => prevKey + 1); // Force a refresh
+    setVisitListKey(prevKey => prevKey + 1); // Refresh HouseDetail
+    setStudyVisitListKey(prevKey => prevKey + 1); // Refresh StudyDetail
     setIsAddVisitModalOpen(false); // Close the modal
-    setVisitToEdit(null); // IMPORTANT: Reset the visitToEdit state
+    setVisitToEdit(null); // Reset the visitToEdit state
   };
 
   const handleSaveStudy = async (studyData) => {
@@ -497,8 +558,17 @@ const fetchTerritories = async () => {
         // 1. Delete the person from the database using their ID
         await deleteFromStore('people', personId);
         
-        // 2. Increment the key to force the component to re-render
-        setPeopleListKey(prevKey => prevKey + 1);
+        // 2. Re-run the logic from handleHouseSelect to update peopleForSelectedHouse
+        if (selectedHouse) {
+          const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
+          const refreshedStudies = await getAllFromStore('studies');
+          const peopleWithStudyStatus = peopleData.map(p => {
+            const hasStudy = refreshedStudies.some(s => s.personId === p.id);
+            return { ...p, hasStudy: hasStudy };
+          });
+          setPeopleForSelectedHouse(peopleWithStudyStatus);
+        }
+        setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
       }
     };
 
@@ -524,9 +594,31 @@ const fetchTerritories = async () => {
     }
   };
 
-  const handleEditVisit = (visitObject) => {
-    setVisitToEdit(visitObject);      // Store the visit we want to edit
-    setIsAddVisitModalOpen(true); // Open the modal
+      const handleEditVisit = (visitObject) => {
+      setVisitToEdit(visitObject);      // Store the visit we want to edit
+      setIsAddVisitModalOpen(true); // Open the modal
+    };
+  
+    const handlePersonSelect = async (person) => {
+      if (person.houseId) {
+        const house = await getFromStore('houses', person.houseId);
+        const street = await getFromStore('streets', house.streetId);
+        const territory = await getFromStore('territories', street.territoryId);
+  
+        setSelectedTerritoryDetails(territory);
+        setSelectedTerritoryId(territory.id);
+        setSelectedStreetDetails(street);
+        setSelectedStreetId(street.id);
+        await handleHouseSelect(house);
+        setIsBibleStudiesVisible(false);
+      }
+      // Handle unassociated people later
+    };
+  const handleUpdateStudy = async (updatedStudyData) => {
+    await updateInStore('studies', updatedStudyData);
+    await fetchStudies(); // Re-fetch all studies to update the UI
+    setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
+    handleCloseEditStudyModal();
   };
 
 
@@ -540,12 +632,17 @@ const fetchTerritories = async () => {
         onBack={() => setSelectedStudy(null)} 
         onDeleteVisit={handleDeleteVisit}
         onEditVisit={handleEditVisit}
+        onAddVisit={handleOpenVisitModal}
+        studyVisitListKey={studyVisitListKey}
+        onEditStudy={handleOpenEditStudyModal}
       />
     );
   } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
     currentView = (
       <BibleStudiesPage 
-        onBack={handleCloseBibleStudies} 
+        onBack={handleCloseBibleStudies}
+        onPersonSelect={handlePersonSelect}
+        onAssociate={handleOpenAssociatePersonModal}
       />
     );
   } else if (isSettingsVisible) {
@@ -719,6 +816,7 @@ const fetchTerritories = async () => {
                 onClose={handleCloseVisitModal}
                 visitToEdit={visitToEdit}
                 people={peopleForSelectedHouse}
+                personForVisit={personForVisit}
               />
             )}
 
@@ -735,6 +833,22 @@ const fetchTerritories = async () => {
                 onSave={handleSaveStudy} // We will create this function next
                 onClose={handleCloseStudyModal}
                 person={personForStudy}
+              />
+            )}
+
+            {isEditStudyModalOpen && (
+              <EditStudyModal
+                onSave={handleUpdateStudy}
+                onClose={handleCloseEditStudyModal}
+                study={studyToEdit}
+              />
+            )}
+
+            {isAssociatePersonModalOpen && (
+              <AssociatePersonModal
+                person={personToAssociate}
+                onSave={handleAssociatePerson}
+                onClose={handleCloseAssociatePersonModal}
               />
             )}
           </>

@@ -1,0 +1,22 @@
+.person-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.person-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.person-card h3 {
+  margin-top: 0;
+}
+
+.study-details {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}

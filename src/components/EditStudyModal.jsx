@@ -1,11 +1,18 @@
-// src/components/AddStudyModal.jsx
+// src/components/EditStudyModal.jsx
 
 import { useState, useEffect } from 'react';
 import './AddTerritoryModal.css'; // Reuse CSS
 
-function AddStudyModal({ onSave, onClose, person }) {
+function EditStudyModal({ onSave, onClose, study }) {
   const [publication, setPublication] = useState('');
   const [lesson, setLesson] = useState('');
+
+  useEffect(() => {
+    if (study) {
+      setPublication(study.publication);
+      setLesson(study.lesson);
+    }
+  }, [study]);
 
   const handleSaveClick = () => {
     if (!publication.trim() || !lesson.trim()) {
@@ -13,23 +20,20 @@ function AddStudyModal({ onSave, onClose, person }) {
       return;
     }
 
-    const studyData = {
-      personId: person.id,
+    const updatedStudyData = {
+      ...study,
       publication: publication.trim(),
       lesson: lesson.trim(),
-      isActive: true, // New studies are active by default
-      goals: [], // Start with an empty goals array
-      startDate: new Date().toISOString()
     };
 
-    onSave(studyData);
+    onSave(updatedStudyData);
   };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3>Start New Bible Study</h3>
-        <p>For: <strong>{person.name}</strong></p>
+        <h3>Edit Bible Study</h3>
+        <p>For: <strong>{study.person.name}</strong></p>
         
         <label htmlFor="study-publication">Publication</label>
         <input
@@ -52,11 +56,11 @@ function AddStudyModal({ onSave, onClose, person }) {
 
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSaveClick}>Save Study</button>
+          <button className="btn-primary" onClick={handleSaveClick}>Save Changes</button>
         </div>
       </div>
     </div>
   );
 }
 
-export default AddStudyModal;
+export default EditStudyModal;

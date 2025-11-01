@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'; // <-- Make sure useEffect is imported
 import './AddTerritoryModal.css';
 
-function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept the new prop
+function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit }) { // <-- Accept the new prop
   
   // State for the form fields
   const [date, setDate] = useState('');
@@ -34,9 +34,9 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people }) { // <-- Accept
       
       setDate(todayString);
       setNotes('');
-      setPersonId('');
+      setPersonId(personForVisit ? personForVisit.id : '');
     }
-  }, [visitToEdit]); // This effect depends on the visitToEdit prop
+  }, [visitToEdit, personForVisit]); // This effect depends on the visitToEdit and personForVisit props
 
     const handleSaveClick = () => {
     if (!date) {
