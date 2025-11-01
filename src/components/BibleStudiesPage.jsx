@@ -80,7 +80,7 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, on
       <ViewHeader title="Return Visits & Bible Studies" />
 
       <div className="page-actions">
-        <button onClick={onAddPerson}>+ New Contact</button>
+        <button className="primary-action-btn" onClick={onAddPerson}>+ New Contact</button>
       </div>
 
       <div className="studies-section">

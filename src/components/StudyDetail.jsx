@@ -27,7 +27,7 @@ function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, st
         <div className="header-actions">
           <button className="primary-action-btn" onClick={() => onAddVisit(study.person)}>+ Add Visit</button>
           <button className="secondary-action-btn" onClick={() => onEditStudy(study)}>Edit Study</button>
-          <button onClick={onBack}>Back</button>
+          <button className="secondary-action-btn" onClick={onBack}>Back</button>
         </div>
       </div>
 
