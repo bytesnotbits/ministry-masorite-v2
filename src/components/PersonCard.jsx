@@ -29,7 +29,7 @@ function PersonCard({ person, onSelect, onAssociate }) {
       )}
       {lastVisit && <p><strong>Last Visit:</strong> {new Date(lastVisit.date).toLocaleDateString()}</p>}
       {study && (
-        <div className="study-details">
+        <div className="study-details" onClick={handleCardClick}>
           <h4>Study Info</h4>
           <p><strong>Publication:</strong> {study.publication}</p>
           <p><strong>Lesson:</strong> {study.lesson}</p>

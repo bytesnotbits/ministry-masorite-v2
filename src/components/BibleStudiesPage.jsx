@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import ViewHeader from './ViewHeader.jsx';
 import PersonCard from './PersonCard.jsx';
+import './BibleStudiesPage.css';
 import { getAllFromStore, getByIndex } from '../database.js';
 
-function BibleStudiesPage({ onBack, onPersonSelect }) {
+function BibleStudiesPage({ onBack, onPersonSelect, onAssociate }) {
   const [bibleStudies, setBibleStudies] = useState([]);
   const [returnVisits, setReturnVisits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,9 +82,11 @@ function BibleStudiesPage({ onBack, onPersonSelect }) {
       <div className="studies-section">
         <h2>Bible Studies ({bibleStudies.length})</h2>
         {bibleStudies.length > 0 ? (
-          bibleStudies.map(person => (
-            <PersonCard key={person.id} person={person} onSelect={onPersonSelect} />
-          ))
+          <div className="person-card-grid">
+            {bibleStudies.map(person => (
+              <PersonCard key={person.id} person={person} onSelect={onPersonSelect} onAssociate={onAssociate} />
+            ))}
+          </div>
         ) : (
           <p>No active Bible studies.</p>
         )}
@@ -92,9 +95,11 @@ function BibleStudiesPage({ onBack, onPersonSelect }) {
       <div className="rv-section">
         <h2>Return Visits ({returnVisits.length})</h2>
         {returnVisits.length > 0 ? (
-          returnVisits.map(person => (
-            <PersonCard key={person.id} person={person} onSelect={onPersonSelect} />
-          ))
+          <div className="person-card-grid">
+            {returnVisits.map(person => (
+              <PersonCard key={person.id} person={person} onSelect={onPersonSelect} onAssociate={onAssociate} />
+            ))}
+          </div>
         ) : (
           <p>No return visits found.</p>
         )}

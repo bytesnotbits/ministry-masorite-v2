@@ -99,6 +99,7 @@ function App() {
   const [studyToEdit, setStudyToEdit] = useState(null);
   const [isAssociatePersonModalOpen, setIsAssociatePersonModalOpen] = useState(false);
   const [personToAssociate, setPersonToAssociate] = useState(null);
+  const [bibleStudiesPageKey, setBibleStudiesPageKey] = useState(0);
 
   const handleOpenAssociatePersonModal = (person) => {
     setPersonToAssociate(person);
@@ -114,9 +115,7 @@ function App() {
     const updatedPerson = { ...person, houseId };
     await updateInStore('people', updatedPerson);
     handleCloseAssociatePersonModal();
-    // Optionally, refresh the BibleStudiesPage to reflect the change
-    setIsBibleStudiesVisible(false); // Force a re-mount of the page
-    setTimeout(() => setIsBibleStudiesVisible(true), 0);
+    setBibleStudiesPageKey(prevKey => prevKey + 1);
   };
 
 
@@ -599,22 +598,35 @@ const fetchTerritories = async () => {
       setIsAddVisitModalOpen(true); // Open the modal
     };
   
-    const handlePersonSelect = async (person) => {
-      if (person.houseId) {
-        const house = await getFromStore('houses', person.houseId);
-        const street = await getFromStore('streets', house.streetId);
-        const territory = await getFromStore('territories', street.territoryId);
+        const handlePersonSelect = async (person) => {
   
-        setSelectedTerritoryDetails(territory);
-        setSelectedTerritoryId(territory.id);
-        setSelectedStreetDetails(street);
-        setSelectedStreetId(street.id);
-        await handleHouseSelect(house);
-        setIsBibleStudiesVisible(false);
-      }
-      // Handle unassociated people later
-    };
-  const handleUpdateStudy = async (updatedStudyData) => {
+          if (person.houseId) {
+  
+            const house = await getFromStore('houses', person.houseId);
+  
+            const street = await getFromStore('streets', house.streetId);
+  
+            const territory = await getFromStore('territories', street.territoryId);
+  
+      
+  
+            setSelectedTerritoryDetails(territory);
+  
+            setSelectedTerritoryId(territory.id);
+  
+            setSelectedStreetDetails(street);
+  
+            setSelectedStreetId(street.id);
+  
+            await handleHouseSelect(house);
+  
+            setIsBibleStudiesVisible(false);
+  
+          }
+  
+          // Handle unassociated people later
+  
+        };  const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
@@ -640,6 +652,7 @@ const fetchTerritories = async () => {
   } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
     currentView = (
       <BibleStudiesPage 
+        key={bibleStudiesPageKey}
         onBack={handleCloseBibleStudies}
         onPersonSelect={handlePersonSelect}
         onAssociate={handleOpenAssociatePersonModal}

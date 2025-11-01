@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllFromStore, getByIndex } from '../database.js';
-import './AddTerritoryModal.css'; // Re-using styles
+import './AssociatePersonModal.css';
 
 function AssociatePersonModal({ person, onSave, onClose }) {
   const [territories, setTerritories] = useState([]);
