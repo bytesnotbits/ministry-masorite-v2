@@ -107,6 +107,13 @@ function App() {
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [isMovePersonModalOpen, setIsMovePersonModalOpen] = useState(false);
   const [personToMove, setPersonToMove] = useState(null);
+  const [houseFilters, setHouseFilters] = useState({
+    showNotAtHome: true,
+    showNotInterested: true,
+    showGate: true,
+    showMailbox: true,
+    showNoTrespassing: true
+  });
 
   const handleOpenAssociatePersonModal = (person) => {
     setPersonToAssociate(person);
@@ -824,29 +831,35 @@ const fetchTerritories = async () => {
       );
 
     } else if (selectedStreetId) {
-        currentView = <HouseList 
-          streetId={selectedStreetId} 
+        currentView = <HouseList
+          streetId={selectedStreetId}
           onAddHouse={handleOpenAddHouseModal}
           onHouseSelect={handleHouseSelect}
           onEditStreet={handleEditStreet}
-          key={houseListKey} 
+          filters={houseFilters}
+          onFilterChange={setHouseFilters}
+          key={houseListKey}
         />;
 
     } else if (selectedTerritoryId) {
-        currentView = <StreetList 
-          territoryId={selectedTerritoryId} 
-          onStreetSelect={handleStreetSelect} 
-          onAddStreet={handleOpenAddStreetModal} 
+        currentView = <StreetList
+          territoryId={selectedTerritoryId}
+          onStreetSelect={handleStreetSelect}
+          onAddStreet={handleOpenAddStreetModal}
           onEditTerritory={handleEditTerritory}
+          filters={houseFilters}
+          onFilterChange={setHouseFilters}
           />;
     } else {
       currentView = (
         <TerritoryList
-          territories={territories} 
+          territories={territories}
           onTerritorySelect={handleTerritorySelect}
           onAddTerritory={handleOpenAddTerritoryModal}
           onOpenSettings={handleOpenSettings}
           onOpenBibleStudies={handleOpenBibleStudies}
+          filters={houseFilters}
+          onFilterChange={setHouseFilters}
         />
       );
     }

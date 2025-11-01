@@ -5,9 +5,10 @@ import { getByIndex, getFromStore } from '../database.js';
 import './HouseList.css';
 import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
+import FilterBar from './FilterBar.jsx';
 
     // Note the new 'onHouseSelect' prop
-    function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet }) {
+    function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet, filters, onFilterChange }) {
         
         console.log('onEditStreet prop received in HouseList:', onEditStreet);
 
@@ -33,11 +34,27 @@ import ViewHeader from './ViewHeader.jsx';
     fetchData();
     }, [streetId]);
 
+    // Apply filters to the houses list
+    const filteredHouses = houses.filter(house => {
+        // If showNotAtHome is false, hide houses where isCurrentlyNH is true
+        if (!filters.showNotAtHome && house.isCurrentlyNH) return false;
+        // If showNotInterested is false, hide houses where isNotInterested is true
+        if (!filters.showNotInterested && house.isNotInterested) return false;
+        // If showGate is false, hide houses where hasGate is true
+        if (!filters.showGate && house.hasGate) return false;
+        // If showMailbox is false, hide houses where hasMailbox is true
+        if (!filters.showMailbox && house.hasMailbox) return false;
+        // If showNoTrespassing is false, hide houses where noTrespassing is true
+        if (!filters.showNoTrespassing && house.noTrespassing) return false;
+
+        return true;
+    });
+
     return (
         <div>
             <ViewHeader title={streetName || 'Loading...'}>
-                <button 
-                    className="secondary-action-btn" 
+                <button
+                    className="secondary-action-btn"
                     onClick={() => onEditStreet(streetId)}
                 >
                     Edit Street
@@ -47,8 +64,14 @@ import ViewHeader from './ViewHeader.jsx';
                 </button>
                 </ViewHeader>
 
+            <FilterBar
+                filters={filters}
+                onFilterChange={onFilterChange}
+                availableFilters={['showNotAtHome', 'showNotInterested', 'showGate', 'showMailbox', 'showNoTrespassing']}
+            />
+
             <ul className="house-list">
-            {houses.map(house => (
+            {filteredHouses.map(house => (
                 <li 
                     key={house.id} 
                     className="house-item"

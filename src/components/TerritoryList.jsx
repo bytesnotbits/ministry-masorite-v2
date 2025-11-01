@@ -1,11 +1,29 @@
 import './TerritoryList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
+import FilterBar from './FilterBar.jsx';
 import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies }) {
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies, filters, onFilterChange }) {
+  // Helper function to check if a house passes the filters
+  const housePassesFilters = (house) => {
+    if (!filters.showNotAtHome && house.isCurrentlyNH) return false;
+    if (!filters.showNotInterested && house.isNotInterested) return false;
+    if (!filters.showGate && house.hasGate) return false;
+    if (!filters.showMailbox && house.hasMailbox) return false;
+    if (!filters.showNoTrespassing && house.noTrespassing) return false;
+    return true;
+  };
+
+  // Filter territories: only show territories that have at least one house passing the filters
+  const filteredTerritories = territories.filter(territory => {
+    if (!territory.houses || territory.houses.length === 0) return true; // Show empty territories
+    // Show territory if at least one house passes the filters
+    return territory.houses.some(house => housePassesFilters(house));
+  });
+
   return (
     <div className="territory-list-container">
       <ViewHeader>
@@ -20,8 +38,14 @@ function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenS
         </button>
       </ViewHeader>
 
+      <FilterBar
+        filters={filters}
+        onFilterChange={onFilterChange}
+        availableFilters={['showNotAtHome', 'showNotInterested', 'showGate', 'showMailbox', 'showNoTrespassing']}
+      />
+
         <ul className="territory-list">
-          {territories.map(territory => (
+          {filteredTerritories.map(territory => (
 
 /* The logic is exactly the same as in StreetList, but we're using territory.houses instead of street.houses.
 We've wrapped the original number and description in a <div className="territory-details">.

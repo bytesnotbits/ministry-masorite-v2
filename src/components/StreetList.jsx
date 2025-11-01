@@ -5,10 +5,11 @@ import { getByIndex, getFromStore } from '../database.js';
 import './StreetList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
+import FilterBar from './FilterBar.jsx';
 import './StatIcon.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory }) {
+function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory, filters, onFilterChange }) {
   const [streets, setStreets] = useState([]);
   const [territoryDetails, setTerritoryDetails] = useState(null);
 
@@ -38,6 +39,24 @@ useEffect(() => {
 
     fetchStreetsAndStats();
   }, [territoryId]);
+
+  // Helper function to check if a house passes the filters
+  const housePassesFilters = (house) => {
+    if (!filters.showNotAtHome && house.isCurrentlyNH) return false;
+    if (!filters.showNotInterested && house.isNotInterested) return false;
+    if (!filters.showGate && house.hasGate) return false;
+    if (!filters.showMailbox && house.hasMailbox) return false;
+    if (!filters.showNoTrespassing && house.noTrespassing) return false;
+    return true;
+  };
+
+  // Filter streets: only show streets that have at least one house passing the filters
+  const filteredStreets = streets.filter(street => {
+    if (!street.houses || street.houses.length === 0) return true; // Show empty streets
+    // Show street if at least one house passes the filters
+    return street.houses.some(house => housePassesFilters(house));
+  });
+
   return (
     <div>
       <ViewHeader title={territoryDetails ? `Territory #${territoryDetails.number}` : 'Loading...'}>
@@ -49,9 +68,15 @@ useEffect(() => {
         </button>
       </ViewHeader>
 
+      <FilterBar
+        filters={filters}
+        onFilterChange={onFilterChange}
+        availableFilters={['showNotAtHome', 'showNotInterested', 'showGate', 'showMailbox', 'showNoTrespassing']}
+      />
+
       {/* Add the className and onClick handler */}
       <ul className="street-list">
-        {streets.map(street => (
+        {filteredStreets.map(street => (
         <li
           key={street.id}
           className="street-item"
