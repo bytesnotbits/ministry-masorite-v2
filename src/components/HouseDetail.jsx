@@ -7,7 +7,7 @@ import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 
 
-function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson }) {
+function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
@@ -43,17 +43,20 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
   const handleSave = () => {
     onSave(formData);
     setIsEditing(false);
+    setIsEditingHouse(false);
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to permanently delete this house? This cannot be undone.')) {
       onDelete(house.id);
+      setIsEditingHouse(false);
     }
   };
 
   const handleCancel = () => {
     setFormData(house);
     setIsEditing(false);
+    setIsEditingHouse(false);
   };
 
   if (!formData) {
@@ -128,7 +131,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
               + Add Visit
             </button>
           </div>
-          <button className="secondary-action-btn" onClick={() => setIsEditing(true)}>
+          <button className="secondary-action-btn" onClick={() => { setIsEditing(true); setIsEditingHouse(true); }}>
               Edit House
           </button>
         </ViewHeader>

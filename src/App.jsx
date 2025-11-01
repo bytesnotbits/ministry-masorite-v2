@@ -48,6 +48,7 @@ function App() {
   const [selectedTerritoryDetails, setSelectedTerritoryDetails] = useState(null);
   const [selectedStreetDetails, setSelectedStreetDetails] = useState(null);
   const [peopleForSelectedHouse, setPeopleForSelectedHouse] = useState([]);
+  const [isEditingHouse, setIsEditingHouse] = useState(false);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -791,6 +792,7 @@ const fetchTerritories = async () => {
             visitListKey={visitListKey}
             onStartStudy={handleStartStudy}
             onViewStudy={handleViewStudy}
+            setIsEditingHouse={setIsEditingHouse}
           />
         );
     } else if (selectedStreet) {
@@ -867,12 +869,12 @@ const fetchTerritories = async () => {
     });
 
     // 2. The "Territory" crumb (shows when you're on a street or house)
-    if (selectedStreetDetails || selectedStreet) { // Condition updated to include edit mode
+    if (selectedStreetDetails || selectedStreet || selectedHouse) { // Condition updated to include edit mode
       crumbs.push({
         label: `${selectedTerritoryDetails.number}`,
         onClick: () => {
-          // ADD a check: ONLY show the alert if they were editing a street.
-          if (selectedStreet) {
+          // ADD a check: ONLY show the alert if they were editing a street or house.
+          if (selectedStreet || isEditingHouse) {
             alert("Canceling edit. No changes saved.");
           }
           setSelectedStreetId(null);
@@ -880,6 +882,7 @@ const fetchTerritories = async () => {
           setSelectedStreetDetails(null);
           // ADDED: Ensure we exit street edit mode when going back to territory
           setSelectedStreet(null); 
+          setIsEditingHouse(false); // Reset editing state
         }
       });
     }
@@ -889,7 +892,11 @@ const fetchTerritories = async () => {
       crumbs.push({
         label: selectedStreetDetails.name,
         onClick: () => {
+          if (isEditingHouse) {
+            alert("Canceling edit. No changes saved.");
+          }
           setSelectedHouse(null);
+          setIsEditingHouse(false); // Reset editing state
         }
       });
     }
