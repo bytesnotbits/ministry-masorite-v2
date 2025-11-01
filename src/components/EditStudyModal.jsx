@@ -9,8 +9,8 @@ function EditStudyModal({ onSave, onClose, study }) {
 
   useEffect(() => {
     if (study) {
-      setPublication(study.publication);
-      setLesson(study.lesson);
+      setPublication(study.publication || '');
+      setLesson(study.lesson || '');
     }
   }, [study]);
 

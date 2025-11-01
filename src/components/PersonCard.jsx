@@ -1,7 +1,7 @@
 import React from 'react';
 import './PersonCard.css';
 
-function PersonCard({ person, onSelect, onAssociate }) {
+function PersonCard({ person, onSelect, onAssociate, onViewStudy }) {
   const { name, territory, street, house, lastVisit, study } = person;
 
   const handleCardClick = () => {
@@ -29,10 +29,12 @@ function PersonCard({ person, onSelect, onAssociate }) {
       )}
       {lastVisit && <p><strong>Last Visit:</strong> {new Date(lastVisit.date).toLocaleDateString()}</p>}
       {study && (
-        <div className="study-details" onClick={handleCardClick}>
-          <h4>Study Info</h4>
-          <p><strong>Publication:</strong> {study.publication}</p>
-          <p><strong>Lesson:</strong> {study.lesson}</p>
+        <div className="study-details">
+          <button className="view-study-btn-card" onClick={() => onViewStudy(person)}>
+            <h4>Study Info</h4>
+            <p><strong>Publication:</strong> {study.publication}</p>
+            <p><strong>Lesson:</strong> {study.lesson}</p>
+          </button>
         </div>
       )}
     </div>

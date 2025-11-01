@@ -6,7 +6,7 @@ import PersonCard from './PersonCard.jsx';
 import './BibleStudiesPage.css';
 import { getAllFromStore, getByIndex } from '../database.js';
 
-function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson }) {
+function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, onViewStudy }) {
   const [bibleStudies, setBibleStudies] = useState([]);
   const [returnVisits, setReturnVisits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +88,13 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson }) 
         {bibleStudies.length > 0 ? (
           <div className="person-card-grid">
             {bibleStudies.map(person => (
-              <PersonCard key={person.id} person={person} onSelect={onPersonSelect} onAssociate={onAssociate} />
+              <PersonCard 
+                key={person.id} 
+                person={person} 
+                onSelect={onPersonSelect} 
+                onAssociate={onAssociate} 
+                onViewStudy={onViewStudy} 
+              />
             ))}
           </div>
         ) : (
@@ -101,7 +107,7 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson }) 
         {returnVisits.length > 0 ? (
           <div className="person-card-grid">
             {returnVisits.map(person => (
-              <PersonCard key={person.id} person={person} onSelect={onPersonSelect} onAssociate={onAssociate} />
+              <PersonCard key={person.id} person={person} onSelect={onPersonSelect} onAssociate={onAssociate} onViewStudy={onViewStudy} />
             ))}
           </div>
         ) : (

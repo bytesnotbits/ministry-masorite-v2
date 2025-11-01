@@ -737,6 +737,7 @@ const fetchTerritories = async () => {
         onBack={handleBackToBibleStudies}
         onAddVisit={handleOpenVisitModal}
         onAssociate={handleOpenAssociatePersonModal}
+        onViewStudy={handleViewStudy}
       />
     );
   } else if (selectedStudy) {
@@ -759,6 +760,7 @@ const fetchTerritories = async () => {
         onPersonSelect={handlePersonSelect}
         onAssociate={handleOpenAssociatePersonModal}
         onAddPerson={handleAddPerson}
+        onViewStudy={handleViewStudy}
       />
     );
   } else if (isSettingsVisible) {

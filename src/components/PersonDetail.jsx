@@ -1,6 +1,6 @@
 import { getByIndex, getFromStore } from '../database.js';
 
-function PersonDetail({ person, onBack, onAddVisit, onAssociate }) {
+function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy }) {
   const [visits, setVisits] = useState([]);
   const [study, setStudy] = useState(null);
 
@@ -36,6 +36,7 @@ function PersonDetail({ person, onBack, onAddVisit, onAssociate }) {
           <h3>Study Details</h3>
           <p><strong>Publication:</strong> {study.publication}</p>
           <p><strong>Lesson:</strong> {study.lesson}</p>
+          <button onClick={() => onViewStudy(person)}>View Study</button>
         </div>
       )}
 
