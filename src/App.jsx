@@ -49,6 +49,7 @@ function App() {
   const [selectedStreetDetails, setSelectedStreetDetails] = useState(null);
   const [peopleForSelectedHouse, setPeopleForSelectedHouse] = useState([]);
   const [isEditingHouse, setIsEditingHouse] = useState(false);
+  const [cameFromBibleStudies, setCameFromBibleStudies] = useState(false);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -400,6 +401,7 @@ const fetchTerritories = async () => {
     const street = await getFromStore('streets', streetId);
     setSelectedStreetDetails(street);
     setSelectedStreetId(streetId);
+    setCameFromBibleStudies(false);
   };
 
   const handleHouseSelect = async (houseObject) => {
@@ -425,6 +427,7 @@ const fetchTerritories = async () => {
       // If we are deselecting a house, clear the list (same as before)
       setPeopleForSelectedHouse([]);
     }
+    setCameFromBibleStudies(false);
   };
 
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
@@ -665,6 +668,7 @@ const fetchTerritories = async () => {
       const territory = await getFromStore('territories', territoryId);
       setSelectedTerritoryDetails(territory);
       setSelectedTerritoryId(territoryId);
+      setCameFromBibleStudies(false);
     };
   
   const handleDeleteVisit = async (visitId) => {
@@ -697,25 +701,29 @@ const fetchTerritories = async () => {
   
               setSelectedTerritoryDetails(territory);
   
-              setSelectedTerritoryId(territory.id);
+                    setSelectedTerritoryId(territory.id);
   
-              setSelectedStreetDetails(street);
+                    setSelectedStreetDetails(street);
   
-              setSelectedStreetId(street.id);
+                    setSelectedStreetId(street.id);
   
-              await handleHouseSelect(house);
+                    await handleHouseSelect(house);
   
-              setIsBibleStudiesVisible(false);
+                    setIsBibleStudiesVisible(false);
   
-            } else {
+                    setCameFromBibleStudies(true);
   
-              setSelectedPerson(person);
+                  } else {
   
-              setIsBibleStudiesVisible(false);
+                    setSelectedPerson(person);
   
-            }
+                    setIsBibleStudiesVisible(false);
   
-          };  const handleUpdateStudy = async (updatedStudyData) => {
+                    setCameFromBibleStudies(true);
+  
+                  }
+  
+                };  const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
@@ -847,8 +855,31 @@ const fetchTerritories = async () => {
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
 
-  // We only show breadcrumbs if we have navigated away from the home screen
-  if (selectedTerritoryId) {
+  // Special breadcrumb when coming from Bible Studies page
+  if (cameFromBibleStudies && (selectedHouse || selectedPerson)) {
+    crumbs.push({
+      label: 'Return Visits & Bible Studies',
+      onClick: () => {
+        if (isEditingHouse) {
+          alert("Canceling edit. No changes saved.");
+        }
+        // Reset all navigation state
+        setSelectedTerritoryId(null);
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedTerritoryDetails(null);
+        setSelectedStreetDetails(null);
+        setSelectedPerson(null);
+        setSelectedTerritory(null);
+        setSelectedStreet(null);
+        setIsEditingHouse(false);
+        setCameFromBibleStudies(false);
+        // Open Bible Studies page
+        setIsBibleStudiesVisible(true);
+      }
+    });
+  } else if (selectedTerritoryId) {
+    // Standard hierarchical breadcrumbs
     // 1. The "Home" crumb
     crumbs.push({
       label: 'Territories',
@@ -881,7 +912,7 @@ const fetchTerritories = async () => {
           setSelectedHouse(null);
           setSelectedStreetDetails(null);
           // ADDED: Ensure we exit street edit mode when going back to territory
-          setSelectedStreet(null); 
+          setSelectedStreet(null);
           setIsEditingHouse(false); // Reset editing state
         }
       });
