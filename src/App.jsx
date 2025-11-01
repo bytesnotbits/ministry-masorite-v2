@@ -855,8 +855,13 @@ const fetchTerritories = async () => {
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
 
-  // Special breadcrumb when coming from Bible Studies page
-  if (cameFromBibleStudies && (selectedHouse || selectedPerson)) {
+  // Breadcrumb for Study view
+  if (selectedStudy) {
+    crumbs.push({
+      label: 'Back',
+      onClick: () => setSelectedStudy(null)
+    });
+  } else if (cameFromBibleStudies && (selectedHouse || selectedPerson)) {
     crumbs.push({
       label: 'Return Visits & Bible Studies',
       onClick: () => {
@@ -942,8 +947,9 @@ const fetchTerritories = async () => {
             <p>Loading data...</p>
         ) : (
           // --- START: This fragment is the single wrapper for the "else" case ---
-          <> 
-            {!selectedTerritoryId && <h1>Ministry Masorite v2</h1>}
+          <>
+            {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
+            {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
             <Breadcrumbs crumbs={crumbs} />
             {currentView}
             
