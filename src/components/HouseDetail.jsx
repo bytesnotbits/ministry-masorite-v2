@@ -88,7 +88,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
         </ViewHeader>
           
           {/* A simple form for editing */}
-          <div className="house-details-form">
+          <div className="house-form">
             <label htmlFor="address">Address</label>
             <input 
               type="text" 
