@@ -20,6 +20,8 @@ import AddStudyModal from './components/AddStudyModal.jsx';
 import StudyDetail from './components/StudyDetail.jsx';
 import EditStudyModal from './components/EditStudyModal.jsx';
 import AssociatePersonModal from './components/AssociatePersonModal.jsx';
+import PersonDetail from './components/PersonDetail.jsx';
+import MovePersonModal from './components/MovePersonModal.jsx';
 
 
 
@@ -100,6 +102,9 @@ function App() {
   const [isAssociatePersonModalOpen, setIsAssociatePersonModalOpen] = useState(false);
   const [personToAssociate, setPersonToAssociate] = useState(null);
   const [bibleStudiesPageKey, setBibleStudiesPageKey] = useState(0);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [isMovePersonModalOpen, setIsMovePersonModalOpen] = useState(false);
+  const [personToMove, setPersonToMove] = useState(null);
 
   const handleOpenAssociatePersonModal = (person) => {
     setPersonToAssociate(person);
@@ -112,10 +117,61 @@ function App() {
   };
 
   const handleAssociatePerson = async (person, houseId) => {
+    const house = await getFromStore('houses', houseId);
+    const street = await getFromStore('streets', house.streetId);
+    const territory = await getFromStore('territories', street.territoryId);
+    const logEntry = {
+      personId: person.id,
+      date: new Date().toISOString(),
+      notes: `Associated with house: ${house.address}, ${street.name}, Terr ${territory.number}`,
+      type: 'SYSTEM',
+    };
+    await addToStore('visits', logEntry);
+
     const updatedPerson = { ...person, houseId };
     await updateInStore('people', updatedPerson);
     handleCloseAssociatePersonModal();
     setBibleStudiesPageKey(prevKey => prevKey + 1);
+  };
+
+  const handleOpenMovePersonModal = (person) => {
+    setPersonToMove(person);
+    setIsMovePersonModalOpen(true);
+  };
+
+  const handleCloseMovePersonModal = () => {
+    setPersonToMove(null);
+    setIsMovePersonModalOpen(false);
+  };
+
+  const handleMovePerson = async (person, newHouseId) => {
+    const oldHouse = await getFromStore('houses', person.houseId);
+    const newHouse = await getFromStore('houses', newHouseId);
+    const newStreet = await getFromStore('streets', newHouse.streetId);
+    const newTerritory = await getFromStore('territories', newStreet.territoryId);
+
+    const logEntry = {
+      personId: person.id,
+      date: new Date().toISOString(),
+      notes: `Moved from ${oldHouse.address} to ${newHouse.address}, ${newStreet.name}, Terr ${newTerritory.number}`,
+      type: 'SYSTEM',
+    };
+    await addToStore('visits', logEntry);
+
+    const updatedPerson = { ...person, houseId: newHouseId };
+    await updateInStore('people', updatedPerson);
+
+    if (selectedHouse) {
+      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
+      const refreshedStudies = await getAllFromStore('studies');
+      const peopleWithStudyStatus = peopleData.map(p => {
+        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
+        return { ...p, hasStudy: hasStudy };
+      });
+      setPeopleForSelectedHouse(peopleWithStudyStatus);
+    }
+
+    handleCloseMovePersonModal();
   };
 
 
@@ -316,13 +372,9 @@ const fetchTerritories = async () => {
       await updateInStore('people', updatedPerson);
     } else {
       // --- ADD (CREATE) LOGIC ---
-      if (!selectedHouse) {
-        console.error("Cannot save person: no house is selected.");
-        return; // Safety check
-      }
       const newPerson = {
         ...personData,
-        houseId: selectedHouse.id,
+        houseId: selectedHouse ? selectedHouse.id : null,
       };
       await addToStore('people', newPerson);
     }
@@ -339,6 +391,7 @@ const fetchTerritories = async () => {
       setPeopleForSelectedHouse(peopleWithStudyStatus);
     }
     setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
+    setBibleStudiesPageKey(prevKey => prevKey + 1); // Force the BibleStudiesPage to refresh
     handleClosePersonModal();                   // Close the modal
   };
 
@@ -576,6 +629,37 @@ const fetchTerritories = async () => {
       setIsAddPersonModalOpen(true);    // 2. Open the modal
     };
 
+    const handleDisassociatePerson = async (person) => {
+      if (window.confirm(`Are you sure you want to disassociate ${person.name} from this house?`)) {
+        // 1. Log the disassociation in the visit history
+        const logEntry = {
+          personId: person.id,
+          date: new Date().toISOString(),
+          notes: `Disassociated from house.`,
+          type: 'SYSTEM',
+        };
+        await addToStore('visits', logEntry);
+
+        // 2. Update the person's houseId to null
+        const updatedPerson = { ...person, houseId: null };
+        await updateInStore('people', updatedPerson);
+
+        // 3. Refresh the PeopleList for the current house
+        if (selectedHouse) {
+          const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
+          const refreshedStudies = await getAllFromStore('studies');
+          const peopleWithStudyStatus = peopleData.map(p => {
+            const hasStudy = refreshedStudies.some(s => s.personId === p.id);
+            return { ...p, hasStudy: hasStudy };
+          });
+          setPeopleForSelectedHouse(peopleWithStudyStatus);
+        }
+
+        // 4. Refresh the BibleStudiesPage
+        setBibleStudiesPageKey(prevKey => prevKey + 1);
+      }
+    };
+
     const handleTerritorySelect = async (territoryId) => {
       const territory = await getFromStore('territories', territoryId);
       setSelectedTerritoryDetails(territory);
@@ -598,46 +682,64 @@ const fetchTerritories = async () => {
       setIsAddVisitModalOpen(true); // Open the modal
     };
   
-        const handlePersonSelect = async (person) => {
+          const handlePersonSelect = async (person) => {
   
-          if (person.houseId) {
+            if (person.houseId) {
   
-            const house = await getFromStore('houses', person.houseId);
+              const house = await getFromStore('houses', person.houseId);
   
-            const street = await getFromStore('streets', house.streetId);
+              const street = await getFromStore('streets', house.streetId);
   
-            const territory = await getFromStore('territories', street.territoryId);
+              const territory = await getFromStore('territories', street.territoryId);
   
-      
+        
   
-            setSelectedTerritoryDetails(territory);
+              setSelectedTerritoryDetails(territory);
   
-            setSelectedTerritoryId(territory.id);
+              setSelectedTerritoryId(territory.id);
   
-            setSelectedStreetDetails(street);
+              setSelectedStreetDetails(street);
   
-            setSelectedStreetId(street.id);
+              setSelectedStreetId(street.id);
   
-            await handleHouseSelect(house);
+              await handleHouseSelect(house);
   
-            setIsBibleStudiesVisible(false);
+              setIsBibleStudiesVisible(false);
   
-          }
+            } else {
   
-          // Handle unassociated people later
+              setSelectedPerson(person);
   
-        };  const handleUpdateStudy = async (updatedStudyData) => {
+              setIsBibleStudiesVisible(false);
+  
+            }
+  
+          };  const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
     handleCloseEditStudyModal();
   };
 
+  const handleBackToBibleStudies = () => {
+    setSelectedPerson(null);
+    setIsBibleStudiesVisible(true);
+  };
+
 
 
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
   let currentView;
-  if (selectedStudy) {
+  if (selectedPerson) {
+    currentView = (
+      <PersonDetail 
+        person={selectedPerson}
+        onBack={handleBackToBibleStudies}
+        onAddVisit={handleOpenVisitModal}
+        onAssociate={handleOpenAssociatePersonModal}
+      />
+    );
+  } else if (selectedStudy) {
     currentView = (
       <StudyDetail 
         study={selectedStudy}
@@ -656,6 +758,7 @@ const fetchTerritories = async () => {
         onBack={handleCloseBibleStudies}
         onPersonSelect={handlePersonSelect}
         onAssociate={handleOpenAssociatePersonModal}
+        onAddPerson={handleAddPerson}
       />
     );
   } else if (isSettingsVisible) {
@@ -681,6 +784,8 @@ const fetchTerritories = async () => {
             onAddPerson={handleAddPerson}
             onDeletePerson={handleDeletePerson}
             onEditPerson={handleEditPerson}
+            onDisassociatePerson={handleDisassociatePerson}
+            onMovePerson={handleOpenMovePersonModal}
             visitListKey={visitListKey}
             onStartStudy={handleStartStudy}
             onViewStudy={handleViewStudy}
@@ -862,6 +967,14 @@ const fetchTerritories = async () => {
                 person={personToAssociate}
                 onSave={handleAssociatePerson}
                 onClose={handleCloseAssociatePersonModal}
+              />
+            )}
+
+            {isMovePersonModalOpen && (
+              <MovePersonModal
+                person={personToMove}
+                onSave={handleMovePerson}
+                onClose={handleCloseMovePersonModal}
               />
             )}
           </>

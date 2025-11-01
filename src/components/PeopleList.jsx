@@ -1,6 +1,6 @@
 import './PeopleList.css';
 
-function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy }) {
+function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy, onDisassociate, onMove }) {
   return (
     <div className="people-list-container">
       <h3>People</h3>
@@ -35,7 +35,20 @@ function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy }) {
                   >
                     Start Study
                   </button>
-                )}                <button 
+                )}
+                <button 
+                  className="move-person-btn"
+                  onClick={() => onMove(person)}
+                >
+                  Move
+                </button>
+                <button 
+                  className="disassociate-person-btn"
+                  onClick={() => onDisassociate(person)}
+                >
+                  Disassociate
+                </button>
+                <button 
                   className="edit-person-btn"
                   onClick={() => onEdit(person)}
                 >

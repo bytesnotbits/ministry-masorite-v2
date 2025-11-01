@@ -6,7 +6,7 @@ import PersonCard from './PersonCard.jsx';
 import './BibleStudiesPage.css';
 import { getAllFromStore, getByIndex } from '../database.js';
 
-function BibleStudiesPage({ onBack, onPersonSelect, onAssociate }) {
+function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson }) {
   const [bibleStudies, setBibleStudies] = useState([]);
   const [returnVisits, setReturnVisits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +78,10 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate }) {
       </button>
 
       <ViewHeader title="Return Visits & Bible Studies" />
+
+      <div className="page-actions">
+        <button onClick={onAddPerson}>+ New Contact</button>
+      </div>
 
       <div className="studies-section">
         <h2>Bible Studies ({bibleStudies.length})</h2>
