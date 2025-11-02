@@ -28,6 +28,16 @@
   transform: translateY(-2px);
 }
 
+.territory-item.completed {
+  background-color: #e8f5e9; /* Light green background */
+  opacity: 0.75;
+  border-left: 4px solid #4CAF50; /* Green left border */
+}
+
+.territory-item.completed:hover {
+  opacity: 0.9;
+}
+
 /*
 .territory-details {
   /* This container doesn't need special styles right now, but it's useful for structure */

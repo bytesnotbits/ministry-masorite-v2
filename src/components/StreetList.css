@@ -27,6 +27,16 @@
   transform: translateY(-2px);
 }
 
+.street-item.completed {
+  background-color: #e8f5e9; /* Light green background */
+  opacity: 0.75;
+  border-left: 4px solid #4CAF50; /* Green left border */
+}
+
+.street-item.completed:hover {
+  opacity: 0.9;
+}
+
 .street-name {
   font-size: 1.2rem;
   font-weight: bold;

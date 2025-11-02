@@ -29,6 +29,16 @@
   transform: translateY(-2px);
 }
 
+.house-item.completed {
+  background-color: #e8f5e9; /* Light green background */
+  opacity: 0.75;
+  border-left: 4px solid #4CAF50; /* Green left border */
+}
+
+.house-item.completed:hover {
+  opacity: 0.9;
+}
+
 .house-address {
   font-size: 1.1rem; /* Font size, Adjust as needed */
   font-weight: bold; /* Default: bold */

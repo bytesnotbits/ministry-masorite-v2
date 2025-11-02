@@ -114,6 +114,7 @@ function App() {
     showMailbox: false,
     showNoTrespassing: false
   });
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const handleOpenAssociatePersonModal = (person) => {
     setPersonToAssociate(person);
@@ -847,8 +848,8 @@ const fetchTerritories = async () => {
           onStreetSelect={handleStreetSelect}
           onAddStreet={handleOpenAddStreetModal}
           onEditTerritory={handleEditTerritory}
-          filters={houseFilters}
-          onFilterChange={setHouseFilters}
+          showCompleted={showCompleted}
+          onToggleCompleted={setShowCompleted}
           />;
     } else {
       currentView = (
@@ -858,8 +859,8 @@ const fetchTerritories = async () => {
           onAddTerritory={handleOpenAddTerritoryModal}
           onOpenSettings={handleOpenSettings}
           onOpenBibleStudies={handleOpenBibleStudies}
-          filters={houseFilters}
-          onFilterChange={setHouseFilters}
+          showCompleted={showCompleted}
+          onToggleCompleted={setShowCompleted}
         />
       );
     }

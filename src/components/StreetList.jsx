@@ -5,11 +5,11 @@ import { getByIndex, getFromStore } from '../database.js';
 import './StreetList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
-import FilterBar from './FilterBar.jsx';
+import CompletionToggle from './CompletionToggle.jsx';
 import './StatIcon.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory, filters, onFilterChange }) {
+function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory, showCompleted, onToggleCompleted }) {
   const [streets, setStreets] = useState([]);
   const [territoryDetails, setTerritoryDetails] = useState(null);
 
@@ -40,28 +40,17 @@ useEffect(() => {
     fetchStreetsAndStats();
   }, [territoryId]);
 
-  // Helper function to check if a house passes the filters
-  const housePassesFilters = (house) => {
-    // Collect all active filters (those set to true)
-    const activeFilters = [];
-    if (filters.showNotAtHome) activeFilters.push('isCurrentlyNH');
-    if (filters.showNotInterested) activeFilters.push('isNotInterested');
-    if (filters.showGate) activeFilters.push('hasGate');
-    if (filters.showMailbox) activeFilters.push('hasMailbox');
-    if (filters.showNoTrespassing) activeFilters.push('noTrespassing');
-
-    // If no filters are active, show all houses
-    if (activeFilters.length === 0) return true;
-
-    // House must match ALL active filters (AND logic)
-    return activeFilters.every(filterKey => house[filterKey] === true);
+  // Helper function to check if a street is completed
+  // A street is completed when ALL houses have isCurrentlyNH = false (no more not-at-homes)
+  const isStreetCompleted = (street) => {
+    if (!street.houses || street.houses.length === 0) return false; // Empty streets are not completed
+    return street.houses.every(house => !house.isCurrentlyNH);
   };
 
-  // Filter streets: only show streets that have at least one house passing the filters
+  // Filter streets: hide completed ones if showCompleted is false
   const filteredStreets = streets.filter(street => {
-    if (!street.houses || street.houses.length === 0) return true; // Show empty streets
-    // Show street if at least one house passes the filters
-    return street.houses.some(house => housePassesFilters(house));
+    if (showCompleted) return true; // Show all if toggle is on
+    return !isStreetCompleted(street); // Hide completed if toggle is off
   });
 
   return (
@@ -75,18 +64,19 @@ useEffect(() => {
         </button>
       </ViewHeader>
 
-      <FilterBar
-        filters={filters}
-        onFilterChange={onFilterChange}
-        availableFilters={['showNotAtHome', 'showNotInterested', 'showGate', 'showMailbox', 'showNoTrespassing']}
+      <CompletionToggle
+        showCompleted={showCompleted}
+        onToggle={onToggleCompleted}
       />
 
       {/* Add the className and onClick handler */}
       <ul className="street-list">
-        {filteredStreets.map(street => (
+        {filteredStreets.map(street => {
+          const isCompleted = isStreetCompleted(street);
+          return (
         <li
           key={street.id}
-          className="street-item"
+          className={`street-item ${isCompleted ? 'completed' : ''}`}
           onClick={() => onStreetSelect(street.id)}
         >
           <div className="street-name">{street.name}</div>
@@ -119,7 +109,8 @@ useEffect(() => {
               />
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

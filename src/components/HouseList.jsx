@@ -72,10 +72,12 @@ import FilterBar from './FilterBar.jsx';
             />
 
             <ul className="house-list">
-            {filteredHouses.map(house => (
-                <li 
-                    key={house.id} 
-                    className="house-item"
+            {filteredHouses.map(house => {
+                const isCompleted = !house.isCurrentlyNH; // House is completed when not at home is false
+                return (
+                <li
+                    key={house.id}
+                    className={`house-item ${isCompleted ? 'completed' : ''}`}
                     onClick={() => onHouseSelect(house)}
                     >
                     <div className="house-address">{house.address}</div>
@@ -90,7 +92,8 @@ import FilterBar from './FilterBar.jsx';
                     </div>
                     {/* --- END: Icon Logic --- */}
                 </li>
-            ))}
+                );
+            })}
             </ul>
         </div>
         );

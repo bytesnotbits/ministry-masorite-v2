@@ -1,34 +1,23 @@
 import './TerritoryList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
-import FilterBar from './FilterBar.jsx';
+import CompletionToggle from './CompletionToggle.jsx';
 import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies, filters, onFilterChange }) {
-  // Helper function to check if a house passes the filters
-  const housePassesFilters = (house) => {
-    // Collect all active filters (those set to true)
-    const activeFilters = [];
-    if (filters.showNotAtHome) activeFilters.push('isCurrentlyNH');
-    if (filters.showNotInterested) activeFilters.push('isNotInterested');
-    if (filters.showGate) activeFilters.push('hasGate');
-    if (filters.showMailbox) activeFilters.push('hasMailbox');
-    if (filters.showNoTrespassing) activeFilters.push('noTrespassing');
-
-    // If no filters are active, show all houses
-    if (activeFilters.length === 0) return true;
-
-    // House must match ALL active filters (AND logic)
-    return activeFilters.every(filterKey => house[filterKey] === true);
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies, showCompleted, onToggleCompleted }) {
+  // Helper function to check if a territory is completed
+  // A territory is completed when ALL houses have isCurrentlyNH = false (no more not-at-homes)
+  const isTerritoryCompleted = (territory) => {
+    if (!territory.houses || territory.houses.length === 0) return false; // Empty territories are not completed
+    return territory.houses.every(house => !house.isCurrentlyNH);
   };
 
-  // Filter territories: only show territories that have at least one house passing the filters
+  // Filter territories: hide completed ones if showCompleted is false
   const filteredTerritories = territories.filter(territory => {
-    if (!territory.houses || territory.houses.length === 0) return true; // Show empty territories
-    // Show territory if at least one house passes the filters
-    return territory.houses.some(house => housePassesFilters(house));
+    if (showCompleted) return true; // Show all if toggle is on
+    return !isTerritoryCompleted(territory); // Hide completed if toggle is off
   });
 
   return (
@@ -45,14 +34,15 @@ function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenS
         </button>
       </ViewHeader>
 
-      <FilterBar
-        filters={filters}
-        onFilterChange={onFilterChange}
-        availableFilters={['showNotAtHome', 'showNotInterested', 'showGate', 'showMailbox', 'showNoTrespassing']}
+      <CompletionToggle
+        showCompleted={showCompleted}
+        onToggle={onToggleCompleted}
       />
 
         <ul className="territory-list">
-          {filteredTerritories.map(territory => (
+          {filteredTerritories.map(territory => {
+            const isCompleted = isTerritoryCompleted(territory);
+            return (
 
 /* The logic is exactly the same as in StreetList, but we're using territory.houses instead of street.houses.
 We've wrapped the original number and description in a <div className="territory-details">.
@@ -60,7 +50,7 @@ We've created a new container, <div className="territory-stats-container">, to h
 The "Visited" count is now in a div with a unique class, territory-stat-pill, to avoid any style conflicts. */
           <li
             key={territory.id}
-            className="territory-item"
+            className={`territory-item ${isCompleted ? 'completed' : ''}`}
             onClick={() => onTerritorySelect(territory.id)}
           >
             <div className="territory-details">
@@ -95,7 +85,8 @@ The "Visited" count is now in a div with a unique class, territory-stat-pill, to
               />
             </div>
           </li>
-        ))}
+            );
+          })}
       </ul>
     </div>
   );
