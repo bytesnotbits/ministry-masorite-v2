@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './AddTerritoryModal.css';
 
 // It now receives onSave and onClose
 function AddTerritoryModal({ onSave, onClose }) {
   const [number, setNumber] = useState('');
   const [description, setDescription] = useState('');
+  const inputRef = useRef(null);
 
   const handleSave = (closeModal) => {
     // Basic validation
@@ -27,6 +28,12 @@ function AddTerritoryModal({ onSave, onClose }) {
       // Save & New: clear the form, keep modal open
       setNumber('');
       setDescription('');
+      // Focus back on the first input field for quick data entry
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -37,11 +44,13 @@ function AddTerritoryModal({ onSave, onClose }) {
         
         <label htmlFor="territory-number">Territory Number</label>
         <input
+          ref={inputRef}
           type="text"
           id="territory-number"
           placeholder="e.g., 5, 1-7, LTR-02"
           value={number}
           onChange={(e) => setNumber(e.target.value)}
+          autoFocus
         />
 
         <label htmlFor="territory-description">Description</label>

@@ -330,8 +330,8 @@ const fetchTerritories = async () => {
     // 2. Save the complete street object to the database
     await addToStore('streets', newStreet);
 
-    // 3. Re-fetch the territories to update the UI (we'll improve this later)
-    // await fetchTerritories(); // This is a temporary measure
+    // 3. Re-fetch the territories and refresh the street list
+    await fetchTerritories();
     setStreetListKey(prevKey => prevKey + 1);
 
     // 4. Close the modal only if requested
@@ -350,7 +350,8 @@ const fetchTerritories = async () => {
     // 2. Save the complete house object to the database
     await addToStore('houses', newHouse);
 
-    // 3. Increment the key to force the HouseList component to re-render
+    // 3. Refresh territories list and force the HouseList to re-render
+    await fetchTerritories();
     setHouseListKey(prevKey => prevKey + 1);
 
     // 4. Close the modal only if requested
@@ -447,9 +448,12 @@ const fetchTerritories = async () => {
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
       // 1. Save the updated object to the database
       await updateInStore('houses', updatedHouseData);
-      
+
       // 2. Force the HouseList to update in the background for next time
       setHouseListKey(prevKey => prevKey + 1);
+
+      // 3. Refresh the territories list to update stats and completion status
+      await fetchTerritories();
 
       if (stayOnPage) {
           // If we're staying, just refresh the data for the current view

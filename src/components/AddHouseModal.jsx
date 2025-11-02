@@ -1,10 +1,11 @@
 // src/components/AddHouseModal.jsx
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './AddTerritoryModal.css'; // We can reuse the same CSS for consistency!
 
 function AddHouseModal({ onSave, onClose }) {
   const [address, setAddress] = useState('');
+  const inputRef = useRef(null);
 
   const handleSave = (closeModal) => {
     if (!address.trim()) {
@@ -30,6 +31,12 @@ function AddHouseModal({ onSave, onClose }) {
     if (!closeModal) {
       // Save & New: clear the form, keep modal open
       setAddress('');
+      // Focus back on the input field for quick data entry
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -40,6 +47,7 @@ function AddHouseModal({ onSave, onClose }) {
         
         <label htmlFor="house-address">Address / House Number</label>
         <input
+          ref={inputRef}
           type="text"
           id="house-address"
           placeholder="e.g., 123, 45B, Apt 6"

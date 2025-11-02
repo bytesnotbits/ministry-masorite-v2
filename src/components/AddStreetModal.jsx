@@ -1,10 +1,11 @@
 // src/components/AddStreetModal.jsx
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './AddTerritoryModal.css'; // We can reuse the same CSS!
 
 function AddStreetModal({ onSave, onClose }) {
   const [name, setName] = useState('');
+  const inputRef = useRef(null);
 
   const handleSave = (closeModal) => {
     if (!name.trim()) {
@@ -24,6 +25,12 @@ function AddStreetModal({ onSave, onClose }) {
     if (!closeModal) {
       // Save & New: clear the form, keep modal open
       setName('');
+      // Focus back on the input field for quick data entry
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -34,6 +41,7 @@ function AddStreetModal({ onSave, onClose }) {
         
         <label htmlFor="street-name">Street Name</label>
         <input
+          ref={inputRef}
           type="text"
           id="street-name"
           placeholder="e.g., Main St, County Rd 123"
