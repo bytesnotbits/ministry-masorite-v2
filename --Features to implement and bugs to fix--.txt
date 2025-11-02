@@ -1,0 +1,29 @@
+>--Features to implement--<
+Log notathome, letter, NI directly from the house card
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>--Bugs to fix--<
+Deleting a territory should return the user to territorylist
+Deleting a street should return the user to streetlist
+Deleting a house should return the user to houselist
