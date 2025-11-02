@@ -36,18 +36,19 @@ import FilterBar from './FilterBar.jsx';
 
     // Apply filters to the houses list
     const filteredHouses = houses.filter(house => {
-        // If showNotAtHome is false, hide houses where isCurrentlyNH is true
-        if (!filters.showNotAtHome && house.isCurrentlyNH) return false;
-        // If showNotInterested is false, hide houses where isNotInterested is true
-        if (!filters.showNotInterested && house.isNotInterested) return false;
-        // If showGate is false, hide houses where hasGate is true
-        if (!filters.showGate && house.hasGate) return false;
-        // If showMailbox is false, hide houses where hasMailbox is true
-        if (!filters.showMailbox && house.hasMailbox) return false;
-        // If showNoTrespassing is false, hide houses where noTrespassing is true
-        if (!filters.showNoTrespassing && house.noTrespassing) return false;
+        // Collect all active filters (those set to true)
+        const activeFilters = [];
+        if (filters.showNotAtHome) activeFilters.push('isCurrentlyNH');
+        if (filters.showNotInterested) activeFilters.push('isNotInterested');
+        if (filters.showGate) activeFilters.push('hasGate');
+        if (filters.showMailbox) activeFilters.push('hasMailbox');
+        if (filters.showNoTrespassing) activeFilters.push('noTrespassing');
 
-        return true;
+        // If no filters are active, show all houses
+        if (activeFilters.length === 0) return true;
+
+        // House must match ALL active filters (AND logic)
+        return activeFilters.every(filterKey => house[filterKey] === true);
     });
 
     return (

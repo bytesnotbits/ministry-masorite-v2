@@ -108,11 +108,11 @@ function App() {
   const [isMovePersonModalOpen, setIsMovePersonModalOpen] = useState(false);
   const [personToMove, setPersonToMove] = useState(null);
   const [houseFilters, setHouseFilters] = useState({
-    showNotAtHome: true,
-    showNotInterested: true,
-    showGate: true,
-    showMailbox: true,
-    showNoTrespassing: true
+    showNotAtHome: false,
+    showNotInterested: false,
+    showGate: false,
+    showMailbox: false,
+    showNoTrespassing: false
   });
 
   const handleOpenAssociatePersonModal = (person) => {

@@ -42,12 +42,19 @@ useEffect(() => {
 
   // Helper function to check if a house passes the filters
   const housePassesFilters = (house) => {
-    if (!filters.showNotAtHome && house.isCurrentlyNH) return false;
-    if (!filters.showNotInterested && house.isNotInterested) return false;
-    if (!filters.showGate && house.hasGate) return false;
-    if (!filters.showMailbox && house.hasMailbox) return false;
-    if (!filters.showNoTrespassing && house.noTrespassing) return false;
-    return true;
+    // Collect all active filters (those set to true)
+    const activeFilters = [];
+    if (filters.showNotAtHome) activeFilters.push('isCurrentlyNH');
+    if (filters.showNotInterested) activeFilters.push('isNotInterested');
+    if (filters.showGate) activeFilters.push('hasGate');
+    if (filters.showMailbox) activeFilters.push('hasMailbox');
+    if (filters.showNoTrespassing) activeFilters.push('noTrespassing');
+
+    // If no filters are active, show all houses
+    if (activeFilters.length === 0) return true;
+
+    // House must match ALL active filters (AND logic)
+    return activeFilters.every(filterKey => house[filterKey] === true);
   };
 
   // Filter streets: only show streets that have at least one house passing the filters
