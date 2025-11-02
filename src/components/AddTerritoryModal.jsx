@@ -6,7 +6,7 @@ function AddTerritoryModal({ onSave, onClose }) {
   const [number, setNumber] = useState('');
   const [description, setDescription] = useState('');
 
-  const handleSaveClick = () => {
+  const handleSave = (closeModal) => {
     // Basic validation
     if (!number.trim() || !description.trim()) {
       alert('Please fill out both fields.');
@@ -20,8 +20,14 @@ function AddTerritoryModal({ onSave, onClose }) {
       createdAt: new Date().toISOString(),
     };
 
-    // Call the function passed down from the parent
-    onSave(newTerritory);
+    // Call the function passed down from the parent with closeModal flag
+    onSave(newTerritory, closeModal);
+
+    if (!closeModal) {
+      // Save & New: clear the form, keep modal open
+      setNumber('');
+      setDescription('');
+    }
   };
 
   return (
@@ -49,8 +55,8 @@ function AddTerritoryModal({ onSave, onClose }) {
 
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          {/* The Save button now calls our new handler */}
-          <button className="btn-primary" onClick={handleSaveClick}>Save</button>
+          <button className="btn-primary" onClick={() => handleSave(false)}>Save & New</button>
+          <button className="btn-primary" onClick={() => handleSave(true)}>Save & Close</button>
         </div>
       </div>
     </div>

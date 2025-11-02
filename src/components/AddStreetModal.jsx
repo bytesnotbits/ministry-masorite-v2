@@ -6,7 +6,7 @@ import './AddTerritoryModal.css'; // We can reuse the same CSS!
 function AddStreetModal({ onSave, onClose }) {
   const [name, setName] = useState('');
 
-  const handleSaveClick = () => {
+  const handleSave = (closeModal) => {
     if (!name.trim()) {
       alert('Please enter a street name.');
       return;
@@ -18,7 +18,13 @@ function AddStreetModal({ onSave, onClose }) {
       name: name,
     };
 
-    onSave(newStreet);
+    // Call the function passed down from the parent with closeModal flag
+    onSave(newStreet, closeModal);
+
+    if (!closeModal) {
+      // Save & New: clear the form, keep modal open
+      setName('');
+    }
   };
 
   return (
@@ -38,7 +44,8 @@ function AddStreetModal({ onSave, onClose }) {
 
         <div className="modal-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSaveClick}>Save</button>
+          <button className="btn-primary" onClick={() => handleSave(false)}>Save & New</button>
+          <button className="btn-primary" onClick={() => handleSave(true)}>Save & Close</button>
         </div>
       </div>
     </div>

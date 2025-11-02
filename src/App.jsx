@@ -302,10 +302,12 @@ const fetchTerritories = async () => {
     setSelectedStreet(null);
   };
 
-  const handleSaveTerritory = async (newTerritory) => {
+  const handleSaveTerritory = async (newTerritory, shouldClose = true) => {
     await addToStore('territories', newTerritory); // Save to the database
     await fetchTerritories(); // Re-fetch the list to include the new one
-    setIsAddTerritoryModalOpen(false); // Close the modal
+    if (shouldClose) {
+      setIsAddTerritoryModalOpen(false); // Close the modal only if requested
+    }
   };
 
   const handleEditStreet = async (streetId) => {
@@ -318,7 +320,7 @@ const fetchTerritories = async () => {
     }
   };
 
-  const handleSaveStreet = async (streetData) => {
+  const handleSaveStreet = async (streetData, shouldClose = true) => {
     // 1. Combine the street name from the modal with the currently selected territory ID
     const newStreet = {
       ...streetData, // This copies the { name: '...' } object from the modal
@@ -332,11 +334,13 @@ const fetchTerritories = async () => {
     // await fetchTerritories(); // This is a temporary measure
     setStreetListKey(prevKey => prevKey + 1);
 
-    // 4. Close the modal
-    setIsAddStreetModalOpen(false);
+    // 4. Close the modal only if requested
+    if (shouldClose) {
+      setIsAddStreetModalOpen(false);
+    }
   };
 
-  const handleSaveHouse = async (houseData) => {
+  const handleSaveHouse = async (houseData, shouldClose = true) => {
     // 1. Combine the house data from the modal with the currently selected street ID
     const newHouse = {
       ...houseData,
@@ -349,8 +353,10 @@ const fetchTerritories = async () => {
     // 3. Increment the key to force the HouseList component to re-render
     setHouseListKey(prevKey => prevKey + 1);
 
-    // 4. Close the modal
-    setIsAddHouseModalOpen(false);
+    // 4. Close the modal only if requested
+    if (shouldClose) {
+      setIsAddHouseModalOpen(false);
+    }
   };
 
   const handleOpenAddHouseModal = () => setIsAddHouseModalOpen(true);
