@@ -82,7 +82,9 @@ function App() {
     }
     await deleteFromStore('territories', territoryId); // Finally, delete the territory
 
+    // Clear both edit mode and selection to return to TerritoryList
     setSelectedTerritory(null);
+    setSelectedTerritoryId(null);
     await fetchTerritories();
   };
 
@@ -307,8 +309,12 @@ const fetchTerritories = async () => {
       await deleteFromStore('houses', house.id);
     }
     await deleteFromStore('streets', streetId); // Now delete the street itself
+
+    // Clear both edit mode and selection to return to StreetList
     setSelectedStreet(null);
+    setSelectedStreetId(null);
     setStreetListKey(prevKey => prevKey + 1);
+    await fetchTerritories(); // Refresh territories to update stats
   };
 
   const handleBackToStreetList = () => {
@@ -490,11 +496,14 @@ const fetchTerritories = async () => {
     // 1. Delete the item from the database using its ID
     await deleteFromStore('houses', houseId);
 
-    // 2. Clear the selected house to return to the list view
+    // 2. Clear the selected house to return to the HouseList view
     setSelectedHouse(null);
 
     // 3. Increment the key to force the HouseList to re-fetch and show the updated list
     setHouseListKey(prevKey => prevKey + 1);
+
+    // 4. Refresh territories to update stats
+    await fetchTerritories();
   };
 
   const handleGoBack = () => {
