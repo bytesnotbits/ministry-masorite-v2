@@ -80,6 +80,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
           onChange={(e) => setType(e.target.value)}
         >
           <option value="Regular">Regular Visit</option>
+          <option value="Not At Home">Not At Home</option>
           <option value="LETTER">Letter Sent</option>
           <option value="Letter Response">Letter Response</option>
           <option value="Phone Call">Phone Call</option>

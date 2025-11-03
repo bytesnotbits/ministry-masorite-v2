@@ -25,6 +25,7 @@ import MovePersonModal from './components/MovePersonModal.jsx';
 import LetterCampaignList from './components/LetterCampaignList.jsx';
 import LetterQueue from './components/LetterQueue.jsx';
 import LetterTemplates from './components/LetterTemplates.jsx';
+import PhoneCallModal from './components/PhoneCallModal.jsx';
 
 
 
@@ -56,6 +57,8 @@ function App() {
   const [isLetterWritingVisible, setIsLetterWritingVisible] = useState(false);
   const [isLetterQueueVisible, setIsLetterQueueVisible] = useState(false);
   const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
+  const [isPhoneCallModalOpen, setIsPhoneCallModalOpen] = useState(false);
+  const [selectedHouseForPhoneCall, setSelectedHouseForPhoneCall] = useState(null);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -633,6 +636,75 @@ const fetchTerritories = async () => {
     setPersonForVisit(null); // Reset person for visit
   };
 
+  // Handler for "Log NH" button - creates a Not At Home visit directly
+  const handleLogNH = async (house) => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+
+    const visitData = {
+      date: todayString,
+      notes: 'Not at home',
+      personId: null,
+      type: 'Not At Home',
+      houseId: house.id,
+    };
+
+    await addToStore('visits', visitData);
+
+    // Track consecutive NH visits if house is marked as NH
+    if (house.isCurrentlyNH) {
+      const freshHouse = await getFromStore('houses', house.id);
+      const newCount = (freshHouse.consecutiveNHVisits || 0) + 1;
+      const updatedHouse = {
+        ...freshHouse,
+        consecutiveNHVisits: newCount
+      };
+      await updateInStore('houses', updatedHouse);
+      console.log(`📊 Consecutive NH visits incremented for ${house.address}`);
+    }
+
+    // Refresh the house list
+    setHouseListKey(prevKey => prevKey + 1);
+    setVisitListKey(prevKey => prevKey + 1);
+  };
+
+  // Handler for opening phone call modal
+  const handleOpenPhoneCallModal = (house) => {
+    setSelectedHouseForPhoneCall(house);
+    setIsPhoneCallModalOpen(true);
+  };
+
+  // Handler for saving phone call from modal
+  const handleSavePhoneCall = async (visitData, houseId) => {
+    const newVisit = {
+      ...visitData,
+      houseId: houseId,
+    };
+
+    await addToStore('visits', newVisit);
+
+    // Track consecutive NH visits if house is marked as NH
+    const house = await getFromStore('houses', houseId);
+    if (house && house.isCurrentlyNH) {
+      const newCount = (house.consecutiveNHVisits || 0) + 1;
+      const updatedHouse = {
+        ...house,
+        consecutiveNHVisits: newCount
+      };
+      await updateInStore('houses', updatedHouse);
+      console.log(`📊 Consecutive NH visits incremented for ${house.address}`);
+    }
+
+    // Close modal and refresh lists
+    setIsPhoneCallModalOpen(false);
+    setSelectedHouseForPhoneCall(null);
+    setHouseListKey(prevKey => prevKey + 1);
+    setVisitListKey(prevKey => prevKey + 1);
+  };
+
   const handleSaveStudy = async (studyData) => {
     // 1. Save the new study to the database
     await addToStore('studies', studyData);
@@ -897,6 +969,8 @@ const fetchTerritories = async () => {
           onEditStreet={handleEditStreet}
           filters={houseFilters}
           onFilterChange={setHouseFilters}
+          onLogNH={handleLogNH}
+          onPhoneCall={handleOpenPhoneCallModal}
           key={houseListKey}
         />;
 
@@ -1061,6 +1135,17 @@ const fetchTerritories = async () => {
                 onSave={handleSavePerson}
                 onClose={handleClosePersonModal}
                 personToEdit={personToEdit}
+              />
+            )}
+
+            {isPhoneCallModalOpen && selectedHouseForPhoneCall && (
+              <PhoneCallModal
+                house={selectedHouseForPhoneCall}
+                onSave={handleSavePhoneCall}
+                onClose={() => {
+                  setIsPhoneCallModalOpen(false);
+                  setSelectedHouseForPhoneCall(null);
+                }}
               />
             )}
 
