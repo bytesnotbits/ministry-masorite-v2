@@ -14,8 +14,10 @@ function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, st
         visitData.sort((a, b) => {
           const dateTimeA = `${a.date} ${a.time || '00:00'}`;
           const dateTimeB = `${b.date} ${b.time || '00:00'}`;
-          return new Date(dateTimeB) - new Date(dateTimeA);
+          return new Date(dateTimeA) - new Date(dateTimeB);
         });
+        // Reverse to get newest first
+        visitData.reverse();
         setVisits(visitData);
       }
     };
