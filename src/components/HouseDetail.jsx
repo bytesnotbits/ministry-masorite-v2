@@ -127,7 +127,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
             <button className="primary-action-btn" onClick={onAddPerson}>
               + Add Person
             </button>
-            <button className="primary-action-btn" onClick={onAddVisit}>
+            <button className="primary-action-btn" onClick={() => onAddVisit()}>
               + Add Visit
             </button>
             <button className="primary-action-btn" onClick={onQuickLetter}>

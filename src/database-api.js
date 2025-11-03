@@ -274,11 +274,12 @@ export async function executeMerge(data, existingTerritory = null) {
         }
         
         // CRITICAL: Ensure all boolean fields are present, especially for old imported data
-        if (house.isNotInterested === undefined) house.isNotInterested = false; 
+        if (house.isNotInterested === undefined) house.isNotInterested = false;
         if (house.isCurrentlyNH === undefined) house.isCurrentlyNH = true; // Default to true if missing
         if (house.hasGate === undefined) house.hasGate = false;
         if (house.hasMailbox === undefined) house.hasMailbox = false;
         if (house.noTrespassing === undefined) house.noTrespassing = false;
+        if (house.consecutiveNHVisits === undefined) house.consecutiveNHVisits = 0;
 
         const newId = await addToStore('houses', house);
         idMaps.houses.set(oldId, newId);

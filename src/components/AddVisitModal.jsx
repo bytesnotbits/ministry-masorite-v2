@@ -9,6 +9,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
   const [personId, setPersonId] = useState('');
+  const [type, setType] = useState('Regular');
 
 
   // This effect runs when the modal opens or when the visitToEdit prop changes
@@ -16,9 +17,10 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
     if (visitToEdit) {
       // EDIT MODE: We have a visit to edit, so pre-fill the form.
       // We only take the YYYY-MM-DD part of the string to avoid any time/timezone data.
-      setDate(visitToEdit.date.substring(0, 10)); 
+      setDate(visitToEdit.date.substring(0, 10));
       setNotes(visitToEdit.notes || '');
       setPersonId(visitToEdit.personId || '');
+      setType(visitToEdit.type || 'Regular'); // Default to Regular for old visits
     } else {
       // ADD MODE: No visit to edit, so set defaults for a new visit.
       const today = new Date(); // Creates a date object using the user's local clock.
@@ -35,6 +37,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
       setDate(todayString);
       setNotes('');
       setPersonId(personForVisit ? personForVisit.id : '');
+      setType('Regular'); // Default to Regular for new visits
     }
   }, [visitToEdit, personForVisit]); // This effect depends on the visitToEdit and personForVisit props
 
@@ -49,6 +52,7 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
         date: date, // Date is required
         notes: notes, // Notes can be empty
         personId: personId ? parseInt(personId, 10) : null, // Convert to integer or null
+        type: type, // Visit type
     };
 
     // Call the onSave function passed from App.jsx
@@ -68,6 +72,19 @@ function AddVisitModal({ onSave, onClose, visitToEdit, people, personForVisit })
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
+
+        <label htmlFor="visit-type">Visit Type</label>
+        <select
+          id="visit-type"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
+          <option value="Regular">Regular Visit</option>
+          <option value="LETTER">Letter Sent</option>
+          <option value="Letter Response">Letter Response</option>
+          <option value="Phone Call">Phone Call</option>
+          <option value="SYSTEM">System</option>
+        </select>
 
         <label htmlFor="visit-notes">Notes</label>
         <textarea

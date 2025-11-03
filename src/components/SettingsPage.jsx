@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import './SettingsPage.css';
 import ViewHeader from './ViewHeader.jsx';
 
@@ -6,6 +6,26 @@ import ViewHeader from './ViewHeader.jsx';
 function SettingsPage({ onBack, onExport, onImport, onClearAllData }) {
   // 1. Create the ref for our hidden file input
   const fileInputRef = useRef(null);
+
+  // 2. Letter Queue Threshold state
+  const [letterQueueThreshold, setLetterQueueThreshold] = useState(3);
+
+  // 3. Load threshold from localStorage on mount
+  useEffect(() => {
+    const savedThreshold = localStorage.getItem('letterQueueThreshold');
+    if (savedThreshold) {
+      setLetterQueueThreshold(parseInt(savedThreshold, 10));
+    }
+  }, []);
+
+  // 4. Handler to update threshold
+  const handleThresholdChange = (e) => {
+    const value = parseInt(e.target.value, 10);
+    if (value > 0) { // Ensure positive number
+      setLetterQueueThreshold(value);
+      localStorage.setItem('letterQueueThreshold', value.toString());
+    }
+  };
 
   // 2. This function is called when the VISIBLE button is clicked
   const handleImportClick = () => {
@@ -51,6 +71,18 @@ function SettingsPage({ onBack, onExport, onImport, onClearAllData }) {
           onChange={handleFileChange}
           style={{ display: 'none' }} // This is what hides it
           accept=".json" // Only allow .json files to be selected
+        />
+      </div>
+
+      <div className="settings-section">
+        <h3>Letter Queue Settings</h3>
+        <p>Add houses to the Letter Queue after this many consecutive not-at-home visits:</p>
+        <input
+          type="number"
+          min="1"
+          value={letterQueueThreshold}
+          onChange={handleThresholdChange}
+          className="threshold-input"
         />
       </div>
 

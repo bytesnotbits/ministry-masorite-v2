@@ -377,7 +377,7 @@ const fetchTerritories = async () => {
   const handleCloseVisitModal = () => {
     setIsAddVisitModalOpen(false);
     setVisitToEdit(null); // Also reset the state on cancel/close
-    setPersonForVisit(null);
+    setPersonForVisit(null); // Reset person
   };
 
   const handleClosePersonModal = () => {
@@ -453,6 +453,11 @@ const fetchTerritories = async () => {
   };
 
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
+      // NEW: Check if isCurrentlyNH changed to false, reset consecutive count
+      if (selectedHouse && selectedHouse.isCurrentlyNH && !updatedHouseData.isCurrentlyNH) {
+        updatedHouseData.consecutiveNHVisits = 0;
+      }
+
       // 1. Save the updated object to the database
       await updateInStore('houses', updatedHouseData);
 
@@ -571,7 +576,7 @@ const fetchTerritories = async () => {
     // Check if we are editing an existing visit or adding a new one
     if (visitToEdit) {
       // --- UPDATE LOGIC ---
-      const updatedVisit = { 
+      const updatedVisit = {
         ...visitToEdit,
         ...visitData
       };
@@ -579,6 +584,8 @@ const fetchTerritories = async () => {
     } else {
       // --- ADD (CREATE) LOGIC ---
       let newVisit;
+      let houseId;
+
       if (personForVisit) {
         // Case 1: Visit added from StudyDetail view
         newVisit = {
@@ -586,24 +593,41 @@ const fetchTerritories = async () => {
           personId: personForVisit.id,
           houseId: personForVisit.houseId,
         };
+        houseId = personForVisit.houseId;
       } else if (selectedHouse) {
         // Case 2: Visit added from HouseDetail view
         newVisit = {
           ...visitData,
           houseId: selectedHouse.id,
         };
+        houseId = selectedHouse.id;
       } else {
         console.error("Cannot save visit: no house or person is selected.");
         return;
       }
+
       await addToStore('visits', newVisit);
+
+      // --- NEW: Track consecutive NH visits ---
+      if (houseId && visitData.type !== 'LETTER') {
+        const house = await getFromStore('houses', houseId);
+        if (house && house.isCurrentlyNH) {
+          // House is still marked as NH, increment the counter
+          const updatedHouse = {
+            ...house,
+            consecutiveNHVisits: (house.consecutiveNHVisits || 0) + 1
+          };
+          await updateInStore('houses', updatedHouse);
+        }
+      }
     }
-    
+
     // --- This runs for both adds and updates ---
     setVisitListKey(prevKey => prevKey + 1); // Refresh HouseDetail
     setStudyVisitListKey(prevKey => prevKey + 1); // Refresh StudyDetail
     setIsAddVisitModalOpen(false); // Close the modal
     setVisitToEdit(null); // Reset the visitToEdit state
+    setPersonForVisit(null); // Reset person for visit
   };
 
   const handleSaveStudy = async (studyData) => {
