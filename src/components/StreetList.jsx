@@ -79,36 +79,36 @@ useEffect(() => {
           className={`street-item ${isCompleted ? 'completed' : ''}`}
           onClick={() => onStreetSelect(street.id)}
         >
-          <div className="street-name">{street.name}</div>
-          {/* --- NEW COMBINED STATS CONTAINER --- */}
-            <div className="street-stats-container">
-              <div className="street-stats">
-                {(() => {
-                  const totalHouses = street.houses ? street.houses.length : 0;
-                  const visitedHouses = street.houses ? street.houses.filter(h => !h.isCurrentlyNH).length : 0;
-                  return `${visitedHouses} of ${totalHouses} Visited`;
-                })()}
-              </div>
-
-              {/* The icons are now inside the same container */}
-              <StatIcon 
-                iconName="notAtHome" 
-                count={street.houses ? street.houses.filter(h => h.isCurrentlyNH).length : 0} 
-              />
-              <StatIcon 
-                iconName="notInterested" 
-                count={street.houses ? street.houses.filter(h => h.isNotInterested).length : 0} 
-              />
-              <StatIcon 
-                iconName="gate" 
-                count={street.houses ? street.houses.filter(h => h.hasGate).length : 0} 
-              />
-              <StatIcon 
-                iconName="noTrespassing" 
-                count={street.houses ? street.houses.filter(h => h.noTrespassing).length : 0} 
-              />
+          <div className="street-header">
+            <div className="street-name">{street.name}</div>
+            <div className="street-stats">
+              {(() => {
+                const totalHouses = street.houses ? street.houses.length : 0;
+                const visitedHouses = street.houses ? street.houses.filter(h => !h.isCurrentlyNH).length : 0;
+                return `${visitedHouses} of ${totalHouses} Visited`;
+              })()}
             </div>
-          </li>
+          </div>
+
+          <div className="street-stats-container">
+            <StatIcon
+              iconName="notAtHome"
+              count={street.houses ? street.houses.filter(h => h.isCurrentlyNH).length : 0}
+            />
+            <StatIcon
+              iconName="notInterested"
+              count={street.houses ? street.houses.filter(h => h.isNotInterested).length : 0}
+            />
+            <StatIcon
+              iconName="gate"
+              count={street.houses ? street.houses.filter(h => h.hasGate).length : 0}
+            />
+            <StatIcon
+              iconName="noTrespassing"
+              count={street.houses ? street.houses.filter(h => h.noTrespassing).length : 0}
+            />
+          </div>
+        </li>
           );
         })}
       </ul>

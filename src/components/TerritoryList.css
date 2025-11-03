@@ -15,11 +15,11 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
-  
+
   /* --- Key Changes for Layout --- */
   display: flex;
   flex-direction: column; /* Stack details and stats vertically */
-  align-items: flex-start; /* Align everything to the left */
+  align-items: stretch; /* Stretch items to full width */
   gap: 0.75rem;           /* Add space between the two rows */
 }
 
@@ -38,12 +38,14 @@
   opacity: 0.9;
 }
 
-/*
 .territory-details {
-  /* This container doesn't need special styles right now, but it's useful for structure */
-/*
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap; /* Allow wrapping on very small screens */
 }
-*/
 
 .territory-number {
   font-size: 1.2rem;
@@ -60,7 +62,9 @@
 /* --- NEW: Styles for the Stats Row --- */
 .territory-stats-container {
   display: flex;
+  flex-wrap: wrap; /* Allow stats to wrap to next line when space is limited */
   align-items: center;
+  justify-content: flex-end; /* Right-justify the icons */
   gap: 1rem; /* Space between the pill and the icons */
 }
 

@@ -57,11 +57,10 @@ The "Visited" count is now in a div with a unique class, territory-stat-pill, to
             onClick={() => onTerritorySelect(territory.id)}
           >
             <div className="territory-details">
-              <div className="territory-number">Territory #{territory.number}</div>
-              <div className="territory-description">{territory.description}</div>
-            </div>
-            
-            <div className="territory-stats-container">
+              <div>
+                <div className="territory-number">Territory #{territory.number}</div>
+                <div className="territory-description">{territory.description}</div>
+              </div>
               <div className="territory-stat-pill">
                 {(() => {
                   const totalHouses = territory.houses ? territory.houses.length : 0;
@@ -69,22 +68,24 @@ The "Visited" count is now in a div with a unique class, territory-stat-pill, to
                   return `${visitedHouses} of ${totalHouses} Visited`;
                 })()}
               </div>
-              
-              <StatIcon 
-                iconName="notAtHome" 
-                count={territory.houses ? territory.houses.filter(h => h.isCurrentlyNH).length : 0} 
+            </div>
+
+            <div className="territory-stats-container">
+              <StatIcon
+                iconName="notAtHome"
+                count={territory.houses ? territory.houses.filter(h => h.isCurrentlyNH).length : 0}
               />
-              <StatIcon 
-                iconName="notInterested" 
-                count={territory.houses ? territory.houses.filter(h => h.isNotInterested).length : 0} 
+              <StatIcon
+                iconName="notInterested"
+                count={territory.houses ? territory.houses.filter(h => h.isNotInterested).length : 0}
               />
-              <StatIcon 
-                iconName="gate" 
-                count={territory.houses ? territory.houses.filter(h => h.hasGate).length : 0} 
+              <StatIcon
+                iconName="gate"
+                count={territory.houses ? territory.houses.filter(h => h.hasGate).length : 0}
               />
-              <StatIcon 
-                iconName="noTrespassing" 
-                count={territory.houses ? territory.houses.filter(h => h.noTrespassing).length : 0} 
+              <StatIcon
+                iconName="noTrespassing"
+                count={territory.houses ? territory.houses.filter(h => h.noTrespassing).length : 0}
               />
             </div>
           </li>

@@ -71,6 +71,7 @@ h1 {
 
 .header-actions {
   display: flex;
+  flex-wrap: wrap; /* Allow buttons to wrap to next line when space is limited */
   gap: 1rem; /* Creates space between the buttons */
 }
 
