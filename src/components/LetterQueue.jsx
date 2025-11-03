@@ -3,7 +3,7 @@ import { getAllFromStore, getFromStore, getByIndex } from '../database.js';
 import Icon from './Icon';
 import './LetterQueue.css';
 
-function LetterQueue({ onBack }) {
+function LetterQueue({ onBack, onHouseSelect }) {
   const [queue, setQueue] = useState([]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [threshold, setThreshold] = useState(3);
@@ -104,7 +104,7 @@ function LetterQueue({ onBack }) {
       <ul className="queue-list">
         {displayedQueue.map(house => (
           <li key={house.id} className={house.letterSent ? 'completed' : ''}>
-            <div className="queue-item-header">
+            <div className="queue-item-header" onClick={() => onHouseSelect(house)} style={{ cursor: 'pointer' }}>
               <div className="queue-item-address">
                 <strong>{house.address}</strong>
                 <span className="queue-item-location">
@@ -125,7 +125,10 @@ function LetterQueue({ onBack }) {
             </div>
             <button
               className="letter-sent-btn"
-              onClick={() => handleLetterSent(house)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLetterSent(house);
+              }}
               disabled={house.letterSent}
             >
               {house.letterSent ? '✓ Letter Sent' : 'Mark Letter Sent'}

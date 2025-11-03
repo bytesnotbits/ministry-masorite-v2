@@ -30,3 +30,10 @@
   margin: 0 0.5rem; /* Increased margin for spacing */
   font-size: 1.2rem;
 }
+
+.breadcrumb-separator-custom {
+  color: #a0aec0;
+  font-weight: bold;
+  margin: 0 0.75rem; /* Slightly more margin for visual separation */
+  font-size: 1.2rem;
+}

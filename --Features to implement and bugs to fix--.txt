@@ -1,27 +1,6 @@
 >--Features to implement--<
-HouseList -- Add buttons to log notAthome, Not Interested directly from the house card
 LetterQueue -- Add ability to click on the card and be taken to the HouseDetail view.
 HouseDetail -- Deleting a Letter Sent entry in the Visit History ask the user if they want to add the house back to the Letter Queue
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 >--Bugs to fix--<

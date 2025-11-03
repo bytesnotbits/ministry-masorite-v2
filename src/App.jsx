@@ -54,6 +54,7 @@ function App() {
   const [peopleForSelectedHouse, setPeopleForSelectedHouse] = useState([]);
   const [isEditingHouse, setIsEditingHouse] = useState(false);
   const [cameFromBibleStudies, setCameFromBibleStudies] = useState(false);
+  const [cameFromLetterQueue, setCameFromLetterQueue] = useState(false);
   const [isLetterWritingVisible, setIsLetterWritingVisible] = useState(false);
   const [isLetterQueueVisible, setIsLetterQueueVisible] = useState(false);
   const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
@@ -427,6 +428,7 @@ const fetchTerritories = async () => {
     setSelectedStreetDetails(street);
     setSelectedStreetId(streetId);
     setCameFromBibleStudies(false);
+    setCameFromLetterQueue(false);
   };
 
   const handleHouseSelect = async (houseObject) => {
@@ -805,6 +807,7 @@ const fetchTerritories = async () => {
       setSelectedTerritoryDetails(territory);
       setSelectedTerritoryId(territoryId);
       setCameFromBibleStudies(false);
+      setCameFromLetterQueue(false);
     };
   
   const handleDeleteVisit = async (visitId) => {
@@ -824,42 +827,56 @@ const fetchTerritories = async () => {
     };
   
           const handlePersonSelect = async (person) => {
-  
+
             if (person.houseId) {
-  
+
               const house = await getFromStore('houses', person.houseId);
-  
+
               const street = await getFromStore('streets', house.streetId);
-  
+
               const territory = await getFromStore('territories', street.territoryId);
-  
-        
-  
+
+
+
               setSelectedTerritoryDetails(territory);
-  
+
                     setSelectedTerritoryId(territory.id);
-  
+
                     setSelectedStreetDetails(street);
-  
+
                     setSelectedStreetId(street.id);
-  
+
                     await handleHouseSelect(house);
-  
+
                     setIsBibleStudiesVisible(false);
-  
+
                     setCameFromBibleStudies(true);
-  
+
                   } else {
-  
+
                     setSelectedPerson(person);
-  
+
                     setIsBibleStudiesVisible(false);
-  
+
                     setCameFromBibleStudies(true);
-  
+
                   }
-  
-                };  const handleUpdateStudy = async (updatedStudyData) => {
+
+                };
+
+  const handleHouseSelectFromLetterQueue = async (house) => {
+    const street = await getFromStore('streets', house.streetId);
+    const territory = await getFromStore('territories', street.territoryId);
+
+    setSelectedTerritoryDetails(territory);
+    setSelectedTerritoryId(territory.id);
+    setSelectedStreetDetails(street);
+    setSelectedStreetId(street.id);
+    await handleHouseSelect(house);
+    setIsLetterQueueVisible(false);
+    setIsLetterWritingVisible(false);
+    setCameFromLetterQueue(true);
+  };  const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
@@ -920,7 +937,7 @@ const fetchTerritories = async () => {
   } else if (isLetterTemplatesVisible) {
     currentView = <LetterTemplates onBack={() => setIsLetterTemplatesVisible(false)} />;
   } else if (isLetterQueueVisible) {
-    currentView = <LetterQueue onBack={() => setIsLetterQueueVisible(false)} />;
+    currentView = <LetterQueue onBack={() => setIsLetterQueueVisible(false)} onHouseSelect={handleHouseSelectFromLetterQueue} />;
   } else if (isLetterWritingVisible) {
     currentView = <LetterCampaignList onBack={() => setIsLetterWritingVisible(false)} onOpenLetterQueue={() => setIsLetterQueueVisible(true)} onOpenLetterTemplates={() => setIsLetterTemplatesVisible(true)} />;
   } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
@@ -1011,28 +1028,109 @@ const fetchTerritories = async () => {
       label: 'Back',
       onClick: () => setSelectedStudy(null)
     });
-  } else if (cameFromBibleStudies && (selectedHouse || selectedPerson)) {
-    crumbs.push({
-      label: 'Return Visits & Bible Studies',
-      onClick: () => {
-        if (isEditingHouse) {
-          alert("Canceling edit. No changes saved.");
+  } else if ((cameFromBibleStudies || cameFromLetterQueue) && (selectedHouse || selectedPerson)) {
+    // Add the source button (Bible Studies or Letter Queue)
+    if (cameFromBibleStudies) {
+      crumbs.push({
+        label: 'Return Visits & Bible Studies',
+        onClick: () => {
+          if (isEditingHouse) {
+            alert("Canceling edit. No changes saved.");
+          }
+          // Reset all navigation state
+          setSelectedTerritoryId(null);
+          setSelectedStreetId(null);
+          setSelectedHouse(null);
+          setSelectedTerritoryDetails(null);
+          setSelectedStreetDetails(null);
+          setSelectedPerson(null);
+          setSelectedTerritory(null);
+          setSelectedStreet(null);
+          setIsEditingHouse(false);
+          setCameFromBibleStudies(false);
+          // Open Bible Studies page
+          setIsBibleStudiesVisible(true);
         }
-        // Reset all navigation state
-        setSelectedTerritoryId(null);
-        setSelectedStreetId(null);
-        setSelectedHouse(null);
-        setSelectedTerritoryDetails(null);
-        setSelectedStreetDetails(null);
-        setSelectedPerson(null);
-        setSelectedTerritory(null);
-        setSelectedStreet(null);
-        setIsEditingHouse(false);
-        setCameFromBibleStudies(false);
-        // Open Bible Studies page
-        setIsBibleStudiesVisible(true);
-      }
+      });
+    } else if (cameFromLetterQueue) {
+      crumbs.push({
+        label: 'Letter Queue',
+        onClick: () => {
+          if (isEditingHouse) {
+            alert("Canceling edit. No changes saved.");
+          }
+          // Reset all navigation state
+          setSelectedTerritoryId(null);
+          setSelectedStreetId(null);
+          setSelectedHouse(null);
+          setSelectedTerritoryDetails(null);
+          setSelectedStreetDetails(null);
+          setSelectedPerson(null);
+          setSelectedTerritory(null);
+          setSelectedStreet(null);
+          setIsEditingHouse(false);
+          setCameFromLetterQueue(false);
+          // Open Letter Queue page
+          setIsLetterQueueVisible(true);
+          setIsLetterWritingVisible(true);
+        }
+      });
+    }
+
+    // Add separator
+    crumbs.push({
+      label: '|',
+      onClick: null // Non-clickable separator
     });
+
+    // Add hierarchical breadcrumbs only if we have a house selected
+    if (selectedHouse && selectedTerritoryId) {
+      // 1. "Territories" crumb
+      crumbs.push({
+        label: 'Territories',
+        onClick: () => {
+          if (selectedTerritory || selectedStreet) {
+            alert("Canceling edit. No changes saved.");
+          }
+          setSelectedTerritoryId(null);
+          setSelectedStreetId(null);
+          setSelectedHouse(null);
+          setSelectedTerritoryDetails(null);
+          setSelectedStreetDetails(null);
+          setSelectedTerritory(null);
+          setSelectedStreet(null);
+          setCameFromBibleStudies(false);
+          setCameFromLetterQueue(false);
+        }
+      });
+
+      // 2. Territory number crumb
+      crumbs.push({
+        label: `${selectedTerritoryDetails.number}`,
+        onClick: () => {
+          if (selectedStreet || isEditingHouse) {
+            alert("Canceling edit. No changes saved.");
+          }
+          setSelectedStreetId(null);
+          setSelectedHouse(null);
+          setSelectedStreetDetails(null);
+          setSelectedStreet(null);
+          setIsEditingHouse(false);
+        }
+      });
+
+      // 3. Street name crumb
+      crumbs.push({
+        label: selectedStreetDetails.name,
+        onClick: () => {
+          if (isEditingHouse) {
+            alert("Canceling edit. No changes saved.");
+          }
+          setSelectedHouse(null);
+          setIsEditingHouse(false);
+        }
+      });
+    }
   } else if (selectedTerritoryId) {
     // Standard hierarchical breadcrumbs
     // 1. The "Home" crumb
