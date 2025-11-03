@@ -642,10 +642,14 @@ const fetchTerritories = async () => {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
+    const hours = String(today.getHours()).padStart(2, '0');
+    const minutes = String(today.getMinutes()).padStart(2, '0');
     const todayString = `${year}-${month}-${day}`;
+    const timeString = `${hours}:${minutes}`;
 
     const visitData = {
       date: todayString,
+      time: timeString,
       notes: 'Not at home',
       personId: null,
       type: 'Not At Home',

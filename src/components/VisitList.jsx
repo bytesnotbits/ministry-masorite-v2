@@ -15,7 +15,18 @@ function VisitList({ visits, onDelete, onEdit, people }) {
                 <div className="visit-date">
                     {(() => {
                         const [year, month, day] = visit.date.substring(0, 10).split('-');
-                        return `${month}/${day}/${year}`;
+                        let dateStr = `${month}/${day}/${year}`;
+
+                        // Add time if available
+                        if (visit.time) {
+                            const [hours, minutes] = visit.time.split(':');
+                            const hour = parseInt(hours, 10);
+                            const ampm = hour >= 12 ? 'PM' : 'AM';
+                            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                            dateStr += ` at ${displayHour}:${minutes} ${ampm}`;
+                        }
+
+                        return dateStr;
                     })()}
                 </div>
                 <div className="visit-item-actions">

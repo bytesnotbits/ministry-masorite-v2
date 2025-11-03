@@ -32,7 +32,12 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, on
           const territory = street ? territoriesMap.get(street.territoryId) : null;
           const study = allStudies.find(s => s.personId === person.id);
           const visits = allVisits.filter(v => v.personId === person.id || v.houseId === person.houseId);
-          const lastVisit = visits.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+          // Sort by date and time (most recent first)
+          const lastVisit = visits.sort((a, b) => {
+            const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+            const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+            return new Date(dateTimeB) - new Date(dateTimeA);
+          })[0];
 
           return { ...person, house, street, territory, study, lastVisit };
         });

@@ -10,7 +10,12 @@ function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, st
     const fetchVisits = async () => {
       if (study?.person?.id) {
         const visitData = await getByIndex('visits', 'personId', study.person.id);
-        visitData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort by date and time (most recent first)
+        visitData.sort((a, b) => {
+          const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+          const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+          return new Date(dateTimeB) - new Date(dateTimeA);
+        });
         setVisits(visitData);
       }
     };

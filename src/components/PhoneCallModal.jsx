@@ -32,16 +32,20 @@ function PhoneCallModal({ house, onSave, onClose }) {
       fullNotes += `\n${notes.trim()}`;
     }
 
-    // Get today's date in YYYY-MM-DD format
+    // Get today's date and time
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
+    const hours = String(today.getHours()).padStart(2, '0');
+    const minutes = String(today.getMinutes()).padStart(2, '0');
     const todayString = `${year}-${month}-${day}`;
+    const timeString = `${hours}:${minutes}`;
 
     // Create visit data object
     const visitData = {
       date: todayString,
+      time: timeString,
       notes: fullNotes,
       personId: null,
       type: 'Phone Call',

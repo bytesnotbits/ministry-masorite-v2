@@ -22,7 +22,12 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
     const fetchVisits = async () => {
       if (house?.id) {
         const visitData = await getByIndex('visits', 'houseId', house.id);
-        visitData.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort by date and time (most recent first)
+        visitData.sort((a, b) => {
+          const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+          const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+          return new Date(dateTimeB) - new Date(dateTimeA);
+        });
         setVisits(visitData);
       }
     };
