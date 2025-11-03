@@ -9,16 +9,14 @@
 
 .house-item {
   background-color: var(--white);
-  padding: 1.rem 1.5rem; /* The space between the content (the address and tags) and the edge of the white card. default: 1rem(top/bottom) 1.5rem(left/right) */
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding: 0.75rem 1rem; /* Small comfortable gap from edges: 12px top/bottom, 16px left/right */
   border-radius: 8px;
   margin-bottom: .75rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   transition: box-shadow 0.2s, transform 0.2s;
   display: flex;
   flex-direction: column;
-  gap: .5rem; /* Space between content and buttons */
+  gap: 0.75rem; /* Space between content and buttons */
 }
 
 .house-item:hover {
