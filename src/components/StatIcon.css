@@ -27,5 +27,26 @@ in the list.
   font-size: 0.9rem;
   font-weight: bold;
   /* We give the number its own specific color */
-  color: #4a5568; 
+  color: #4a5568;
+}
+
+/* Icon-specific colors for stat icons */
+.icon-notAtHome {
+  color: #b7791f; /* Gold/brown color */
+}
+
+.icon-notInterested {
+  color: #c53030; /* Strong red */
+}
+
+.icon-mailbox {
+  color: #3182ce; /* Nice blue */
+}
+
+.icon-noTrespassing {
+  color: #9b2c2c; /* Darker red */
+}
+
+.icon-gate {
+  color: #7a4a28; /* Brown color, like a wooden gate */
 }

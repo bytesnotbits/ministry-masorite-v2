@@ -180,8 +180,10 @@
 }
 
 /* --- Icon Specific Colors (Off State) --- */
+.icon-nh { color: #b7791f; } /* Not at home - gold/brown */
+.icon-ni { color: #c53030; } /* Not interested - strong red */
 .icon-mailbox { color: #3182ce; }
-.icon-no-trespassing { color: #c53030; }
+.icon-no-trespassing { color: #9b2c2c; }
 .icon-gate { color: #7a4a28; }
 
 /* --- Icon Color for the 'On' State --- */

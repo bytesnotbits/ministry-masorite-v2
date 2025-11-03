@@ -9,7 +9,7 @@
 
 .house-item {
   background-color: var(--white);
-  padding: .1rem .5rem; /* The space between the content (the address and tags) and the edge of the white card. default: 1rem(top/bottom) 1.5rem(left/right) */
+  padding: 1.rem 1.5rem; /* The space between the content (the address and tags) and the edge of the white card. default: 1rem(top/bottom) 1.5rem(left/right) */
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   border-radius: 8px;
@@ -55,6 +55,27 @@
   width: 1.5rem;   /* 24px */
   height: 1.5rem;  /* 24px */
   fill: currentColor; /* This makes the SVG take on the color property */
+}
+
+/* Icon-specific colors for house tags */
+.icon-nh {
+  color: #b7791f; /* Not at home - gold/brown */
+}
+
+.icon-ni {
+  color: #c53030; /* Not interested - strong red */
+}
+
+.icon-mailbox {
+  color: #3182ce; /* Nice blue */
+}
+
+.icon-no-trespassing {
+  color: #9b2c2c; /* Darker red */
+}
+
+.icon-gate {
+  color: #7a4a28; /* Brown color, like a wooden gate */
 }
 
 /* House card content wrapper (address and status tags) */
