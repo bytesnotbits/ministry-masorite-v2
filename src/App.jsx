@@ -22,6 +22,9 @@ import EditStudyModal from './components/EditStudyModal.jsx';
 import AssociatePersonModal from './components/AssociatePersonModal.jsx';
 import PersonDetail from './components/PersonDetail.jsx';
 import MovePersonModal from './components/MovePersonModal.jsx';
+import LetterCampaignList from './components/LetterCampaignList.jsx';
+import LetterQueue from './components/LetterQueue.jsx';
+import LetterTemplates from './components/LetterTemplates.jsx';
 
 
 
@@ -50,6 +53,9 @@ function App() {
   const [peopleForSelectedHouse, setPeopleForSelectedHouse] = useState([]);
   const [isEditingHouse, setIsEditingHouse] = useState(false);
   const [cameFromBibleStudies, setCameFromBibleStudies] = useState(false);
+  const [isLetterWritingVisible, setIsLetterWritingVisible] = useState(false);
+  const [isLetterQueueVisible, setIsLetterQueueVisible] = useState(false);
+  const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -293,7 +299,7 @@ const fetchTerritories = async () => {
       // In the future, we would also delete visits/people associated with each house here.
       await deleteFromStore('houses', house.id);
     }
-    await deleteFromStore('streets', streetId); // Now delete the street itself
+    await deleteFromStore('streets', street.id); // Now delete the street itself
     setSelectedStreet(null);
     setStreetListKey(prevKey => prevKey + 1);
   };
@@ -315,7 +321,8 @@ const fetchTerritories = async () => {
     
    if (streetObject) {
       setSelectedStreet(streetObject);
-    } else {
+    }
+    else {
       console.error("Could not find street to edit with ID:", streetId);
     }
   };
@@ -477,9 +484,17 @@ const fetchTerritories = async () => {
   };
 
   const handleGoBack = () => {
-    setSelectedStreet(null);
-    if (selectedStreetId) setSelectedStreetId(null);
-    else if (selectedTerritoryId) setSelectedTerritoryId(null);
+    if (isLetterQueueVisible) {
+      setIsLetterQueueVisible(false);
+    } else if (isLetterTemplatesVisible) {
+      setIsLetterTemplatesVisible(false);
+    } else if (isLetterWritingVisible) {
+      setIsLetterWritingVisible(false);
+    } else if (selectedStreetId) {
+      setSelectedStreetId(null);
+    } else if (selectedTerritoryId) {
+      setSelectedTerritoryId(null);
+    }
   };
 
   const handleStartStudy = (person) => {
@@ -799,6 +814,12 @@ const fetchTerritories = async () => {
       onClearAllData={handleClearAllData}
     />
     );
+  } else if (isLetterTemplatesVisible) {
+    currentView = <LetterTemplates onBack={() => setIsLetterTemplatesVisible(false)} />;
+  } else if (isLetterQueueVisible) {
+    currentView = <LetterQueue onBack={() => setIsLetterQueueVisible(false)} />;
+  } else if (isLetterWritingVisible) {
+    currentView = <LetterCampaignList onBack={() => setIsLetterWritingVisible(false)} onOpenLetterQueue={() => setIsLetterQueueVisible(true)} onOpenLetterTemplates={() => setIsLetterTemplatesVisible(true)} />;
   } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
     if (selectedHouse) {
         currentView = (
@@ -860,7 +881,7 @@ const fetchTerritories = async () => {
           onEditTerritory={handleEditTerritory}
           showCompleted={showCompleted}
           onToggleCompleted={setShowCompleted}
-          />;
+        />;
     } else {
       currentView = (
         <TerritoryList
@@ -869,6 +890,7 @@ const fetchTerritories = async () => {
           onAddTerritory={handleOpenAddTerritoryModal}
           onOpenSettings={handleOpenSettings}
           onOpenBibleStudies={handleOpenBibleStudies}
+          onOpenLetterWriting={() => setIsLetterWritingVisible(true)}
           showCompleted={showCompleted}
           onToggleCompleted={setShowCompleted}
         />
@@ -879,7 +901,6 @@ const fetchTerritories = async () => {
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
 
-  // Breadcrumb for Study view
   if (selectedStudy) {
     crumbs.push({
       label: 'Back',

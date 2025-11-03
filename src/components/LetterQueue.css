@@ -1,0 +1,25 @@
+.letter-queue {
+  padding: 1rem;
+}
+
+.letter-queue .breadcrumb-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  color: var(--primary-color);
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.letter-queue .breadcrumb-button:hover {
+  background-color: #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.letter-queue h2 {
+  margin: 0 0 1rem 0;
+}

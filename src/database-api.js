@@ -1,4 +1,4 @@
-import { addToStore, getAllFromStore, getFromStore, getByIndex, deleteFromStore, clearAllStores } from './database.js';
+import { addToStore, getAllFromStore, getFromStore, getByIndex, deleteFromStore, clearAllStores, updateInStore } from './database.js';
 import jsPDF from 'jspdf';
 
 // --- START: NEW JSON EXPORT/IMPORT SYSTEM ---
@@ -18,7 +18,10 @@ export async function bundleDataForExport(scope = 'full', id = null) {
             people: [],
             visits: [],
             studies: [],
-            studyHistory: []
+            studyHistory: [],
+            letterCampaigns: [],
+            letters: [],
+            letterTemplates: []
         }
     };
 
@@ -31,6 +34,9 @@ export async function bundleDataForExport(scope = 'full', id = null) {
         bundle.data.visits = await getAllFromStore('visits');
         bundle.data.studies = await getAllFromStore('studies');
         bundle.data.studyHistory = await getAllFromStore('studyHistory');
+        bundle.data.letterCampaigns = await getAllFromStore('letterCampaigns');
+        bundle.data.letters = await getAllFromStore('letters');
+        bundle.data.letterTemplates = await getAllFromStore('letterTemplates');
 
     } else if (scope === 'territory' && id) {
         const territory = await getFromStore('territories', id);
@@ -48,6 +54,7 @@ export async function bundleDataForExport(scope = 'full', id = null) {
             for (const houseId of houseIds) {
                 bundle.data.people.push(...await getByIndex('people', 'houseId', houseId));
                 bundle.data.visits.push(...await getByIndex('visits', 'houseId', houseId));
+                bundle.data.letters.push(...await getByIndex('letters', 'houseId', houseId));
             }
         }
     } else if (scope === 'street' && id) {
@@ -64,6 +71,7 @@ export async function bundleDataForExport(scope = 'full', id = null) {
         for (const houseId of houseIds) {
             bundle.data.people.push(...await getByIndex('people', 'houseId', houseId));
             bundle.data.visits.push(...await getByIndex('visits', 'houseId', houseId));
+            bundle.data.letters.push(...await getByIndex('letters', 'houseId', houseId));
         }
     }
 
@@ -215,7 +223,10 @@ export async function executeMerge(data, existingTerritory = null) {
         people: new Map(),
         visits: new Map(),
         studies: new Map(),
-        studyHistory: new Map()
+        studyHistory: new Map(),
+        letterCampaigns: new Map(),
+        letters: new Map(),
+        letterTemplates: new Map()
     };
 
     // 1. Process Territories
@@ -334,6 +345,40 @@ export async function executeMerge(data, existingTerritory = null) {
                 session.studyId = newStudyId;
                 await addToStore('studyHistory', session);
             }
+        }
+    }
+
+    // 8. Process Letter Campaigns
+    if (data.letterCampaigns) {
+        for (const campaign of data.letterCampaigns) {
+            const oldId = campaign.id;
+            delete campaign.id;
+            const newId = await addToStore('letterCampaigns', campaign);
+            idMaps.letterCampaigns.set(oldId, newId);
+        }
+    }
+
+    // 9. Process Letters
+    if (data.letters) {
+        for (const letter of data.letters) {
+            const oldHouseId = letter.houseId;
+            const newHouseId = idMaps.houses.get(oldHouseId);
+            const oldCampaignId = letter.campaignId;
+            const newCampaignId = idMaps.letterCampaigns.get(oldCampaignId);
+            if (newHouseId) {
+                delete letter.id;
+                letter.houseId = newHouseId;
+                letter.campaignId = newCampaignId || null;
+                await addToStore('letters', letter);
+            }
+        }
+    }
+
+    // 10. Process Letter Templates
+    if (data.letterTemplates) {
+        for (const template of data.letterTemplates) {
+            delete template.id;
+            await addToStore('letterTemplates', template);
         }
     }
 }
@@ -455,3 +500,19 @@ export async function searchAllData(searchText) {
         houseIds: Array.from(matches.houseIds)
     };
 }
+
+// --- Letter Writing ---
+export const getLetterCampaigns = () => getAllFromStore('letterCampaigns');
+export const addLetterCampaign = (campaign) => addToStore('letterCampaigns', campaign);
+export const updateLetterCampaign = (campaign) => updateInStore('letterCampaigns', campaign);
+export const deleteLetterCampaign = (id) => deleteFromStore('letterCampaigns', id);
+
+export const getLetters = () => getAllFromStore('letters');
+export const addLetter = (letter) => addToStore('letters', letter);
+export const updateLetter = (letter) => updateInStore('letters', letter);
+export const deleteLetter = (id) => deleteFromStore('letters', id);
+
+export const getLetterTemplates = () => getAllFromStore('letterTemplates');
+export const addLetterTemplate = (template) => addToStore('letterTemplates', template);
+export const updateLetterTemplate = (template) => updateInStore('letterTemplates', template);
+export const deleteLetterTemplate = (id) => deleteFromStore('letterTemplates', id);

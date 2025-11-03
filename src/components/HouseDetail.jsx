@@ -7,7 +7,7 @@ import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 
 
-function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse }) {
+function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse, onQuickLetter }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
@@ -129,6 +129,9 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
             </button>
             <button className="primary-action-btn" onClick={onAddVisit}>
               + Add Visit
+            </button>
+            <button className="primary-action-btn" onClick={onQuickLetter}>
+              Quick Letter
             </button>
           </div>
           <button className="secondary-action-btn" onClick={() => { setIsEditing(true); setIsEditingHouse(true); }}>

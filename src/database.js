@@ -2,7 +2,7 @@
 
 // --- DATABASE INITIALIZATION ---
 const DB_NAME = 'MinistryScribeDB';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 let db;
 
 export function initDB() {
@@ -42,6 +42,18 @@ export function initDB() {
             if (!housesStore.indexNames.contains('streetId')) {
                 housesStore.createIndex('streetId', 'streetId', { unique: false });
             }
+             if (!housesStore.indexNames.contains('letterSent')) {
+                housesStore.createIndex('letterSent', 'letterSent', { unique: false });
+            }
+            if (!housesStore.indexNames.contains('lastLetterDate')) {
+                housesStore.createIndex('lastLetterDate', 'lastLetterDate', { unique: false });
+            }
+            if (!housesStore.indexNames.contains('letterResponse')) {
+                housesStore.createIndex('letterResponse', 'letterResponse', { unique: false });
+            }
+            if (!housesStore.indexNames.contains('nextLetterDate')) {
+                housesStore.createIndex('nextLetterDate', 'nextLetterDate', { unique: false });
+            }
 
 // Create other stores if they don't exist
             let visitsStore;
@@ -68,6 +80,19 @@ export function initDB() {
             if (!db.objectStoreNames.contains('studyHistory')) {
                 const studyHistoryStore = db.createObjectStore('studyHistory', { keyPath: 'id', autoIncrement: true });
                 studyHistoryStore.createIndex('studyId', 'studyId', { unique: false });
+            }
+
+// --- Letter Writing Feature ---
+            if (!db.objectStoreNames.contains('letterCampaigns')) {
+                db.createObjectStore('letterCampaigns', { keyPath: 'id', autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains('letters')) {
+                const lettersStore = db.createObjectStore('letters', { keyPath: 'id', autoIncrement: true });
+                lettersStore.createIndex('houseId', 'houseId', { unique: false });
+                lettersStore.createIndex('campaignId', 'campaignId', { unique: false });
+            }
+            if (!db.objectStoreNames.contains('letterTemplates')) {
+                db.createObjectStore('letterTemplates', { keyPath: 'id', autoIncrement: true });
             }
 
 // --- DATA MIGRATION from v2 to v3 ---
