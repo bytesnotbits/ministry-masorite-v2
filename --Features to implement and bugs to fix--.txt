@@ -1,5 +1,6 @@
 >--Features to implement--<
-Log notathome, letter, NI directly from the house card
+Add buttons to log notathome, NI directly from the house card in the houseList view
+
 
 
 

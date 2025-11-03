@@ -455,6 +455,7 @@ const fetchTerritories = async () => {
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
       // NEW: Check if isCurrentlyNH changed to false, reset consecutive count
       if (selectedHouse && selectedHouse.isCurrentlyNH && !updatedHouseData.isCurrentlyNH) {
+        console.log(`🔄 Contact made! Resetting consecutive NH counter: ${selectedHouse.consecutiveNHVisits || 0} → 0 for house ${updatedHouseData.address}`);
         updatedHouseData.consecutiveNHVisits = 0;
       }
 
@@ -613,11 +614,13 @@ const fetchTerritories = async () => {
         const house = await getFromStore('houses', houseId);
         if (house && house.isCurrentlyNH) {
           // House is still marked as NH, increment the counter
+          const newCount = (house.consecutiveNHVisits || 0) + 1;
           const updatedHouse = {
             ...house,
-            consecutiveNHVisits: (house.consecutiveNHVisits || 0) + 1
+            consecutiveNHVisits: newCount
           };
           await updateInStore('houses', updatedHouse);
+          console.log(`📊 Consecutive NH visits incremented: ${house.consecutiveNHVisits || 0} → ${newCount} for house ${house.address}`);
         }
       }
     }
