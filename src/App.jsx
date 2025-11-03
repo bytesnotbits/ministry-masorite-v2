@@ -26,6 +26,7 @@ import LetterCampaignList from './components/LetterCampaignList.jsx';
 import LetterQueue from './components/LetterQueue.jsx';
 import LetterTemplates from './components/LetterTemplates.jsx';
 import PhoneCallModal from './components/PhoneCallModal.jsx';
+import ConfirmDialog from './components/ConfirmDialog.jsx';
 
 
 
@@ -60,6 +61,8 @@ function App() {
   const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
   const [isPhoneCallModalOpen, setIsPhoneCallModalOpen] = useState(false);
   const [selectedHouseForPhoneCall, setSelectedHouseForPhoneCall] = useState(null);
+  const [showLetterQueueConfirm, setShowLetterQueueConfirm] = useState(false);
+  const [houseToAddToQueue, setHouseToAddToQueue] = useState(null);
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
@@ -811,14 +814,60 @@ const fetchTerritories = async () => {
     };
   
   const handleDeleteVisit = async (visitId) => {
+    // 1. Get the visit before deleting to check if it's a letter
+    const visit = await getFromStore('visits', visitId);
+
+    if (!visit) {
+      console.error('Visit not found');
+      return;
+    }
+
     // Show a confirmation dialog before deleting
     if (window.confirm('Are you sure you want to permanently delete this visit?')) {
-      // 1. Delete the visit from the database using its ID
+      // 2. Delete the visit from the database using its ID
       await deleteFromStore('visits', visitId);
 
-      // 2. Increment the key to force the component to re-fetch and show the updated list
+      // 3. If this was a LETTER visit, ask if they want to add house back to Letter Queue
+      if (visit.type === 'LETTER' && visit.houseId) {
+        const house = await getFromStore('houses', visit.houseId);
+
+        if (house) {
+          // Store house and show custom Yes/No dialog
+          setHouseToAddToQueue(house);
+          setShowLetterQueueConfirm(true);
+        }
+      }
+
+      // 4. Increment the key to force the component to re-fetch and show the updated list
       setVisitListKey(prevKey => prevKey + 1);
     }
+  };
+
+  const handleAddToLetterQueueYes = async () => {
+    if (houseToAddToQueue) {
+      // Clear the letterSent flag to add it back to the queue
+      const updatedHouse = {
+        ...houseToAddToQueue,
+        letterSent: false,
+        lastLetterDate: null
+      };
+      await updateInStore('houses', updatedHouse);
+
+      // Refresh territories to update the stats
+      await fetchTerritories();
+
+      console.log(`📬 House ${houseToAddToQueue.address} added back to Letter Queue`);
+    }
+
+    // Close dialog and reset state
+    setShowLetterQueueConfirm(false);
+    setHouseToAddToQueue(null);
+  };
+
+  const handleAddToLetterQueueNo = () => {
+    // Just close dialog and reset state
+    setShowLetterQueueConfirm(false);
+    setHouseToAddToQueue(null);
   };
 
       const handleEditVisit = (visitObject) => {
@@ -1280,6 +1329,16 @@ const fetchTerritories = async () => {
                 person={personToMove}
                 onSave={handleMovePerson}
                 onClose={handleCloseMovePersonModal}
+              />
+            )}
+
+            {showLetterQueueConfirm && (
+              <ConfirmDialog
+                message="Would you like to add this house back to the Letter Queue?"
+                onYes={handleAddToLetterQueueYes}
+                onNo={handleAddToLetterQueueNo}
+                yesText="Yes"
+                noText="No"
               />
             )}
           </>

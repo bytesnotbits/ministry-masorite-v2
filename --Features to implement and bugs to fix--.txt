@@ -1,9 +1,10 @@
 >--Features to implement--<
-LetterQueue -- Add ability to click on the card and be taken to the HouseDetail view.
-HouseDetail -- Deleting a Letter Sent entry in the Visit History ask the user if they want to add the house back to the Letter Queue
+-->HouseDetail -- Deleting a Letter Sent entry in the Visit History ask the user if they want to add the house back to the Letter Queue
+-->Move the People section of the HouseDetail up to be between the Details and the Visit History sections
+-->Quick/Easy way to share streets between publishers. Share a street with another publisher or publishers, they work the street, share their updated data back to the territory owner. Merge the data together back into the owners database.
 
 
 >--Bugs to fix--<
-Deleting a territory should return the user to territorylist
-Deleting a street should return the user to streetlist
-Deleting a house should return the user to houselist
+-->Deleting a territory should return the user to territorylist
+-->Deleting a street should return the user to streetlist
+-->Deleting a house should return the user to houselist
