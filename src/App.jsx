@@ -306,7 +306,7 @@ const fetchTerritories = async () => {
       // In the future, we would also delete visits/people associated with each house here.
       await deleteFromStore('houses', house.id);
     }
-    await deleteFromStore('streets', street.id); // Now delete the street itself
+    await deleteFromStore('streets', streetId); // Now delete the street itself
     setSelectedStreet(null);
     setStreetListKey(prevKey => prevKey + 1);
   };

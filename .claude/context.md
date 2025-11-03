@@ -72,6 +72,38 @@ await deleteFromStore('streets', street.id);
 - Use `key={someKey}` on list components
 - Increment key to force re-fetch: `setHouseListKey(prev => prev + 1)`
 
+#### Custom Confirmation Dialog Pattern
+```javascript
+// State for dialog
+const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+const [dataForConfirm, setDataForConfirm] = useState(null);
+
+// Show dialog
+setDataForConfirm(someData);
+setShowConfirmDialog(true);
+
+// Handlers
+const handleYes = async () => {
+  // Process action with dataForConfirm
+  setShowConfirmDialog(false);
+  setDataForConfirm(null);
+};
+
+const handleNo = () => {
+  setShowConfirmDialog(false);
+  setDataForConfirm(null);
+};
+
+// Render
+{showConfirmDialog && (
+  <ConfirmDialog
+    message="Your question here?"
+    onYes={handleYes}
+    onNo={handleNo}
+  />
+)}
+```
+
 ## Component Organization
 
 ### Main Views
@@ -89,6 +121,7 @@ await deleteFromStore('streets', street.id);
 ### Modals
 - Add/Edit modals for: Territory, Street, House, Person, Visit, Study
 - Utility modals: AssociatePerson, MovePerson, PhoneCall
+- **ConfirmDialog** - Reusable custom confirmation dialog with Yes/No buttons (replaces window.confirm for better UX)
 
 ## Important Features
 
@@ -96,6 +129,8 @@ await deleteFromStore('streets', street.id);
 - Types: Visit, Not At Home, Phone Call, Letter, SYSTEM
 - Consecutive NH tracking: `consecutiveNHVisits` counter
 - Quick "Log NH" button creates visit instantly
+- Visit history sorted newest first (most recent at top)
+- Deleting a Letter Sent visit prompts user to add house back to Letter Queue (with Yes/No dialog)
 
 ### House Filters
 - Filter by status flags: Not At Home, Not Interested, Gate, Mailbox, No Trespassing
@@ -114,8 +149,8 @@ await deleteFromStore('streets', street.id);
 
 ## Known Issues / Pending Features
 See `--Features to implement and bugs to fix--.txt`:
-- LetterQueue: Add click to navigate to HouseDetail
-- HouseDetail: Deleting Letter Sent visit should prompt to re-add to queue
+- LetterQueue: Add click to navigate to HouseDetail ✓ (completed)
+- HouseDetail: Deleting Letter Sent visit should prompt to re-add to queue ✓ (completed with Yes/No dialog)
 - Delete operations should properly return to parent list view
 
 ## Development Commands
