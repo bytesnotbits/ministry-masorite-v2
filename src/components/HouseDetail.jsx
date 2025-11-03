@@ -209,13 +209,6 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
             </div>
           </div>
 
-          <VisitList 
-              visits={visits} 
-              onDelete={onDeleteVisit} 
-              onEdit={onEditVisit} 
-              people={people}
-          />
-
           <PeopleList
               people={people}
               onDelete={onDeletePerson}
@@ -224,6 +217,13 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
               onViewStudy={onViewStudy}
               onDisassociate={onDisassociatePerson}
               onMove={onMovePerson}
+          />
+
+          <VisitList
+              visits={visits}
+              onDelete={onDeleteVisit}
+              onEdit={onEditVisit}
+              people={people}
           />
         </>
       )}
