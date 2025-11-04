@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // We can reuse the same styles for consistency!
+import ViewHeader from './ViewHeader.jsx';
 
 // CHANGE 1: Accept the 'onCancel' prop
 function StreetDetail({ street, onSave, onDelete, onCancel }) {
@@ -33,18 +34,14 @@ function StreetDetail({ street, onSave, onDelete, onCancel }) {
 
   return (
     <div className="house-detail-container">
-      <div className="view-header">
-        <h2>Edit Street</h2>
-        {/* CHANGE 2: Add the header-actions wrapper and the Cancel button */}
-        <div className="header-actions">
-          <button className="secondary-action-btn" onClick={onCancel}>
-            Cancel
-          </button>
-          <button className="primary-action-btn" onClick={handleSave}>
-            Save Changes
-          </button>
-        </div>
-      </div>
+      <ViewHeader title="Edit Street">
+        <button className="secondary-action-btn" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="primary-action-btn" onClick={handleSave}>
+          Save Changes
+        </button>
+      </ViewHeader>
 
       <form className="house-form">
         <label htmlFor="name">Street Name</label>
