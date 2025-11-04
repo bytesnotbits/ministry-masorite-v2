@@ -5,18 +5,12 @@ import { getByIndex } from '../database.js';
 import PeopleList from './PeopleList.jsx';
 import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
+import LongPressEditField from './LongPressEditField.jsx';
+import InlineEditableText from './InlineEditableText.jsx';
 
 
 function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse, onQuickLetter }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(null);
   const [visits, setVisits] = useState([]);
-
-  useEffect(() => {
-    setFormData(house);
-    // When the house changes, we should exit editing mode.
-    setIsEditing(false);
-  }, [house]);
 
   useEffect(() => {
     const fetchVisits = async () => {
@@ -39,34 +33,21 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
 
 
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-  
-  const handleSave = () => {
-    onSave(formData, true); // Pass true to stay on the house detail page
-    setIsEditing(false);
-    setIsEditingHouse(false);
+  const handleFieldSave = (fieldName, value) => {
+    const updatedHouse = {
+      ...house,
+      [fieldName]: value
+    };
+    onSave(updatedHouse, true); // Pass true to stay on the house detail page
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to permanently delete this house? This cannot be undone.')) {
       onDelete(house.id);
-      setIsEditingHouse(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData(house);
-    setIsEditing(false);
-    setIsEditingHouse(false);
-  };
-
-  if (!formData) {
+  if (!house) {
     return <p>Loading house details...</p>;
   }
 
@@ -81,152 +62,119 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
   
   return (
     <div className="house-detail-container">
-      <h2>{house.address}</h2>
-      {/* --- RENDER LOGIC --- */}
-      {/* Check if we are in "editing" mode. */}
-      {isEditing ? (
-        
-        /* If isEditing is TRUE, render the EDITING VIEW (the form) */
-        <>
-        <ViewHeader title="Editing House">
-          <button className="secondary-action-btn" onClick={handleCancel}>
-            Cancel
+      <InlineEditableText
+        value={house.address}
+        onSave={(value) => handleFieldSave('address', value)}
+        as="h2"
+        placeholder="No address set"
+      />
+
+      <ViewHeader>
+        <div className="header-actions">
+          <button className="primary-action-btn" onClick={onAddPerson}>
+            + Add Person
           </button>
-          <button className="primary-action-btn" onClick={handleSave}>
-            Save Changes
+          <button className="primary-action-btn" onClick={() => onAddVisit()}>
+            + Add Visit
           </button>
-        </ViewHeader>
-          
-          {/* A simple form for editing */}
-          <div className="house-form">
-            <label htmlFor="address">Address</label>
-            <input 
-              type="text" 
-              name="address" 
-              id="address"
-              value={formData.address || ''} 
-              onChange={handleChange} 
+          <button className="primary-action-btn" onClick={onQuickLetter}>
+            Quick Letter
+          </button>
+        </div>
+      </ViewHeader>
+
+      <div className="house-details-section">
+        <LongPressEditField
+          label="Notes"
+          value={house.notes}
+          onSave={(value) => handleFieldSave('notes', value)}
+          multiline={true}
+          placeholder="No notes recorded."
+        />
+
+        <h3>Details</h3>
+        <div className="details-grid">
+          <label className="detail-toggle-button">
+            <input
+              type="checkbox"
+              name="isCurrentlyNH"
+              checked={house.isCurrentlyNH || false}
+              onChange={handleToggleChange}
             />
-            
-            <label htmlFor="notes">Notes</label>
-            <textarea 
-              name="notes" 
-              id="notes"
-              value={formData.notes || ''} 
-              onChange={handleChange} 
-              rows="4"
-            ></textarea>
-          </div>
+            <span>NH</span>
+            <Icon name="notAtHome" className="detail-icon icon-nh" />
+          </label>
 
-          <div className="danger-zone">
-             <button className="danger-action-btn" onClick={handleDelete}>
-                Delete this House Permanently
-            </button>
-          </div>
-        </>
+          <label className="detail-toggle-button">
+            <input
+              type="checkbox"
+              name="isNotInterested"
+              checked={house.isNotInterested || false}
+              onChange={handleToggleChange}
+            />
+            <span>NI</span>
+            <Icon name="notInterested" className="detail-icon icon-ni" />
+          </label>
 
-      ) : (
+          <label className="detail-toggle-button">
+            <input
+              type="checkbox"
+              name="hasMailbox"
+              checked={house.hasMailbox || false}
+              onChange={handleToggleChange}
+            />
+            <span>Mailbox</span>
+            <Icon name="mailbox" className="detail-icon icon-mailbox" />
+          </label>
 
-        /* If isEditing is FALSE, render the VIEWING VIEW (the details) */
-        <>
-        <ViewHeader>
-          <div className="header-actions">
-            <button className="primary-action-btn" onClick={onAddPerson}>
-              + Add Person
-            </button>
-            <button className="primary-action-btn" onClick={() => onAddVisit()}>
-              + Add Visit
-            </button>
-            <button className="primary-action-btn" onClick={onQuickLetter}>
-              Quick Letter
-            </button>
-            <button className="secondary-action-btn" onClick={() => { setIsEditing(true); setIsEditingHouse(true); }}>
-              Edit House
-            </button>
-          </div>
-        </ViewHeader>
+          <label className="detail-toggle-button">
+            <input
+              type="checkbox"
+              name="noTrespassing"
+              checked={house.noTrespassing || false}
+              onChange={handleToggleChange}
+            />
+            <span>NT</span>
+            <Icon name="noTrespassing" className="detail-icon icon-no-trespassing" />
+          </label>
 
-          <div className="house-details-readonly">
-            <h3>Notes</h3>
-            <p>{house.notes || <em>No notes recorded.</em>}</p> 
-            
-            <h3>Details</h3>
-            <div className="details-grid">
-                  <label className="detail-toggle-button">
-                    <input
-                      type="checkbox"
-                      name="isCurrentlyNH"
-                      checked={house.isCurrentlyNH || false}
-                      onChange={handleToggleChange}
-                    />
-                    <span>NH</span>
-                    <Icon name="notAtHome" className="detail-icon icon-nh" />
-                  </label>
+          <label className="detail-toggle-button">
+            <input
+              type="checkbox"
+              name="hasGate"
+              checked={house.hasGate || false}
+              onChange={handleToggleChange}
+            />
+            <span>Gate</span>
+            <Icon name="gate" className="detail-icon icon-gate" />
+          </label>
+        </div>
+      </div>
 
-                  <label className="detail-toggle-button">
-                    <input
-                      type="checkbox"
-                      name="isNotInterested"
-                      checked={house.isNotInterested || false}
-                      onChange={handleToggleChange}
-                    />
-                    <span>NI</span>
-                    <Icon name="notInterested" className="detail-icon icon-ni" />
-                  </label>
+      <PeopleList
+        people={people}
+        onDelete={onDeletePerson}
+        onEdit={onEditPerson}
+        onStartStudy={onStartStudy}
+        onViewStudy={onViewStudy}
+        onDisassociate={onDisassociatePerson}
+        onMove={onMovePerson}
+      />
 
-                  <label className="detail-toggle-button">
-                    <input
-                      type="checkbox"
-                      name="hasMailbox"
-                      checked={house.hasMailbox || false}
-                      onChange={handleToggleChange}
-                    />
-                    <span>Mailbox</span>
-                    <Icon name="mailbox" className="detail-icon icon-mailbox" />
-                  </label>
+      <VisitList
+        visits={visits}
+        onDelete={onDeleteVisit}
+        onEdit={onEditVisit}
+        people={people}
+      />
 
-                  <label className="detail-toggle-button">
-                    <input
-                      type="checkbox"
-                      name="noTrespassing"
-                      checked={house.noTrespassing || false}
-                      onChange={handleToggleChange}
-                    />
-                    <span>NT</span>
-                    <Icon name="noTrespassing" className="detail-icon icon-no-trespassing" />
-                  </label>
-
-                  <label className="detail-toggle-button">
-                    <input
-                      type="checkbox"
-                      name="hasGate"
-                      checked={house.hasGate || false}
-                      onChange={handleToggleChange}
-                    />
-                    <span>Gate</span>
-                    <Icon name="gate" className="detail-icon icon-gate" />
-                  </label>
-            </div>
-          </div>
-
-          <PeopleList
-              people={people}
-              onDelete={onDeletePerson}
-              onEdit={onEditPerson}
-              onStartStudy={onStartStudy}
-              onViewStudy={onViewStudy}
-              onDisassociate={onDisassociatePerson}
-              onMove={onMovePerson}
-          />
-
-          <VisitList
-              visits={visits}
-              onDelete={onDeleteVisit}
-              onEdit={onEditVisit}
-              people={people}
-          />
-        </>
-      )}
+      <div className="danger-zone">
+        <h3>Danger Zone</h3>
+        <p>This action is permanent and cannot be undone.</p>
+        <button className="danger-action-btn" onClick={handleDelete}>
+          Delete this House Permanently
+        </button>
+      </div>
     </div>
   );
 }

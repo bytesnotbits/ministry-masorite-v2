@@ -73,29 +73,19 @@
   background-color: #c53030; /* A darker red for hover */
 }
 
-/* Styles for the Read-Only View */
-.house-details-readonly {
+/* Styles for the House Details Section */
+.house-details-section {
   margin-top: 1.5rem;
   text-align: left;
 }
 
-.house-details-readonly h3 {
+.house-details-section h3 {
   font-size: 1.1rem;
   color: #333;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.5rem;
   margin-top: 2rem;
   margin-bottom: 1rem;
-}
-
-.house-details-readonly p {
-  line-height: 1.6;
-  color: #444;
-  white-space: pre-wrap; /* This makes sure line breaks in your notes are displayed! */
-}
-
-.house-details-readonly p em {
-  color: #888; /* Styles the "No notes recorded" text */
 }
 
 /* Styles for the new action buttons in edit mode */

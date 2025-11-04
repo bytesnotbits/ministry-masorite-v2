@@ -157,6 +157,17 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Implemented inline editing for HouseDetail with double-click and long-press support
+  - Created InlineEditableText component for editable headers (address)
+  - Created LongPressEditField component for form fields (notes)
+  - Address header is now editable via double-click or long-press (500ms)
+  - Notes field supports both double-click and long-press to edit
+  - Auto-saves on blur, ESC to cancel, ENTER to save (single-line fields)
+  - Removed Edit House button and separate edit mode for cleaner UX
+  - House attributes (NH, NI, Mailbox, NT, Gate) remain as instant toggles
+  - Custom double-click detection to work with user-select: none CSS
+  - Visual feedback: hover highlights, edit icons, helpful hint text
+- ✓ Fixed house editing navigation to stay on HouseDetail view after saving instead of returning to StreetList
 - ✓ Enhanced AddHouseModal with attribute toggles (NH, NI, Mbox, NT, Gate)
   - Attributes persist between "Save & New" clicks for faster data entry
   - NH (Not at Home) always checked by default for new houses
