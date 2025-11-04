@@ -157,16 +157,20 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
-- ✓ Implemented inline editing for HouseDetail with double-click and long-press support
-  - Created InlineEditableText component for editable headers (address)
-  - Created LongPressEditField component for form fields (notes)
-  - Address header is now editable via double-click or long-press (500ms)
-  - Notes field supports both double-click and long-press to edit
+- ✓ Implemented inline editing throughout entire app with double-click and long-press support
+  - Created InlineEditableText component for editable headers (h2 elements)
+  - Created LongPressEditField component for labeled form fields
+  - HouseDetail: Address header and notes field are inline editable
+  - StreetList: Territory number header and description field are inline editable
+  - HouseList: Street name header is inline editable
+  - All fields support double-click (300ms window) and long-press (500ms hold)
   - Auto-saves on blur, ESC to cancel, ENTER to save (single-line fields)
-  - Removed Edit House button and separate edit mode for cleaner UX
+  - Removed all Edit buttons (Edit House, Edit Territory, Edit Street)
+  - Removed separate edit modes for Territory and Street (TerritoryDetail/StreetDetail no longer rendered)
   - House attributes (NH, NI, Mailbox, NT, Gate) remain as instant toggles
-  - Custom double-click detection to work with user-select: none CSS
+  - Custom double-click detection to work around user-select: none CSS limitations
   - Visual feedback: hover highlights, edit icons, helpful hint text
+  - Consistent editing UX across all hierarchical levels (Territory → Street → House)
 - ✓ Fixed house editing navigation to stay on HouseDetail view after saving instead of returning to StreetList
 - ✓ Enhanced AddHouseModal with attribute toggles (NH, NI, Mbox, NT, Gate)
   - Attributes persist between "Save & New" clicks for faster data entry

@@ -286,18 +286,21 @@ const fetchTerritories = async () => {
 
   
   // --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---
-  const handleEditTerritory = async (territoryId) => {
-    const territoryObject = await getFromStore('territories', territoryId);
-    if (territoryObject) {
-      setSelectedTerritory(territoryObject);
-    } else {
-      console.error("Could not find territory to edit with ID:", territoryId);
-    }
-  };
+  // Removed handleEditTerritory - territories are now editable inline on StreetList
 
   const handleUpdateStreet = async (updatedStreetData) => {
     await updateInStore('streets', updatedStreetData);
     setSelectedStreet(null); // Go back to the list
+    setStreetListKey(prevKey => prevKey + 1); // Refresh the list
+  };
+
+  const handleSaveTerritoryInline = async (updatedTerritoryData) => {
+    await updateInStore('territories', updatedTerritoryData);
+    await fetchTerritories(); // Refresh the list
+  };
+
+  const handleSaveStreetInline = async (updatedStreetData) => {
+    await updateInStore('streets', updatedStreetData);
     setStreetListKey(prevKey => prevKey + 1); // Refresh the list
   };
 
@@ -329,16 +332,7 @@ const fetchTerritories = async () => {
     }
   };
 
-  const handleEditStreet = async (streetId) => {
-    const streetObject = await getFromStore('streets', streetId);
-    
-   if (streetObject) {
-      setSelectedStreet(streetObject);
-    }
-    else {
-      console.error("Could not find street to edit with ID:", streetId);
-    }
-  };
+  // Removed handleEditStreet - streets are now editable inline on HouseList
 
   const handleSaveStreet = async (streetData, shouldClose = true) => {
     // 1. Combine the street name from the modal with the currently selected territory ID
@@ -1020,32 +1014,31 @@ const fetchTerritories = async () => {
             setIsEditingHouse={setIsEditingHouse}
           />
         );
-    } else if (selectedStreet) {
-    currentView = (
-      <StreetDetail
-        street={selectedStreet}
-        onSave={handleUpdateStreet}
-        onDelete={handleDeleteStreet}
-        onCancel={handleBackToStreetList}
-      />
-    );
-
-    } else if (selectedTerritory) {
-      currentView = (
-        <TerritoryDetail
-          territory={selectedTerritory}
-          onSave={handleUpdateTerritory}
-          onDelete={handleDeleteTerritory}
-          onCancel={handleBackToTerritoryList}
-        />
-      );
-
+    // Removed: Territory and Street edit mode - fields are now editable inline
+    // } else if (selectedStreet) {
+    //   currentView = (
+    //     <StreetDetail
+    //       street={selectedStreet}
+    //       onSave={handleUpdateStreet}
+    //       onDelete={handleDeleteStreet}
+    //       onCancel={handleBackToStreetList}
+    //     />
+    //   );
+    // } else if (selectedTerritory) {
+    //   currentView = (
+    //     <TerritoryDetail
+    //       territory={selectedTerritory}
+    //       onSave={handleUpdateTerritory}
+    //       onDelete={handleDeleteTerritory}
+    //       onCancel={handleBackToTerritoryList}
+    //     />
+    //   );
     } else if (selectedStreetId) {
         currentView = <HouseList
           streetId={selectedStreetId}
           onAddHouse={handleOpenAddHouseModal}
           onHouseSelect={handleHouseSelect}
-          onEditStreet={handleEditStreet}
+          onSaveStreet={handleSaveStreetInline}
           filters={houseFilters}
           onFilterChange={setHouseFilters}
           onLogNH={handleLogNH}
@@ -1058,7 +1051,7 @@ const fetchTerritories = async () => {
           territoryId={selectedTerritoryId}
           onStreetSelect={handleStreetSelect}
           onAddStreet={handleOpenAddStreetModal}
-          onEditTerritory={handleEditTerritory}
+          onSaveTerritory={handleSaveTerritoryInline}
           showCompleted={showCompleted}
           onToggleCompleted={setShowCompleted}
         />;

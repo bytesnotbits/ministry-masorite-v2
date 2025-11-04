@@ -62,7 +62,6 @@ function InlineEditableText({
       }, DOUBLE_CLICK_DELAY);
     } else if (clickCountRef.current === 2) {
       // Double click detected!
-      console.log('Double click detected in InlineEditableText');
       clearTimeout(clickTimerRef.current);
       clickCountRef.current = 0;
       cancelLongPress();

@@ -1,27 +1,16 @@
 // src/components/TerritoryDetail.jsx
 
-import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // Reusing styles for a consistent look!
 import ViewHeader from './ViewHeader.jsx';
+import LongPressEditField from './LongPressEditField.jsx';
 
 function TerritoryDetail({ territory, onSave, onDelete, onCancel }) {
-  const [formData, setFormData] = useState(null);
-
-  useEffect(() => {
-    // When the component receives a territory, set it as the form's state
-    setFormData(territory);
-  }, [territory]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
-  };
-  
-  const handleSave = () => {
-    onSave(formData);
+  const handleFieldSave = (fieldName, value) => {
+    const updatedTerritory = {
+      ...territory,
+      [fieldName]: value
+    };
+    onSave(updatedTerritory);
   };
 
   const handleDelete = () => {
@@ -31,55 +20,41 @@ function TerritoryDetail({ territory, onSave, onDelete, onCancel }) {
     }
   };
 
-  // Don't render the form until the data is loaded
-  if (!formData) {
+  if (!territory) {
     return <p>Loading territory details...</p>;
   }
 
   return (
     <div className="house-detail-container">
-      <ViewHeader title="Edit Territory">
+      <ViewHeader title="Territory Details">
         <button className="secondary-action-btn" onClick={onCancel}>
-          Cancel
-        </button>
-        <button className="primary-action-btn" onClick={handleSave}>
-          Save Changes
+          Back to List
         </button>
       </ViewHeader>
 
-      <form className="house-form">
-        <label htmlFor="number">Territory Number</label>
-        <input
-          type="text"
-          id="number"
-          name="number"
-          value={formData.number}
-          onChange={handleChange}
+      <div className="house-details-section">
+        <LongPressEditField
+          label="Territory Number"
+          value={territory.number}
+          onSave={(value) => handleFieldSave('number', value)}
+          placeholder="No number set"
         />
 
-        <label htmlFor="description">Description</label>
-        <input
-          type="text"
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
+        <LongPressEditField
+          label="Description"
+          value={territory.description}
+          onSave={(value) => handleFieldSave('description', value)}
+          placeholder="No description"
         />
+      </div>
 
-        {/* This button has been moved to the header, so it can be removed from here */}
-        {/* <button type="button" className="btn-danger" onClick={handleDelete}>
+      <div className="danger-zone">
+        <h3>Danger Zone</h3>
+        <p>This action is permanent and cannot be undone.</p>
+        <button type="button" className="danger-action-btn" onClick={handleDelete}>
           Delete Territory
-        </button> */}
-
-        {/* It is good practice to put destructive actions in a separate, clearly marked section */}
-        <div className="danger-zone">
-            <h3>Danger Zone</h3>
-            <p>This action is permanent and cannot be undone.</p>
-            <button type="button" className="danger-action-btn" onClick={handleDelete}>
-                Delete Territory
-            </button>
-        </div>
-      </form>
+        </button>
+      </div>
     </div>
   );
 }

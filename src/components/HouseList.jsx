@@ -6,23 +6,20 @@ import './HouseList.css';
 import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 import FilterBar from './FilterBar.jsx';
+import InlineEditableText from './InlineEditableText.jsx';
 
     // Note the new 'onHouseSelect' prop
-    function HouseList({ streetId, onAddHouse, onHouseSelect, onEditStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
-        
-        console.log('onEditStreet prop received in HouseList:', onEditStreet);
-
+    function HouseList({ streetId, onAddHouse, onHouseSelect, onSaveStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
         const [houses, setHouses] = useState([]);
-        const [streetName, setStreetName] = useState('');
+        const [streetDetails, setStreetDetails] = useState(null);
 
 
     useEffect(() => {
     const fetchData = async () => {
-        // Fetch the street object itself to get its name
+        // Fetch the street object itself
         const streetObject = await getFromStore('streets', streetId);
-        console.log('Street object fetched in HouseList:', streetObject);
         if (streetObject) {
-        setStreetName(streetObject.name);
+        setStreetDetails(streetObject);
         }
 
         // Fetch the list of houses for this street
@@ -33,6 +30,15 @@ import FilterBar from './FilterBar.jsx';
 
     fetchData();
     }, [streetId]);
+
+    const handleStreetNameSave = (newName) => {
+        const updatedStreet = {
+            ...streetDetails,
+            name: newName
+        };
+        onSaveStreet(updatedStreet);
+        setStreetDetails(updatedStreet); // Update local state
+    };
 
     // Apply filters to the houses list
     const filteredHouses = houses.filter(house => {
@@ -51,15 +57,22 @@ import FilterBar from './FilterBar.jsx';
         return activeFilters.every(filterKey => house[filterKey] === true);
     });
 
+    if (!streetDetails) {
+        return <p>Loading street details...</p>;
+    }
+
     return (
         <div>
-            <ViewHeader title={streetName || 'Loading...'}>
-                <button
-                    className="secondary-action-btn"
-                    onClick={() => onEditStreet(streetId)}
-                >
-                    Edit Street
-                </button>
+            <div style={{ marginBottom: '1rem' }}>
+                <InlineEditableText
+                    value={streetDetails.name}
+                    onSave={handleStreetNameSave}
+                    as="h2"
+                    placeholder="Street name"
+                />
+            </div>
+
+            <ViewHeader>
                 <button className="primary-action-btn" onClick={onAddHouse}>
                     + Add New House
                 </button>

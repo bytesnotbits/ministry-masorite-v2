@@ -59,7 +59,7 @@
 h2.inline-editable-text {
   width: 100%;
   text-align: center;
-  margin: -0.25rem auto;
+  padding: 0.5rem;
 }
 
 h2.inline-editable-input {

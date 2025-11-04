@@ -6,10 +6,12 @@ import './StreetList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
 import CompletionToggle from './CompletionToggle.jsx';
+import InlineEditableText from './InlineEditableText.jsx';
+import LongPressEditField from './LongPressEditField.jsx';
 import './StatIcon.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onAddStreet, onEditTerritory, showCompleted, onToggleCompleted }) {
+function StreetList({ territoryId, onStreetSelect, onAddStreet, onSaveTerritory, showCompleted, onToggleCompleted }) {
   const [streets, setStreets] = useState([]);
   const [territoryDetails, setTerritoryDetails] = useState(null);
 
@@ -53,16 +55,50 @@ useEffect(() => {
     return !isStreetCompleted(street); // Hide completed if toggle is off
   });
 
+  const handleFieldSave = (fieldName, value) => {
+    const updatedTerritory = {
+      ...territoryDetails,
+      [fieldName]: value
+    };
+    onSaveTerritory(updatedTerritory);
+    setTerritoryDetails(updatedTerritory); // Update local state
+  };
+
+  if (!territoryDetails) {
+    return <p>Loading territory details...</p>;
+  }
+
   return (
     <div>
-      <ViewHeader title={territoryDetails ? `Territory #${territoryDetails.number}` : 'Loading...'}>
-        <button className="secondary-action-btn" onClick={() => onEditTerritory(territoryId)}>
-          Edit Territory
-        </button>
+      <div style={{ marginBottom: '1rem' }}>
+        <InlineEditableText
+          value={`Territory #${territoryDetails.number}`}
+          onSave={(value) => {
+            // Extract just the number from "Territory #XX"
+            const match = value.match(/\d+/);
+            if (match) {
+              handleFieldSave('number', match[0]);
+            }
+          }}
+          as="h2"
+          placeholder="Territory #"
+        />
+      </div>
+
+      <ViewHeader>
         <button className="primary-action-btn" onClick={onAddStreet}>
           + Add New Street
         </button>
       </ViewHeader>
+
+      <div style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+        <LongPressEditField
+          label="Description"
+          value={territoryDetails.description}
+          onSave={(value) => handleFieldSave('description', value)}
+          placeholder="No description"
+        />
+      </div>
 
       <CompletionToggle
         showCompleted={showCompleted}
