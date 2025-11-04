@@ -48,7 +48,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
   };
   
   const handleSave = () => {
-    onSave(formData);
+    onSave(formData, true); // Pass true to stay on the house detail page
     setIsEditing(false);
     setIsEditingHouse(false);
   };
