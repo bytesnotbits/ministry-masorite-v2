@@ -2,8 +2,10 @@
 
 .breadcrumbs-nav {
   display: flex;
-  flex-direction: row; /* This is the fix for the direction */
+  flex-direction: row;
+  flex-wrap: wrap; /* Allow breadcrumbs to wrap on smaller screens */
   align-items: center;
+  gap: 0.3rem; /* Use gap for consistent spacing */
   margin-bottom: 1.5rem;
   font-size: 1rem;
 }
@@ -14,7 +16,7 @@
   color: var(--primary-color);
   font-weight: bold;
   cursor: pointer;
-  padding: 0.5rem 1rem;      /* Increased padding */
+  padding: 0.4rem 0.6rem;      /* Reduced padding for more compact buttons */
   border-radius: 6px;
   transition: background-color 0.2s, box-shadow 0.2s;
 }
@@ -27,13 +29,13 @@
 .breadcrumb-separator {
   color: #a0aec0;
   font-weight: bold;
-  margin: 0 0.5rem; /* Increased margin for spacing */
+  margin: 0 0.2rem; /* Reduced margin for tighter spacing */
   font-size: 1.2rem;
 }
 
 .breadcrumb-separator-custom {
   color: #a0aec0;
   font-weight: bold;
-  margin: 0 0.75rem; /* Slightly more margin for visual separation */
+  margin: 0 0.3rem; /* Reduced margin for tighter spacing */
   font-size: 1.2rem;
 }
