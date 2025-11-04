@@ -140,10 +140,10 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
             <button className="primary-action-btn" onClick={onQuickLetter}>
               Quick Letter
             </button>
-          </div>
-          <button className="secondary-action-btn" onClick={() => { setIsEditing(true); setIsEditingHouse(true); }}>
+            <button className="secondary-action-btn" onClick={() => { setIsEditing(true); setIsEditingHouse(true); }}>
               Edit House
-          </button>
+            </button>
+          </div>
         </ViewHeader>
 
           <div className="house-details-readonly">
