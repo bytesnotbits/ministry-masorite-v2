@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import './HouseDetail.css'; // Reusing styles for a consistent look!
+import ViewHeader from './ViewHeader.jsx';
 
 function TerritoryDetail({ territory, onSave, onDelete, onCancel }) {
   const [formData, setFormData] = useState(null);
@@ -37,18 +38,14 @@ function TerritoryDetail({ territory, onSave, onDelete, onCancel }) {
 
   return (
     <div className="house-detail-container">
-      <div className="view-header">
-        <h2>Edit Territory</h2>
-        <div className="header-actions">
-          <button className="secondary-action-btn" onClick={onCancel}>
-            Cancel
-          </button>
-
+      <ViewHeader title="Edit Territory">
+        <button className="secondary-action-btn" onClick={onCancel}>
+          Cancel
+        </button>
         <button className="primary-action-btn" onClick={handleSave}>
           Save Changes
         </button>
-        </div>
-      </div>
+      </ViewHeader>
 
       <form className="house-form">
         <label htmlFor="number">Territory Number</label>

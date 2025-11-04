@@ -157,6 +157,7 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Fixed breadcrumbs to wrap on smaller screens and reduced spacing for more compact layout
 - ✓ Fixed Edit House button positioning in HouseDetail to render inline with other action buttons
 - ✓ Fixed visit history sorting to show newest entries first (both HouseDetail and StudyDetail)
 - ✓ Added ConfirmDialog component with Yes/No buttons for better UX
