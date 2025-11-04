@@ -159,7 +159,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
                       checked={house.isCurrentlyNH || false}
                       onChange={handleToggleChange}
                     />
-                    <span>Not at Home</span>
+                    <span>NH</span>
                     <Icon name="notAtHome" className="detail-icon icon-nh" />
                   </label>
 
@@ -170,7 +170,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
                       checked={house.isNotInterested || false}
                       onChange={handleToggleChange}
                     />
-                    <span>Not Interested</span>
+                    <span>NI</span>
                     <Icon name="notInterested" className="detail-icon icon-ni" />
                   </label>
 
@@ -181,7 +181,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
                       checked={house.hasMailbox || false}
                       onChange={handleToggleChange}
                     />
-                    <span>Mailbox Available</span>
+                    <span>Mailbox</span>
                     <Icon name="mailbox" className="detail-icon icon-mailbox" />
                   </label>
 
@@ -192,7 +192,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
                       checked={house.noTrespassing || false}
                       onChange={handleToggleChange}
                     />
-                    <span>No Trespassing</span>
+                    <span>NT</span>
                     <Icon name="noTrespassing" className="detail-icon icon-no-trespassing" />
                   </label>
 
@@ -203,7 +203,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
                       checked={house.hasGate || false}
                       onChange={handleToggleChange}
                     />
-                    <span>Gated Property</span>
+                    <span>Gate</span>
                     <Icon name="gate" className="detail-icon icon-gate" />
                   </label>
             </div>

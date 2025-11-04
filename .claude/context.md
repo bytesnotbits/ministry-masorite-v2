@@ -157,6 +157,17 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Enhanced AddHouseModal with attribute toggles (NH, NI, Mbox, NT, Gate)
+  - Attributes persist between "Save & New" clicks for faster data entry
+  - NH (Not at Home) always checked by default for new houses
+  - All attributes reset when modal closes
+- ✓ Optimized house attribute toggle buttons for compact layout:
+  - Changed from vertical stack to horizontal wrap layout
+  - Reduced padding and spacing significantly
+  - Shortened labels (NH, NI, Mbox, NT, Gate) to save space
+  - Reduced icon size and margins
+- ✓ Reduced spacing on filter buttons (FilterBar) for more compact layout
+- ✓ Fixed Edit Territory and Edit Street views to use ViewHeader component (title above buttons)
 - ✓ Fixed breadcrumbs to wrap on smaller screens and reduced spacing for more compact layout
 - ✓ Fixed Edit House button positioning in HouseDetail to render inline with other action buttons
 - ✓ Fixed visit history sorting to show newest entries first (both HouseDetail and StudyDetail)
