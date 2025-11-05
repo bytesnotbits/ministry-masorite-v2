@@ -37,7 +37,7 @@ function App() {
   const [isMenuOpen, setMenuOpen] = useState(false);
 
   const [territories, setTerritories] = useState([]); // Master list of territories now lives here
-  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [currentView, setCurrentView] = useState('territories');
   const [selectedTerritoryId, setSelectedTerritoryId] = useState(null);
   const [selectedStreetId, setSelectedStreetId] = useState(null); // We still need this for now
   const [isAddTerritoryModalOpen, setIsAddTerritoryModalOpen] = useState(false);
@@ -60,9 +60,7 @@ function App() {
   const [isEditingHouse, setIsEditingHouse] = useState(false);
   const [cameFromBibleStudies, setCameFromBibleStudies] = useState(false);
   const [cameFromLetterQueue, setCameFromLetterQueue] = useState(false);
-  const [isLetterWritingVisible, setIsLetterWritingVisible] = useState(false);
-  const [isLetterQueueVisible, setIsLetterQueueVisible] = useState(false);
-  const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
+
   const [isPhoneCallModalOpen, setIsPhoneCallModalOpen] = useState(false);
   const [selectedHouseForPhoneCall, setSelectedHouseForPhoneCall] = useState(null);
   const [showLetterQueueConfirm, setShowLetterQueueConfirm] = useState(false);
@@ -97,7 +95,7 @@ function App() {
   };
   const [isLoading, setIsLoading] = useState(true);
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
-  const [isBibleStudiesVisible, setIsBibleStudiesVisible] = useState(false);
+
   const [isAddStudyModalOpen, setIsAddStudyModalOpen] = useState(false);
   const [personForStudy, setPersonForStudy] = useState(null);
   const handleCloseStudyModal = () => {
@@ -518,11 +516,15 @@ const fetchTerritories = async () => {
   };
 
 
-  const handleOpenSettings = () => setIsSettingsVisible(true);
-    const handleCloseSettings = () => setIsSettingsVisible(false);
-
-  const handleOpenBibleStudies = () => setIsBibleStudiesVisible(true);
-    const handleCloseBibleStudies = () => setIsBibleStudiesVisible(false);
+  const navigateTo = (view) => {
+    setCurrentView(view);
+    setSelectedTerritoryId(null);
+    setSelectedStreetId(null);
+    setSelectedHouse(null);
+    setSelectedPerson(null);
+    setSelectedStudy(null);
+    setMenuOpen(false);
+  };
   
     const handleExportData = () => {
     handleJsonExport('full'); // We pass 'full' to tell it we want a complete backup
@@ -891,22 +893,18 @@ const fetchTerritories = async () => {
 
                     setSelectedStreetId(street.id);
 
-                    await handleHouseSelect(house);
-
-                    setIsBibleStudiesVisible(false);
-
-                    setCameFromBibleStudies(true);
-
-                  } else {
-
-                    setSelectedPerson(person);
-
-                    setIsBibleStudiesVisible(false);
-
-                    setCameFromBibleStudies(true);
-
-                  }
-
+                            await handleHouseSelect(house);
+                    
+                            setCurrentView('territories');
+                            setCameFromBibleStudies(true);
+                      } else {
+                  
+                          setSelectedPerson(person);
+                  
+                          setCurrentView('personDetail');
+                          setCameFromBibleStudies(true);
+                  
+                      }
                 };
 
   const handleHouseSelectFromLetterQueue = async (house) => {
@@ -932,132 +930,79 @@ const fetchTerritories = async () => {
     setIsBibleStudiesVisible(true);
   };
 
+  const handleBreadcrumbClick = (level) => {
+    if (isEditingHouse) {
+      alert("Canceling edit. No changes saved.");
+      setIsEditingHouse(false);
+    }
+
+    switch (level) {
+      case 'territories':
+        setCurrentView('territories');
+        setSelectedTerritoryId(null);
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedTerritoryDetails(null);
+        setSelectedStreetDetails(null);
+        setSelectedPerson(null);
+        setSelectedStudy(null);
+        setCameFromBibleStudies(false);
+        setCameFromLetterQueue(false);
+        break;
+      case 'territory':
+        setSelectedStreetId(null);
+        setSelectedHouse(null);
+        setSelectedStreetDetails(null);
+        setSelectedPerson(null);
+        setSelectedStudy(null);
+        break;
+      case 'street':
+        setSelectedHouse(null);
+        setSelectedPerson(null);
+        setSelectedStudy(null);
+        break;
+      default:
+        break;
+    }
+  };
+
+
 
 
   // --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---   --- RENDER LOGIC ---
-  let currentView;
-  if (selectedPerson) {
-    currentView = (
-      <PersonDetail 
-        person={selectedPerson}
-        onBack={handleBackToBibleStudies}
-        onAddVisit={handleOpenVisitModal}
-        onAssociate={handleOpenAssociatePersonModal}
-        onViewStudy={handleViewStudy}
-      />
-    );
-  } else if (selectedStudy) {
-    currentView = (
-      <StudyDetail 
-        study={selectedStudy}
-        onBack={() => setSelectedStudy(null)} 
-        onDeleteVisit={handleDeleteVisit}
-        onEditVisit={handleEditVisit}
-        onAddVisit={handleOpenVisitModal}
-        studyVisitListKey={studyVisitListKey}
-        onUpdateStudy={handleUpdateStudy}
-      />
-    );
-  } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
-    currentView = (
-      <BibleStudiesPage 
-        key={bibleStudiesPageKey}
-        onBack={handleCloseBibleStudies}
-        onPersonSelect={handlePersonSelect}
-        onAssociate={handleOpenAssociatePersonModal}
-        onAddPerson={handleAddPerson}
-        onViewStudy={handleViewStudy}
-      />
-    );
-  } else if (isSettingsVisible) {
-    currentView = (
-      <SettingsPage 
-      onBack={handleCloseSettings} 
-      onExport={handleExportData} 
-      onImport={handleImportData}
-      onClearAllData={handleClearAllData}
-    />
-    );
-  } else if (isLetterTemplatesVisible) {
-    currentView = <LetterTemplates onBack={() => setIsLetterTemplatesVisible(false)} />;
-  } else if (isLetterQueueVisible) {
-    currentView = <LetterQueue onBack={() => setIsLetterQueueVisible(false)} onHouseSelect={handleHouseSelectFromLetterQueue} />;
-  } else if (isLetterWritingVisible) {
-    currentView = <LetterCampaignList onBack={() => setIsLetterWritingVisible(false)} onOpenLetterQueue={() => setIsLetterQueueVisible(true)} onOpenLetterTemplates={() => setIsLetterTemplatesVisible(true)} />;
-  } else { // <-- WRAP EVERYTHING ELSE IN THIS ELSE BLOCK
-    if (selectedHouse) {
-        currentView = (
-          <HouseDetail 
-            people={peopleForSelectedHouse}
-            house={selectedHouse} 
-            onSave={handleUpdateHouse}
-            onDelete={handleDeleteHouse}
-            onAddVisit={handleOpenVisitModal}
-            onDeleteVisit={handleDeleteVisit}
-            onEditVisit={handleEditVisit}
-            onAddPerson={handleAddPerson}
-            onDeletePerson={handleDeletePerson}
-            onEditPerson={handleEditPerson}
-            onDisassociatePerson={handleDisassociatePerson}
-            onMovePerson={handleOpenMovePersonModal}
-            visitListKey={visitListKey}
-            onStartStudy={handleStartStudy}
-            onViewStudy={handleViewStudy}
-            setIsEditingHouse={setIsEditingHouse}
-          />
-        );
-    // Removed: Territory and Street edit mode - fields are now editable inline
-    // } else if (selectedStreet) {
-    //   currentView = (
-    //     <StreetDetail
-    //       street={selectedStreet}
-    //       onSave={handleUpdateStreet}
-    //       onDelete={handleDeleteStreet}
-    //       onCancel={handleBackToStreetList}
-    //     />
-    //   );
-    // } else if (selectedTerritory) {
-    //   currentView = (
-    //     <TerritoryDetail
-    //       territory={selectedTerritory}
-    //       onSave={handleUpdateTerritory}
-    //       onDelete={handleDeleteTerritory}
-    //       onCancel={handleBackToTerritoryList}
-    //     />
-    //   );
-    } else if (selectedStreetId) {
-        currentView = <HouseList
-          streetId={selectedStreetId}
-          onAddHouse={handleOpenAddHouseModal}
-          onHouseSelect={handleHouseSelect}
-          onSaveStreet={handleSaveStreetInline}
-          filters={houseFilters}
-          onFilterChange={setHouseFilters}
-          onLogNH={handleLogNH}
-          onPhoneCall={handleOpenPhoneCallModal}
-          key={houseListKey}
-        />;
-
-    } else if (selectedTerritoryId) {
-        currentView = <StreetList
-          territoryId={selectedTerritoryId}
-          onStreetSelect={handleStreetSelect}
-          onAddStreet={handleOpenAddStreetModal}
-          onSaveTerritory={handleSaveTerritoryInline}
-          showCompleted={showCompleted}
-          onToggleCompleted={setShowCompleted}
-        />;
-    } else {
-      currentView = (
-        <TerritoryList
-          territories={territories}
-          onTerritorySelect={handleTerritorySelect}
-          onAddTerritory={handleOpenAddTerritoryModal}
-          showCompleted={showCompleted}
-          onToggleCompleted={setShowCompleted}
-        />
-      );
-    }
+  let currentViewComponent;
+  switch (currentView) {
+    case 'personDetail':
+      currentViewComponent = <PersonDetail person={selectedPerson} onBack={() => navigateTo('bibleStudies')} onAddVisit={handleOpenVisitModal} onAssociate={handleOpenAssociatePersonModal} onViewStudy={handleViewStudy} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} />;
+      break;
+    case 'bibleStudies':
+      currentViewComponent = <BibleStudiesPage key={bibleStudiesPageKey} onBack={() => navigateTo('territories')} onPersonSelect={handlePersonSelect} onAssociate={handleOpenAssociatePersonModal} onAddPerson={handleAddPerson} onViewStudy={handleViewStudy} />;
+      break;
+    case 'settings':
+      currentViewComponent = <SettingsPage onBack={() => navigateTo('territories')} onExport={handleExportData} onImport={handleImportData} onClearAllData={handleClearAllData} />;
+      break;
+    case 'letterWriting':
+      currentViewComponent = <LetterCampaignList onBack={() => navigateTo('territories')} onOpenLetterQueue={() => setCurrentView('letterQueue')} onOpenLetterTemplates={() => setCurrentView('letterTemplates')} />;
+      break;
+    case 'letterQueue':
+      currentViewComponent = <LetterQueue onBack={() => setCurrentView('letterWriting')} onHouseSelect={handleHouseSelectFromLetterQueue} />;
+      break;
+    case 'letterTemplates':
+      currentViewComponent = <LetterTemplates onBack={() => setCurrentView('letterWriting')} />;
+      break;
+    default:
+      if (selectedStudy) {
+        currentViewComponent = <StudyDetail study={selectedStudy} onBack={() => setSelectedStudy(null)} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddVisit={handleOpenVisitModal} studyVisitListKey={studyVisitListKey} onUpdateStudy={handleUpdateStudy} />;
+      } else if (selectedHouse) {
+        currentViewComponent = <HouseDetail people={peopleForSelectedHouse} house={selectedHouse} onSave={handleUpdateHouse} onDelete={handleDeleteHouse} onAddVisit={handleOpenVisitModal} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddPerson={handleAddPerson} onDeletePerson={handleDeletePerson} onEditPerson={handleEditPerson} onDisassociatePerson={handleDisassociatePerson} onMovePerson={handleOpenMovePersonModal} visitListKey={visitListKey} onStartStudy={handleStartStudy} onViewStudy={handleViewStudy} setIsEditingHouse={setIsEditingHouse} />;
+      } else if (selectedStreetId) {
+        currentViewComponent = <HouseList streetId={selectedStreetId} onAddHouse={handleOpenAddHouseModal} onHouseSelect={handleHouseSelect} onSaveStreet={handleSaveStreetInline} filters={houseFilters} onFilterChange={setHouseFilters} onLogNH={handleLogNH} onPhoneCall={handleOpenPhoneCallModal} key={houseListKey} />;
+      } else if (selectedTerritoryId) {
+        currentViewComponent = <StreetList territoryId={selectedTerritoryId} onStreetSelect={handleStreetSelect} onAddStreet={handleOpenAddStreetModal} onSaveTerritory={handleSaveTerritoryInline} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
+      } else {
+        currentViewComponent = <TerritoryList territories={territories} onTerritorySelect={handleTerritorySelect} onAddTerritory={handleOpenAddTerritoryModal} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
+      }
+      break;
   }
   
   // --- BREADCRUMB LOGIC ---
@@ -1066,162 +1011,33 @@ const fetchTerritories = async () => {
   if (selectedStudy) {
     crumbs.push({
       label: 'Back',
-      onClick: () => setSelectedStudy(null)
+      onClick: () => handleBreadcrumbClick('street')
     });
-  } else if ((cameFromBibleStudies || cameFromLetterQueue) && (selectedHouse || selectedPerson)) {
-    // Add the source button (Bible Studies or Letter Queue)
-    if (cameFromBibleStudies) {
-      crumbs.push({
-        label: 'Return Visits & Bible Studies',
-        onClick: () => {
-          if (isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          // Reset all navigation state
-          setSelectedTerritoryId(null);
-          setSelectedStreetId(null);
-          setSelectedHouse(null);
-          setSelectedTerritoryDetails(null);
-          setSelectedStreetDetails(null);
-          setSelectedPerson(null);
-          setSelectedTerritory(null);
-          setSelectedStreet(null);
-          setIsEditingHouse(false);
-          setCameFromBibleStudies(false);
-          // Open Bible Studies page
-          setIsBibleStudiesVisible(true);
-        }
-      });
-    } else if (cameFromLetterQueue) {
-      crumbs.push({
-        label: 'Letter Queue',
-        onClick: () => {
-          if (isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          // Reset all navigation state
-          setSelectedTerritoryId(null);
-          setSelectedStreetId(null);
-          setSelectedHouse(null);
-          setSelectedTerritoryDetails(null);
-          setSelectedStreetDetails(null);
-          setSelectedPerson(null);
-          setSelectedTerritory(null);
-          setSelectedStreet(null);
-          setIsEditingHouse(false);
-          setCameFromLetterQueue(false);
-          // Open Letter Queue page
-          setIsLetterQueueVisible(true);
-          setIsLetterWritingVisible(true);
-        }
-      });
-    }
-
-    // Add separator
+  } else if (selectedPerson) {
     crumbs.push({
-      label: '|',
-      onClick: null // Non-clickable separator
+        label: 'Back',
+        onClick: () => handleBreadcrumbClick('territories')
     });
-
-    // Add hierarchical breadcrumbs only if we have a house selected
-    if (selectedHouse && selectedTerritoryId) {
-      // 1. "Territories" crumb
-      crumbs.push({
-        label: 'Territories',
-        onClick: () => {
-          if (selectedTerritory || selectedStreet) {
-            alert("Canceling edit. No changes saved.");
-          }
-          setSelectedTerritoryId(null);
-          setSelectedStreetId(null);
-          setSelectedHouse(null);
-          setSelectedTerritoryDetails(null);
-          setSelectedStreetDetails(null);
-          setSelectedTerritory(null);
-          setSelectedStreet(null);
-          setCameFromBibleStudies(false);
-          setCameFromLetterQueue(false);
-        }
-      });
-
-      // 2. Territory number crumb
-      crumbs.push({
-        label: `${selectedTerritoryDetails.number}`,
-        onClick: () => {
-          if (selectedStreet || isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          setSelectedStreetId(null);
-          setSelectedHouse(null);
-          setSelectedStreetDetails(null);
-          setSelectedStreet(null);
-          setIsEditingHouse(false);
-        }
-      });
-
-      // 3. Street name crumb
-      crumbs.push({
-        label: selectedStreetDetails.name,
-        onClick: () => {
-          if (isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          setSelectedHouse(null);
-          setIsEditingHouse(false);
-        }
-      });
-    }
+  } else if (currentView === 'bibleStudies' || currentView === 'letterWriting' || currentView === 'settings') {
+    // No breadcrumbs on top-level menu pages
   } else if (selectedTerritoryId) {
     // Standard hierarchical breadcrumbs
-    // 1. The "Home" crumb
     crumbs.push({
       label: 'Territories',
-      onClick: () => {
-        // ADD a check: ONLY show the alert if they were in an edit mode.
-        if (selectedTerritory || selectedStreet) {
-          alert("Canceling edit. No changes saved.");
-        }
-        setSelectedTerritoryId(null);
-        setSelectedStreetId(null);
-        setSelectedHouse(null);
-        setSelectedTerritoryDetails(null);
-        setSelectedStreetDetails(null);
-        // ADDED: Ensure we exit any edit mode when going home
-        setSelectedTerritory(null);
-        setSelectedStreet(null);
-      }
+      onClick: () => handleBreadcrumbClick('territories')
     });
 
-    // 2. The "Territory" crumb (shows when you're on a street or house)
-    if (selectedStreetDetails || selectedStreet || selectedHouse) { // Condition updated to include edit mode
+    if (selectedStreetId) {
       crumbs.push({
         label: `${selectedTerritoryDetails.number}`,
-        onClick: () => {
-          // ADD a check: ONLY show the alert if they were editing a street or house.
-          if (selectedStreet || isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          setSelectedStreetId(null);
-          setSelectedHouse(null);
-          setSelectedStreetDetails(null);
-          // ADDED: Ensure we exit street edit mode when going back to territory
-          setSelectedStreet(null);
-          setIsEditingHouse(false); // Reset editing state
-        }
+        onClick: () => handleBreadcrumbClick('territory')
       });
     }
 
-    // 3. The "Street" crumb (shows only when you're on a house)
     if (selectedHouse) {
       crumbs.push({
         label: selectedStreetDetails.name,
-        onClick: () => {
-          if (isEditingHouse) {
-            alert("Canceling edit. No changes saved.");
-          }
-          setSelectedHouse(null);
-          setIsEditingHouse(false); // Reset editing state
-        }
+        onClick: () => handleBreadcrumbClick('street')
       });
     }
   }
@@ -1231,9 +1047,9 @@ const fetchTerritories = async () => {
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
       <div id="outer-container">
         <Menu pageWrapId={ "page-wrap" } outerContainerId={ "outer-container" } isOpen={isMenuOpen} onStateChange={(state) => setMenuOpen(state.isOpen)}>
-          <a className="menu-item" onClick={() => { handleOpenBibleStudies(); setMenuOpen(false); }}>RVs / Bible Studies</a>
-          <a className="menu-item" onClick={() => { setIsLetterWritingVisible(true); setMenuOpen(false); }}>Letter Writing</a>
-          <a className="menu-item" onClick={() => { handleOpenSettings(); setMenuOpen(false); }}>Settings</a>
+          <a className="menu-item" onClick={() => navigateTo('bibleStudies')}>RVs / Bible Studies</a>
+          <a className="menu-item" onClick={() => navigateTo('letterWriting')}>Letter Writing</a>
+          <a className="menu-item" onClick={() => navigateTo('settings')}>Settings</a>
         </Menu>
         <main id="page-wrap">
           {/* --- START: NEW LOADING CHECK --- */}
@@ -1245,7 +1061,7 @@ const fetchTerritories = async () => {
               {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
               {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
               <Breadcrumbs crumbs={crumbs} />
-              {currentView}
+              {currentViewComponent}
               
               {isAddTerritoryModalOpen && (
                 <AddTerritoryModal

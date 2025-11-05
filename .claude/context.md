@@ -6,6 +6,7 @@ A React-based territory management application for ministry work. Tracks territo
 ## Tech Stack
 - **Frontend**: React 19.1.1 with Vite 7.1.7
 - **Database**: IndexedDB (via custom `database.js` wrapper)
+- **UI Libraries**: react-burger-menu
 - **PDF Generation**: jsPDF 3.0.3
 - **Language**: JavaScript (no TypeScript)
 - **Styling**: CSS (App.css + component-level styles)
@@ -35,11 +36,10 @@ A React-based territory management application for ministry work. Tracks territo
 - **components/** - All UI components (modals, lists, detail views)
 
 ### Navigation Pattern
-Hierarchical breadcrumb navigation:
-- Territories → Territory → Streets → Street → Houses → House Detail
-- Special flows: Bible Studies page, Letter Queue, Settings
-- State tracked via: `selectedTerritoryId`, `selectedStreetId`, `selectedHouse`, etc.
-- "Came from" flags: `cameFromBibleStudies`, `cameFromLetterQueue` for return navigation
+- **Main Navigation**: A hamburger menu (`react-burger-menu`) controls the top-level views. A single `currentView` state in `App.jsx` determines which main view is shown (`territories`, `bibleStudies`, `settings`, `letterWriting`).
+- **Hierarchical Navigation**: Within the main territories view, navigation is hierarchical: Territories → Streets → Houses → House Detail. This is managed by `selectedTerritoryId`, `selectedStreetId`, and `selectedHouse` state variables.
+- **Breadcrumbs**: Breadcrumbs are used for navigating up the hierarchy within the territories view.
+- **Special Flows**: Bible Studies and Letter Writing pages have their own internal navigation logic.
 
 ### Common Patterns
 
@@ -158,6 +158,10 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Implemented a hamburger menu to declutter the main view.
+- ✓ Moved "Settings", "RVs / Bible Studies", and "Letter Writing" into the hamburger menu.
+- ✓ Refactored navigation logic to use a single `currentView` state for more robust and predictable navigation.
+- ✓ Fixed multiple navigation bugs related to view switching and breadcrumb behavior.
 - ✓ Refactored Person card UI in HouseDetail view for improved layout and consistency.
   - Moved person's name to be displayed above the action buttons.
   - Standardized the styling of the 'Move', 'Disassociate', and 'Edit' buttons.

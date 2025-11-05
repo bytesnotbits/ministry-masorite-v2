@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { getByIndex, getFromStore } from '../database.js';
+import ViewHeader from './ViewHeader.jsx';
+import VisitList from './VisitList.jsx';
 
-function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy }) {
+function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy, onDeleteVisit, onEditVisit }) {
   const [visits, setVisits] = useState([]);
   const [study, setStudy] = useState(null);
 
@@ -46,7 +49,7 @@ function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy }) 
 
       <div className="visit-history-section">
         <h3>Visit History</h3>
-        <VisitList visits={visits} onAddVisit={() => onAddVisit(person)} />
+        <VisitList visits={visits} onAddVisit={() => onAddVisit(person)} onDelete={onDeleteVisit} onEdit={onEditVisit} people={[person]} />
       </div>
     </div>
   );
