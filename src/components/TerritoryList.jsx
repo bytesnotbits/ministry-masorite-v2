@@ -6,7 +6,7 @@ import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenSettings, onOpenBibleStudies, onOpenLetterWriting, showCompleted, onToggleCompleted }) {
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, showCompleted, onToggleCompleted }) {
   // Helper function to check if a territory is completed
   // A territory is completed when ALL houses have isCurrentlyNH = false (no more not-at-homes)
   const isTerritoryCompleted = (territory) => {
@@ -23,15 +23,6 @@ function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onOpenS
   return (
     <div className="territory-list-container">
       <ViewHeader>
-        <button className="secondary-action-btn" onClick={onOpenBibleStudies}>
-          RVs / Bible Studies
-        </button>
-        <button className="secondary-action-btn" onClick={onOpenLetterWriting}>
-          Letter Writing
-        </button>
-        <button className="secondary-action-btn" onClick={onOpenSettings}>
-          Settings
-        </button>
         <button className="primary-action-btn" onClick={onAddTerritory}>
           + Add New Territory
         </button>

@@ -29,8 +29,13 @@ import ConfirmDialog from './components/ConfirmDialog.jsx';
 
 
 
+import { slide as Menu } from 'react-burger-menu';
+import './components/BurgerMenu.css';
+
 function App() {
   // --- STATE ---
+  const [isMenuOpen, setMenuOpen] = useState(false);
+
   const [territories, setTerritories] = useState([]); // Master list of territories now lives here
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState(null);
@@ -1048,9 +1053,6 @@ const fetchTerritories = async () => {
           territories={territories}
           onTerritorySelect={handleTerritorySelect}
           onAddTerritory={handleOpenAddTerritoryModal}
-          onOpenSettings={handleOpenSettings}
-          onOpenBibleStudies={handleOpenBibleStudies}
-          onOpenLetterWriting={() => setIsLetterWritingVisible(true)}
           showCompleted={showCompleted}
           onToggleCompleted={setShowCompleted}
         />
@@ -1227,106 +1229,113 @@ const fetchTerritories = async () => {
 
 
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
-      <>
-        {/* --- START: NEW LOADING CHECK --- */}
-        {showLoadingIndicator ? (
-            <p>Loading data...</p>
-        ) : (
-          // --- START: This fragment is the single wrapper for the "else" case ---
-          <>
-            {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
-            {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
-            <Breadcrumbs crumbs={crumbs} />
-            {currentView}
-            
-            {isAddTerritoryModalOpen && (
-              <AddTerritoryModal
-                onSave={handleSaveTerritory}
-                onClose={handleCloseTerritoryModal}
-              />
-            )}
-            
-            {isAddStreetModalOpen && (
-              <AddStreetModal
-                onSave={handleSaveStreet}
-                onClose={handleCloseStreetModal}
-              />
-            )}
+      <div id="outer-container">
+        <Menu pageWrapId={ "page-wrap" } outerContainerId={ "outer-container" } isOpen={isMenuOpen} onStateChange={(state) => setMenuOpen(state.isOpen)}>
+          <a className="menu-item" onClick={() => { handleOpenBibleStudies(); setMenuOpen(false); }}>RVs / Bible Studies</a>
+          <a className="menu-item" onClick={() => { setIsLetterWritingVisible(true); setMenuOpen(false); }}>Letter Writing</a>
+          <a className="menu-item" onClick={() => { handleOpenSettings(); setMenuOpen(false); }}>Settings</a>
+        </Menu>
+        <main id="page-wrap">
+          {/* --- START: NEW LOADING CHECK --- */}
+          {showLoadingIndicator ? (
+              <p>Loading data...</p>
+          ) : (
+            // --- START: This fragment is the single wrapper for the "else" case ---
+            <>
+              {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
+              {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
+              <Breadcrumbs crumbs={crumbs} />
+              {currentView}
+              
+              {isAddTerritoryModalOpen && (
+                <AddTerritoryModal
+                  onSave={handleSaveTerritory}
+                  onClose={handleCloseTerritoryModal}
+                />
+              )}
+              
+              {isAddStreetModalOpen && (
+                <AddStreetModal
+                  onSave={handleSaveStreet}
+                  onClose={handleCloseStreetModal}
+                />
+              )}
 
-            {isAddHouseModalOpen && (
-              <AddHouseModal
-                onSave={handleSaveHouse}
-                onClose={handleCloseHouseModal}
-              />
-            )}
-            
-            {isAddVisitModalOpen && (
-              <AddVisitModal
-                onSave={handleSaveVisit}
-                onClose={handleCloseVisitModal}
-                visitToEdit={visitToEdit}
-                people={peopleForSelectedHouse}
-                personForVisit={personForVisit}
-              />
-            )}
+              {isAddHouseModalOpen && (
+                <AddHouseModal
+                  onSave={handleSaveHouse}
+                  onClose={handleCloseHouseModal}
+                />
+              )}
+              
+              {isAddVisitModalOpen && (
+                <AddVisitModal
+                  onSave={handleSaveVisit}
+                  onClose={handleCloseVisitModal}
+                  visitToEdit={visitToEdit}
+                  people={peopleForSelectedHouse}
+                  personForVisit={personForVisit}
+                />
+              )}
 
-            {isAddPersonModalOpen && (
-              <AddPersonModal
-                onSave={handleSavePerson}
-                onClose={handleClosePersonModal}
-                personToEdit={personToEdit}
-              />
-            )}
+              {isAddPersonModalOpen && (
+                <AddPersonModal
+                  onSave={handleSavePerson}
+                  onClose={handleClosePersonModal}
+                  personToEdit={personToEdit}
+                />
+              )}
 
-            {isPhoneCallModalOpen && selectedHouseForPhoneCall && (
-              <PhoneCallModal
-                house={selectedHouseForPhoneCall}
-                onSave={handleSavePhoneCall}
-                onClose={() => {
-                  setIsPhoneCallModalOpen(false);
-                  setSelectedHouseForPhoneCall(null);
-                }}
-              />
-            )}
+              {isPhoneCallModalOpen && selectedHouseForPhoneCall && (
+                <PhoneCallModal
+                  house={selectedHouseForPhoneCall}
+                  onSave={handleSavePhoneCall}
+                  onClose={() => {
+                    setIsPhoneCallModalOpen(false);
+                    setSelectedHouseForPhoneCall(null);
+                  }}
+                />
+              )}
 
-            {isAddStudyModalOpen && (
-              <AddStudyModal
-                onSave={handleSaveStudy} // We will create this function next
-                onClose={handleCloseStudyModal}
-                person={personForStudy}
-              />
-            )}
+              {isAddStudyModalOpen && (
+                <AddStudyModal
+                  onSave={handleSaveStudy} // We will create this function next
+                  onClose={handleCloseStudyModal}
+                  person={personForStudy}
+                />
+              )}
 
-            {isAssociatePersonModalOpen && (
-              <AssociatePersonModal
-                person={personToAssociate}
-                onSave={handleAssociatePerson}
-                onClose={handleCloseAssociatePersonModal}
-              />
-            )}
+              {isAssociatePersonModalOpen && (
+                <AssociatePersonModal
+                  person={personToAssociate}
+                  onSave={handleAssociatePerson}
+                  onClose={handleCloseAssociatePersonModal}
+                />
+              )}
 
-            {isMovePersonModalOpen && (
-              <MovePersonModal
-                person={personToMove}
-                onSave={handleMovePerson}
-                onClose={handleCloseMovePersonModal}
-              />
-            )}
+              {isMovePersonModalOpen && (
+                <MovePersonModal
+                  person={personToMove}
+                  onSave={handleMovePerson}
+                  onClose={handleCloseMovePersonModal}
+                />
+              )}
 
-            {showLetterQueueConfirm && (
-              <ConfirmDialog
-                message="Would you like to add this house back to the Letter Queue?"
-                onYes={handleAddToLetterQueueYes}
-                onNo={handleAddToLetterQueueNo}
-                yesText="Yes"
-                noText="No"
-              />
-            )}
-          </>
-          // --- END: This fragment is the single wrapper ---
-        )}
-        {/* --- END: NEW LOADING CHECK --- */}
-      </>
+              {showLetterQueueConfirm && (
+                <ConfirmDialog
+                  message="Would you like to add this house back to the Letter Queue?"
+                  onYes={handleAddToLetterQueueYes}
+                  onNo={handleAddToLetterQueueNo}
+                  yesText="Yes"
+                  noText="No"
+                />
+              )}
+            </>
+            // --- END: This fragment is the single wrapper ---
+          )}
+          {/* --- END: NEW LOADING CHECK --- */}
+        </main>
+      </div>
     );
 }
 
