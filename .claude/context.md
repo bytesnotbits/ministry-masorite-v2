@@ -158,6 +158,10 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Refactored Person card UI in HouseDetail view for improved layout and consistency.
+  - Moved person's name to be displayed above the action buttons.
+  - Standardized the styling of the 'Move', 'Disassociate', and 'Edit' buttons.
+  - Relocated the delete (x) button to the top-right corner of the card, on the same line as the person's name.
 - ✓ Implemented inline editing for Bible Study details (StudyDetail view).
   - Replaced `EditStudyModal` with `LongPressEditField` for `publication` and `lesson` fields.
   - Removed "Edit Study" button and integrated the "Add Visit" button into a consistent `ViewHeader`.

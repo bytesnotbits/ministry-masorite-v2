@@ -9,17 +9,16 @@ function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy, onDis
         <ul className="people-list">
           {people.map(person => (
             <li key={person.id} className="person-item">
-                <div className="person-details">
-                <div className="person-name">
-                    {person.name}
-                </div>
-                {/* Conditionally render notes only if they exist */}
-                {person.notes && (
-                    <p className="person-notes">
-                    {person.notes}
-                    </p>
-                )}
-                </div>
+              <div className="person-header">
+                <div className="person-name">{person.name}</div>
+                <button 
+                  className="delete-person-btn"
+                  onClick={() => onDelete(person.id)}
+                >
+                  &times;
+                </button>
+              </div>
+              {person.notes && <p className="person-notes">{person.notes}</p>}
               <div className="person-item-actions">
                 {person.hasStudy ? (
                   <button 
@@ -53,12 +52,6 @@ function PeopleList({ people, onEdit, onDelete, onStartStudy, onViewStudy, onDis
                   onClick={() => onEdit(person)}
                 >
                   Edit
-                </button>
-                <button 
-                  className="delete-person-btn"
-                  onClick={() => onDelete(person.id)}
-                >
-                  &times;
                 </button>
               </div>
             </li>

@@ -25,23 +25,36 @@
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.person-header {
+  display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  margin-bottom: 0.75rem; /* Space between header and notes/actions */
 }
 
 .person-name {
   font-weight: bold;
   font-size: 1.1rem;
   color: var(--dark-text);
+  margin-bottom: 0; /* Reset margin as it's now handled by person-header */
 }
 
 .person-item-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%; 
+  margin-top: 0.75rem;
 }
 
-.edit-person-btn {
+.edit-person-btn,
+.move-person-btn,
+.disassociate-person-btn {
   background-color: transparent;
   color: var(--primary-color);
   border: 1px solid var(--primary-color);
@@ -53,7 +66,9 @@
   transition: all 0.2s;
 }
 
-.edit-person-btn:hover {
+.edit-person-btn:hover,
+.move-person-btn:hover,
+.disassociate-person-btn:hover {
   background-color: var(--primary-color);
   color: white;
 }
@@ -110,9 +125,7 @@
   color: white;
 }
 
-person-details {
-  flex-grow: 1;
-}
+
 
 .person-notes {
   font-size: 0.9rem;
