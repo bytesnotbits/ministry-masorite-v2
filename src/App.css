@@ -4,8 +4,23 @@
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0.5rem;
   text-align: center;
+}
+
+@media (max-width: 840px) {
+  #page-wrap {
+    /* Account for fixed burger menu on narrow screens */
+    padding-top: 15px;
+    padding-left: 1px;
+    padding-right: 0;
+  }
+
+  #root {
+    /* Reduce horizontal padding on small screens to maximize content area */
+    padding-left: 0.25rem;
+    padding-right: 0.5rem;
+  }
 }
 
 h1 {
@@ -43,14 +58,14 @@ h1 {
 }
 
 .back-button {
-  display: block; 
-  width: fit-content; 
-  margin-bottom: 1rem; 
-  
+  display: block;
+  width: fit-content;
+  margin-bottom: 1rem;
+
   /* THIS IS THE FIX: Explicitly pin it to the left */
   margin-left: 0;
   margin-right: auto;
-  
+
   /* All the styling we just added */
   background-color: #f0f0f0;
   border: 1px solid #ccc;
