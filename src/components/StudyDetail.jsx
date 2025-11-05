@@ -2,22 +2,21 @@ import { useState, useEffect } from 'react';
 import './StudyDetail.css';
 import { getByIndex } from '../database.js';
 import VisitList from './VisitList.jsx';
+import LongPressEditField from './LongPressEditField.jsx';
+import ViewHeader from './ViewHeader.jsx';
 
-function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, studyVisitListKey, onEditStudy }) {
+function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, studyVisitListKey, onUpdateStudy }) {
   const [visits, setVisits] = useState([]);
 
   useEffect(() => {
     const fetchVisits = async () => {
       if (study?.person?.id) {
         const visitData = await getByIndex('visits', 'personId', study.person.id);
-        // Sort by date and time (most recent first)
         visitData.sort((a, b) => {
           const dateTimeA = `${a.date} ${a.time || '00:00'}`;
           const dateTimeB = `${b.date} ${b.time || '00:00'}`;
-          return new Date(dateTimeA) - new Date(dateTimeB);
+          return new Date(dateTimeB) - new Date(dateTimeA);
         });
-        // Reverse to get newest first
-        visitData.reverse();
         setVisits(visitData);
       }
     };
@@ -25,21 +24,35 @@ function StudyDetail({ study, onBack, onDeleteVisit, onEditVisit, onAddVisit, st
     fetchVisits();
   }, [study?.person?.id, studyVisitListKey]);
 
-  console.log('onAddVisit in StudyDetail:', onAddVisit);
+  const handleUpdate = (field, value) => {
+    const updatedStudy = { ...study, [field]: value };
+    onUpdateStudy(updatedStudy);
+  };
 
   return (
     <div className="study-detail-container">
-      <div className="study-header">
-        <div className="header-actions">
-          <button className="primary-action-btn" onClick={() => onAddVisit(study.person)}>+ Add Visit</button>
-          <button className="secondary-action-btn" onClick={() => onEditStudy(study)}>Edit Study</button>
-        </div>
-      </div>
+      <ViewHeader
+        title={`Study with ${study.person.name}`}
+        primaryAction={{
+          label: '+ Add Visit',
+          handler: () => onAddVisit(study.person),
+        }}
+      />
 
       <div className="study-info">
         <p><strong>Started:</strong> {new Date(study.startDate).toLocaleDateString()}</p>
-        <p><strong>Publication:</strong> {study.publication}</p>
-        <p><strong>Lesson:</strong> {study.lesson}</p>
+        <LongPressEditField
+          label="Publication"
+          value={study.publication}
+          onSave={(newValue) => handleUpdate('publication', newValue)}
+          placeholder="Enter publication"
+        />
+        <LongPressEditField
+          label="Lesson"
+          value={study.lesson}
+          onSave={(newValue) => handleUpdate('lesson', newValue)}
+          placeholder="Enter lesson"
+        />
       </div>
 
       <VisitList 

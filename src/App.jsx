@@ -18,7 +18,6 @@ import { executeMerge, handleJsonExport, handleFileImport } from './database-api
 import BibleStudiesPage from './components/BibleStudiesPage.jsx';
 import AddStudyModal from './components/AddStudyModal.jsx';
 import StudyDetail from './components/StudyDetail.jsx';
-import EditStudyModal from './components/EditStudyModal.jsx';
 import AssociatePersonModal from './components/AssociatePersonModal.jsx';
 import PersonDetail from './components/PersonDetail.jsx';
 import MovePersonModal from './components/MovePersonModal.jsx';
@@ -101,21 +100,10 @@ function App() {
     setPersonForStudy(null);
   };
 
-  const handleOpenEditStudyModal = (study) => {
-    setStudyToEdit(study);
-    setIsEditStudyModalOpen(true);
-  };
-
-  const handleCloseEditStudyModal = () => {
-    setStudyToEdit(null);
-    setIsEditStudyModalOpen(false);
-  };
   const [studies, setStudies] = useState([]);
   const [selectedStudy, setSelectedStudy] = useState(null);
   const [personForVisit, setPersonForVisit] = useState(null);
   const [studyVisitListKey, setStudyVisitListKey] = useState(0);
-  const [isEditStudyModalOpen, setIsEditStudyModalOpen] = useState(false);
-  const [studyToEdit, setStudyToEdit] = useState(null);
   const [isAssociatePersonModalOpen, setIsAssociatePersonModalOpen] = useState(false);
   const [personToAssociate, setPersonToAssociate] = useState(null);
   const [bibleStudiesPageKey, setBibleStudiesPageKey] = useState(0);
@@ -931,8 +919,7 @@ const fetchTerritories = async () => {
   };  const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
-    setSelectedStudy({ ...updatedStudyData, person: updatedStudyData.person }); // Update the currently viewed study
-    handleCloseEditStudyModal();
+    setSelectedStudy({ ...updatedStudyData, person: selectedStudy.person }); // Update the currently viewed study
   };
 
   const handleBackToBibleStudies = () => {
@@ -963,7 +950,7 @@ const fetchTerritories = async () => {
         onEditVisit={handleEditVisit}
         onAddVisit={handleOpenVisitModal}
         studyVisitListKey={studyVisitListKey}
-        onEditStudy={handleOpenEditStudyModal}
+        onUpdateStudy={handleUpdateStudy}
       />
     );
   } else if (isBibleStudiesVisible) { // <-- TOP-LEVEL CHECK
@@ -1307,14 +1294,6 @@ const fetchTerritories = async () => {
                 onSave={handleSaveStudy} // We will create this function next
                 onClose={handleCloseStudyModal}
                 person={personForStudy}
-              />
-            )}
-
-            {isEditStudyModalOpen && (
-              <EditStudyModal
-                onSave={handleUpdateStudy}
-                onClose={handleCloseEditStudyModal}
-                study={studyToEdit}
               />
             )}
 

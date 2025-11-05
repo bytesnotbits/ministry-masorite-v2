@@ -122,7 +122,8 @@ const handleNo = () => {
 - **SettingsPage** - Export/import/clear data
 
 ### Modals
-- Add/Edit modals for: Territory, Street, House, Person, Visit, Study
+- Add modals for: Territory, Street, House, Person, Visit, Study
+- Most Edit modals have been replaced by inline editing.
 - Utility modals: AssociatePerson, MovePerson, PhoneCall
 - **ConfirmDialog** - Reusable custom confirmation dialog with Yes/No buttons (replaces window.confirm for better UX)
 
@@ -157,6 +158,10 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Implemented inline editing for Bible Study details (StudyDetail view).
+  - Replaced `EditStudyModal` with `LongPressEditField` for `publication` and `lesson` fields.
+  - Removed "Edit Study" button and integrated the "Add Visit" button into a consistent `ViewHeader`.
+  - Refactored state management in `App.jsx` to remove modal logic.
 - ✓ Implemented inline editing throughout entire app with double-click and long-press support
   - Created InlineEditableText component for editable headers (h2 elements)
   - Created LongPressEditField component for labeled form fields
