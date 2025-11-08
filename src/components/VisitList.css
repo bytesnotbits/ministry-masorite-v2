@@ -54,23 +54,23 @@
 }
 
 .delete-visit-btn {
-  background-color: #f1f1f4;
-  color: #999;
+  background-color: #e53e3e; /* Red by default */
+  color: white; /* White 'x' */
   border: none;
-  border-radius: 50%; /* This makes it a perfect circle */
+  border-radius: 50%; /* Ensure it's a circle */
   width: 28px;
   height: 28px;
   font-size: 20px;
-  line-height: 28px; /* Helps vertically center the '×' */
-  text-align: center;
   cursor: pointer;
   transition: all 0.2s;
   padding: 0;
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
 }
 
 .delete-visit-btn:hover {
-  background-color: #e53e3e; /* Red on hover */
-  color: white;
+  background-color: #c53030; /* Slightly darker red on hover */
 }
 
 .visit-item-actions {

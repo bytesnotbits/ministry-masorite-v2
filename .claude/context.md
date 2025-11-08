@@ -158,6 +158,14 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Standardized delete button styling for People and Visit History.
+  - Applied consistent red circular style with centered 'x' to delete buttons in `PeopleList` and `VisitList`.
+- ✓ Reimplemented delete functionality for territories and streets.
+  - Added delete buttons to territory and street cards.
+  - Implemented confirmation dialogs for all delete operations (territories, streets).
+  - Ensured cascading deletes for territories (streets, houses) and streets (houses).
+  - Fixed UI refresh issue after street deletion by adding `key` prop to `StreetList`.
+  - Improved delete button styling (red circle, centered 'x', no overlap).
 - ✓ Implemented sequential record navigation for streets and houses.
   - Added a `SequentialNavigator` component with next/previous buttons.
   - Buttons display the name/address of the adjacent record for context.

@@ -6,7 +6,7 @@ import './StatIcon.css';
 
 
 // This is now a "dumb" component. It just receives props and displays them.
-function TerritoryList({ territories, onTerritorySelect, onAddTerritory, showCompleted, onToggleCompleted }) {
+function TerritoryList({ territories, onTerritorySelect, onAddTerritory, onDeleteTerritory, showCompleted, onToggleCompleted }) {
   // Helper function to check if a territory is completed
   // A territory is completed when ALL houses have isCurrentlyNH = false (no more not-at-homes)
   const isTerritoryCompleted = (territory) => {
@@ -47,6 +47,15 @@ The "Visited" count is now in a div with a unique class, territory-stat-pill, to
             className={`territory-item ${isCompleted ? 'completed' : ''}`}
             onClick={() => onTerritorySelect(territory.id)}
           >
+            <button
+              className="delete-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteTerritory(territory);
+              }}
+            >
+              &times;
+            </button>
             <div className="territory-details">
               <div>
                 <div className="territory-number">Territory #{territory.number}</div>

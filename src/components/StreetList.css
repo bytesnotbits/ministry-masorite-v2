@@ -9,18 +9,43 @@
 
 .street-item {
   background-color: var(--white);
-  padding: 1rem 1.5rem;
+  padding: 1rem calc(1.5rem + 28px + 0.5rem) 1rem 1.5rem; /* Adjusted right padding */
   border-radius: 8px;
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
 
   /* --- This brings back the stacked layout --- */
   display: flex;
   flex-direction: column;   /* Stack children vertically */
   align-items: stretch;     /* Stretch items to full width */
   gap: 0.75rem;             /* Add space between name and the stats row */
+}
+
+.delete-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  background-color: #e53e3e; /* Red by default */
+  color: white; /* White 'x' */
+  border: none;
+  border-radius: 50%; /* Ensure it's a circle */
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+}
+
+.delete-btn:hover {
+  background-color: #c53030; /* Slightly darker red on hover */
 }
 .street-item:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);

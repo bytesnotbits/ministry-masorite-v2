@@ -11,7 +11,7 @@ import LongPressEditField from './LongPressEditField.jsx';
 import './StatIcon.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onAddStreet, onSaveTerritory, showCompleted, onToggleCompleted }) {
+function StreetList({ territoryId, onStreetSelect, onAddStreet, onSaveTerritory, showCompleted, onToggleCompleted, onDeleteStreet }) {
   const [streets, setStreets] = useState([]);
   const [territoryDetails, setTerritoryDetails] = useState(null);
 
@@ -115,6 +115,15 @@ useEffect(() => {
           className={`street-item ${isCompleted ? 'completed' : ''}`}
           onClick={() => onStreetSelect(street.id)}
         >
+          <button
+            className="delete-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteStreet(street);
+            }}
+          >
+            &times;
+          </button>
           <div className="street-header">
             <div className="street-name">{street.name}</div>
             <div className="street-stats">

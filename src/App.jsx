@@ -66,29 +66,58 @@ function App() {
   const [selectedHouseForPhoneCall, setSelectedHouseForPhoneCall] = useState(null);
   const [showLetterQueueConfirm, setShowLetterQueueConfirm] = useState(false);
   const [houseToAddToQueue, setHouseToAddToQueue] = useState(null);
+
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmMessage, setConfirmMessage] = useState('');
+  const [confirmYesText, setConfirmYesText] = useState('Yes');
+  const [confirmNoText, setConfirmNoText] = useState('No');
+
+  const handleConfirm = () => {
+    if (confirmAction) {
+      confirmAction();
+    }
+    setShowConfirmDialog(false);
+    setConfirmAction(null);
+  };
+
+  const handleCancel = () => {
+    setShowConfirmDialog(false);
+    setConfirmAction(null);
+  };
+
   const handleUpdateTerritory = async (updatedTerritoryData) => {
     await updateInStore('territories', updatedTerritoryData);
     setSelectedTerritory(null); // Return to the territory list
     await fetchTerritories(); // Re-fetch all territories to show the change
   };
   
-  const handleDeleteTerritory = async (territoryId) => {
-    // This is a full cascading delete. We must delete all children first.
-    const streetsToDelete = await getByIndex('streets', 'territoryId', territoryId);
-    for (const street of streetsToDelete) {
-      const housesToDelete = await getByIndex('houses', 'streetId', street.id);
-      for (const house of housesToDelete) {
-        // Later we'll also delete visits/people here
-        await deleteFromStore('houses', house.id);
+  const handleDeleteTerritory = (territory) => {
+    const deleteAction = async () => {
+      console.log(`🗑️ Deleting territory ${territory.number} (${territory.id})`);
+      // This is a full cascading delete. We must delete all children first.
+      const streetsToDelete = await getByIndex('streets', 'territoryId', territory.id);
+      for (const street of streetsToDelete) {
+        const housesToDelete = await getByIndex('houses', 'streetId', street.id);
+        for (const house of housesToDelete) {
+          // Later we'll also delete visits/people here
+          await deleteFromStore('houses', house.id);
+        }
+        await deleteFromStore('streets', street.id);
       }
-      await deleteFromStore('streets', street.id);
-    }
-    await deleteFromStore('territories', territoryId); // Finally, delete the territory
+      await deleteFromStore('territories', territory.id); // Finally, delete the territory
 
-    // Clear both edit mode and selection to return to TerritoryList
-    setSelectedTerritory(null);
-    setSelectedTerritoryId(null);
-    await fetchTerritories();
+      // Clear both edit mode and selection to return to TerritoryList
+      setSelectedTerritory(null);
+      setSelectedTerritoryId(null);
+      await fetchTerritories();
+    };
+
+    setConfirmAction(() => deleteAction);
+    setConfirmMessage(`Are you sure you want to delete Territory ${territory.number}? This will also delete all of its streets and houses.`);
+    setConfirmYesText("Yes, Delete");
+    setConfirmNoText("No, Cancel");
+    setShowConfirmDialog(true);
   };
 
   const handleBackToTerritoryList = () => {
@@ -423,20 +452,29 @@ const fetchTerritories = async () => {
     setStreetListKey(prevKey => prevKey + 1); // Refresh the list
   };
 
-  const handleDeleteStreet = async (streetId) => {
-    // This is a "cascading" delete. We must delete the children before the parent.
-    const housesToDelete = await getByIndex('houses', 'streetId', streetId);
-    for (const house of housesToDelete) {
-      // In the future, we would also delete visits/people associated with each house here.
-      await deleteFromStore('houses', house.id);
-    }
-    await deleteFromStore('streets', streetId); // Now delete the street itself
+  const handleDeleteStreet = (street) => {
+    const deleteAction = async () => {
+      console.log(`🗑️ Deleting street ${street.name} (${street.id})`);
+      // This is a "cascading" delete. We must delete the children before the parent.
+      const housesToDelete = await getByIndex('houses', 'streetId', street.id);
+      for (const house of housesToDelete) {
+        // In the future, we would also delete visits/people associated with each house here.
+        await deleteFromStore('houses', house.id);
+      }
+      await deleteFromStore('streets', street.id); // Now delete the street itself
 
-    // Clear both edit mode and selection to return to StreetList
-    setSelectedStreet(null);
-    setSelectedStreetId(null);
-    setStreetListKey(prevKey => prevKey + 1);
-    await fetchTerritories(); // Refresh territories to update stats
+      // Clear both edit mode and selection to return to StreetList
+      setSelectedStreet(null);
+      setSelectedStreetId(null);
+      setStreetListKey(prevKey => prevKey + 1);
+      await fetchTerritories(); // Refresh territories to update stats
+    };
+
+    setConfirmAction(() => deleteAction);
+    setConfirmMessage(`Are you sure you want to delete ${street.name}? This will also delete all of its houses.`);
+    setConfirmYesText("Yes, Delete");
+    setConfirmNoText("No, Cancel");
+    setShowConfirmDialog(true);
   };
 
   const handleBackToStreetList = () => {
@@ -1100,9 +1138,9 @@ const fetchTerritories = async () => {
       } else if (selectedStreetId) {
         currentViewComponent = <HouseList streetId={selectedStreetId} onAddHouse={handleOpenAddHouseModal} onHouseSelect={handleHouseSelect} onSaveStreet={handleSaveStreetInline} filters={houseFilters} onFilterChange={setHouseFilters} onLogNH={handleLogNH} onPhoneCall={handleOpenPhoneCallModal} key={houseListKey} />;
       } else if (selectedTerritoryId) {
-        currentViewComponent = <StreetList territoryId={selectedTerritoryId} onStreetSelect={handleStreetSelect} onAddStreet={handleOpenAddStreetModal} onSaveTerritory={handleSaveTerritoryInline} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
+        currentViewComponent = <StreetList key={streetListKey} territoryId={selectedTerritoryId} onStreetSelect={handleStreetSelect} onAddStreet={handleOpenAddStreetModal} onSaveTerritory={handleSaveTerritoryInline} onDeleteStreet={handleDeleteStreet} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
       } else {
-        currentViewComponent = <TerritoryList territories={territories} onTerritorySelect={handleTerritorySelect} onAddTerritory={handleOpenAddTerritoryModal} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
+        currentViewComponent = <TerritoryList territories={territories} onTerritorySelect={handleTerritorySelect} onAddTerritory={handleOpenAddTerritoryModal} onDeleteTerritory={handleDeleteTerritory} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
       }
       break;
   }
@@ -1246,6 +1284,16 @@ const fetchTerritories = async () => {
                   onNo={handleAddToLetterQueueNo}
                   yesText="Yes"
                   noText="No"
+                />
+              )}
+
+              {showConfirmDialog && (
+                <ConfirmDialog
+                  message={confirmMessage}
+                  onYes={handleConfirm}
+                  onNo={handleCancel}
+                  yesText={confirmYesText}
+                  noText={confirmNoText}
                 />
               )}
             </>
