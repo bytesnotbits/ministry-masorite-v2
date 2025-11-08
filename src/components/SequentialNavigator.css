@@ -1,0 +1,37 @@
+/* src/components/SequentialNavigator.css */
+
+.sequential-navigator {
+  position: fixed;
+  top: 20px; /* Align with hamburger menu's top */
+  right: 20px; /* Position on the right */
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.sequential-navigator .nav-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem; /* Slightly smaller padding than primary-action-btn */
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 80px; /* Ensure buttons have a minimum width for labels */
+  text-align: center;
+  white-space: nowrap; /* Prevent labels from wrapping */
+  overflow: hidden; /* Hide overflow if label is too long */
+  text-overflow: ellipsis; /* Add ellipsis for long labels */
+}
+
+.sequential-navigator .nav-button:hover:not(:disabled) {
+  background-color: #3a5d9a; /* Darker shade of primary color */
+}
+
+.sequential-navigator .nav-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

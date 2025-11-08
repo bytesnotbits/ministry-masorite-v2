@@ -113,7 +113,7 @@ const handleNo = () => {
 - **TerritoryList** - Home screen showing all territories
 - **StreetList** - Streets in a territory
 - **HouseList** - Houses on a street (with filters)
-- **HouseDetail** - House info with sections in order: Notes → Details (toggles) → People → Visit History
+- **HouseDetail** - House info with sections in order: Notes → Details → toggles → People → Visit History
 - **BibleStudiesPage** - All people with studies or RV status
 - **StudyDetail** - Study info + visit history for person
 - **LetterCampaignList** - Manage letter campaigns
@@ -158,6 +158,12 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Implemented sequential record navigation for streets and houses.
+  - Added a `SequentialNavigator` component with next/previous buttons.
+  - Buttons display the name/address of the adjacent record for context.
+  - Positioned in the top-right, opposite the hamburger menu.
+  - Handlers in `App.jsx` are memoized with `useCallback` to prevent re-render loops.
+- ✓ Updated hamburger menu icon color and size for better UI consistency.
 - ✓ Implemented a hamburger menu to declutter the main view.
 - ✓ Moved "Settings", "RVs / Bible Studies", and "Letter Writing" into the hamburger menu.
 - ✓ Refactored navigation logic to use a single `currentView` state for more robust and predictable navigation.
@@ -212,6 +218,28 @@ const handleNo = () => {
 See `--Features to implement and bugs to fix--.txt`:
 - Most major navigation and UX issues have been resolved
 - Check feature request file for new features
+
+## Future Direction: Firebase Migration and Mobile App
+
+After extensive discussion, the project's strategic direction has been updated to move away from a local-only database and manual sharing system towards a cloud-based backend to enable real-time collaboration and a path to a native mobile app.
+
+### 1. Backend and Real-Time Sync
+- **Decision**: The manual, file-based sharing protocol (outlined in `newShareProtocol.md`) has been **deprecated**. The project will be migrated to use **Firebase Firestore** as its backend.
+- **Reasoning**: This will provide seamless, real-time data synchronization between users, eliminating the complexity and potential for user error inherent in a manual file-sharing process. It provides a single source of truth for all data.
+- **Critical Requirement - Offline Capability**: The migration to Firebase will make full use of Firestore's built-in offline persistence. The app must remain **100% functional** (both reading and writing data) when users are in areas with no internet connectivity. The Firebase SDK will handle all data caching and automatic synchronization when the connection is restored.
+
+### 2. Security Model
+Security is a top priority for this migration. The new architecture will be secure by design, relying on a multi-layered approach:
+- **Authentication**: User identity will be managed by **Firebase Authentication**. This provides secure, industry-standard login and user management, preventing unauthorized access.
+- **Authorization**: Data access will be controlled by **server-side Firestore Security Rules**. This is the most critical security component. Rules will be written to ensure users can only access their own data or data that has been explicitly shared with them. These rules cannot be bypassed by client-side code.
+- **Client-Side Security**: The app will continue to benefit from React's built-in protection against Cross-Site Scripting (XSS). User input is automatically escaped, preventing malicious script injection. The codebase does not use `dangerouslySetInnerHTML`.
+- **API Key Safety**: Firebase configuration keys (API keys) are intended to be public identifiers, not secrets. Security is enforced by the Authentication and Firestore Rules on the backend, not by hiding these keys.
+
+### 3. Path to a Native Mobile App
+The long-term goal is to release the application on the iOS App Store and Android Play Store. The current development path is the ideal foundation for this.
+- **Phase 1 (Current Focus)**: Complete the migration to a robust, offline-capable, real-time web application using React and Firebase.
+- **Phase 2 (Future Goal)**: Once the web app is complete, use a modern WebView wrapper like **Capacitor** to package the existing web application into native iOS and Android apps for submission to the app stores.
+- **Reasoning for Wrapper Approach**: This approach allows for **100% code reuse** between the web and mobile apps, drastically reducing the development and maintenance effort. Modern wrappers, used by major apps like Microsoft Teams and Slack, provide a high-quality, near-native user experience that is ideal for this application's needs (forms, lists, text). A full rewrite using a native framework like React Native is considered an unnecessary and resource-intensive step.
 
 ## Development Commands
 - `npm run dev` - Start dev server

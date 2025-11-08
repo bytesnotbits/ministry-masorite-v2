@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'; // We now need useEffect here
+import { useState, useEffect, useCallback } from 'react'; // We now need useEffect here
 import './App.css';
 import { getAllFromStore, addToStore, updateInStore, deleteFromStore, getByIndex, getFromStore, clearAllStores } from './database.js';
 import StreetDetail from './components/StreetDetail.jsx';
@@ -26,6 +26,7 @@ import LetterQueue from './components/LetterQueue.jsx';
 import LetterTemplates from './components/LetterTemplates.jsx';
 import PhoneCallModal from './components/PhoneCallModal.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
+import SequentialNavigator from './components/SequentialNavigator.jsx';
 
 
 
@@ -121,6 +122,7 @@ function App() {
     showNoTrespassing: false
   });
   const [showCompleted, setShowCompleted] = useState(false);
+  const [sequentialNavProps, setSequentialNavProps] = useState({});
 
   const handleOpenAssociatePersonModal = (person) => {
     setPersonToAssociate(person);
@@ -190,6 +192,79 @@ function App() {
     handleCloseMovePersonModal();
   };
 
+  const handleHouseSelect = useCallback(async (houseObject) => {
+    setSelectedHouse(houseObject);
+    if (houseObject) {
+      // 1. Get the people for the house (same as before)
+      const peopleData = await getByIndex('people', 'houseId', houseObject.id);
+
+      // 2. NEW: Check each person to see if they have a study
+      const peopleWithStudyStatus = peopleData.map(person => {
+        // The .some() method checks if any item in the 'studies' array
+        // meets the condition. It's very efficient.
+        const hasStudy = studies.some(study => study.personId === person.id);
+        
+        // Return a new person object with the 'hasStudy' property
+        return { ...person, hasStudy: hasStudy };
+      });
+
+      // 3. Set the enhanced list of people into state
+      setPeopleForSelectedHouse(peopleWithStudyStatus);
+
+    } else {
+      // If we are deselecting a house, clear the list (same as before)
+      setPeopleForSelectedHouse([]);
+    }
+    setCameFromBibleStudies(false);
+  }, [studies]);
+
+  const handleNavigateStreets = useCallback(async (direction) => {
+    if (!selectedTerritoryId) return;
+
+    const currentTerritory = territories.find(t => t.id === selectedTerritoryId);
+    if (!currentTerritory) return;
+
+    const streetsInTerritory = await getByIndex('streets', 'territoryId', currentTerritory.id);
+    streetsInTerritory.sort((a, b) => a.name.localeCompare(b.name)); // Ensure consistent order
+
+    const currentIndex = streetsInTerritory.findIndex(s => s.id === selectedStreetId);
+    let newIndex = currentIndex;
+
+    if (direction === 'prev') {
+      newIndex = Math.max(0, currentIndex - 1);
+    } else if (direction === 'next') {
+      newIndex = Math.min(streetsInTerritory.length - 1, currentIndex + 1);
+    }
+
+    if (newIndex !== currentIndex) {
+      const newStreet = streetsInTerritory[newIndex];
+      setSelectedStreetId(newStreet.id);
+      setSelectedStreetDetails(newStreet);
+      setSelectedHouse(null); // Clear selected house when changing street
+    }
+  }, [territories, selectedTerritoryId, selectedStreetId]);
+
+  const handleNavigateHouses = useCallback(async (direction) => {
+    if (!selectedStreetId) return;
+
+    const housesInStreet = await getByIndex('houses', 'streetId', selectedStreetId);
+    housesInStreet.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true })); // Sort by address
+
+    const currentIndex = housesInStreet.findIndex(h => h.id === selectedHouse?.id);
+    let newIndex = currentIndex;
+
+    if (direction === 'prev') {
+      newIndex = Math.max(0, currentIndex - 1);
+    } else if (direction === 'next') {
+      newIndex = Math.min(housesInStreet.length - 1, currentIndex + 1);
+    }
+
+    if (newIndex !== currentIndex) {
+      const newHouse = housesInStreet[newIndex];
+      await handleHouseSelect(newHouse); // Use existing handler to set selectedHouse and fetch people
+    }
+  }, [selectedStreetId, selectedHouse, handleHouseSelect]);
+
 
 
   // --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---   --- DATA FETCHING ---
@@ -222,6 +297,59 @@ function App() {
     };
   }, [isLoading]); // The dependency array: this effect depends on `isLoading`.
 
+  // EFFECT 3: Calculate sequential navigation properties
+  useEffect(() => {
+    const calculateNavProps = async () => {
+      let newNavProps = {
+        prevLabel: '',
+        nextLabel: '',
+        onPrevClick: () => {},
+        onNextClick: () => {},
+        isPrevDisabled: true,
+        isNextDisabled: true,
+      };
+
+      if (selectedStreetId && !selectedHouse) { // Navigating streets within a territory
+        const currentTerritory = territories.find(t => t.id === selectedTerritoryId);
+        if (currentTerritory && currentTerritory.streets) { // Ensure streets are attached
+          const streetsInTerritory = [...currentTerritory.streets].sort((a, b) => a.name.localeCompare(b.name));
+          const currentIndex = streetsInTerritory.findIndex(s => s.id === selectedStreetId);
+
+          if (currentIndex > 0) {
+            newNavProps.prevLabel = streetsInTerritory[currentIndex - 1].name;
+            newNavProps.isPrevDisabled = false;
+            newNavProps.onPrevClick = () => handleNavigateStreets('prev');
+          }
+          if (currentIndex < streetsInTerritory.length - 1) {
+            newNavProps.nextLabel = streetsInTerritory[currentIndex + 1].name;
+            newNavProps.isNextDisabled = false;
+            newNavProps.onNextClick = () => handleNavigateStreets('next');
+          }
+        }
+      } else if (selectedHouse) { // Navigating houses within a street
+        if (selectedStreetId) { // Ensure we have a selected street
+          const housesInStreet = await getByIndex('houses', 'streetId', selectedStreetId);
+          housesInStreet.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
+
+          const currentIndex = housesInStreet.findIndex(h => h.id === selectedHouse.id);
+
+          if (currentIndex > 0) {
+            newNavProps.prevLabel = housesInStreet[currentIndex - 1].address;
+            newNavProps.isPrevDisabled = false;
+            newNavProps.onPrevClick = () => handleNavigateHouses('prev');
+          }
+          if (currentIndex < housesInStreet.length - 1) {
+            newNavProps.nextLabel = housesInStreet[currentIndex + 1].address;
+            newNavProps.isNextDisabled = false;
+            newNavProps.onNextClick = () => handleNavigateHouses('next');
+          }
+        }
+      }
+      setSequentialNavProps(newNavProps);
+    };
+    calculateNavProps();
+  }, [selectedTerritoryId, selectedStreetId, selectedHouse, territories, handleNavigateStreets, handleNavigateHouses]); // Dependencies
+
 /* This function fetches the list of territories and enriches each with its houses 
 Finding all its child streets.
 Then, for all of those streets, we find all their child houses.
@@ -252,7 +380,7 @@ const fetchTerritories = async () => {
         const allHousesForTerritory = housesByStreet.flat();
 
         // e. Return a new object combining the original territory with its complete list of houses
-        return { ...territory, houses: allHousesForTerritory };
+        return { ...territory, streets: streetsForTerritory, houses: allHousesForTerritory };
       });
 
       // 3. Wait for all the territory promises to complete
@@ -423,32 +551,6 @@ const fetchTerritories = async () => {
     setSelectedStreetId(streetId);
     setCameFromBibleStudies(false);
     setCameFromLetterQueue(false);
-  };
-
-  const handleHouseSelect = async (houseObject) => {
-    setSelectedHouse(houseObject);
-    if (houseObject) {
-      // 1. Get the people for the house (same as before)
-      const peopleData = await getByIndex('people', 'houseId', houseObject.id);
-
-      // 2. NEW: Check each person to see if they have a study
-      const peopleWithStudyStatus = peopleData.map(person => {
-        // The .some() method checks if any item in the 'studies' array
-        // meets the condition. It's very efficient.
-        const hasStudy = studies.some(study => study.personId === person.id);
-        
-        // Return a new person object with the 'hasStudy' property
-        return { ...person, hasStudy: hasStudy };
-      });
-
-      // 3. Set the enhanced list of people into state
-      setPeopleForSelectedHouse(peopleWithStudyStatus);
-
-    } else {
-      // If we are deselecting a house, clear the list (same as before)
-      setPeopleForSelectedHouse([]);
-    }
-    setCameFromBibleStudies(false);
   };
 
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
@@ -1150,6 +1252,16 @@ const fetchTerritories = async () => {
             // --- END: This fragment is the single wrapper ---
           )}
           {/* --- END: NEW LOADING CHECK --- */}
+          {(!showLoadingIndicator && (selectedStreetId || selectedHouse)) && (
+            <SequentialNavigator
+              prevLabel={sequentialNavProps.prevLabel}
+              nextLabel={sequentialNavProps.nextLabel}
+              onPrevClick={sequentialNavProps.onPrevClick}
+              onNextClick={sequentialNavProps.onNextClick}
+              isPrevDisabled={sequentialNavProps.isPrevDisabled}
+              isNextDisabled={sequentialNavProps.isNextDisabled}
+            />
+          )}
         </main>
       </div>
     );
