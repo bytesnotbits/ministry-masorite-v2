@@ -158,6 +158,8 @@ const handleNo = () => {
 
 ## Recent Changes & Bug Fixes
 ### Completed Features (Latest)
+- ✓ Fixed delete button rendering issue on Territory and Street Cards.
+  - Ensured circular shape by adding `!important` to `border-radius` in `.delete-btn` styles.
 - ✓ Standardized delete button styling for People and Visit History.
   - Applied consistent red circular style with centered 'x' to delete buttons in `PeopleList` and `VisitList`.
 - ✓ Reimplemented delete functionality for territories and streets.

@@ -32,7 +32,7 @@
   background-color: #e53e3e; /* Red by default */
   color: white; /* White 'x' */
   border: none;
-  border-radius: 50%; /* Ensure it's a circle */
+  border-radius: 50% !important; /* Ensure it's a circle */
   width: 28px;
   height: 28px;
   font-size: 20px;
