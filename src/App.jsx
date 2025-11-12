@@ -50,7 +50,6 @@ function App() {
   const [streetListKey, setStreetListKey] = useState(0);
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   const [personToEdit, setPersonToEdit] = useState(null);
-  const [peopleListKey, setPeopleListKey] = useState(0);
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [visitToEdit, setVisitToEdit] = useState(null);
   const [selectedStreet, setSelectedStreet] = useState(null);
