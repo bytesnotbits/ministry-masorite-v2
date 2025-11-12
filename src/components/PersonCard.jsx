@@ -20,7 +20,7 @@ function PersonCard({ person, onSelect, onAssociate, onViewStudy }) {
       ) : (
         <div className="unassociated-actions">
           <p><em>Not associated with a house.</em></p>
-          <button onClick={(e) => { e.stopPropagation(); onAssociate(person); }}>
+          <button className="secondary-action-btn" onClick={(e) => { e.stopPropagation(); onAssociate(person); }}>
             Associate with a House
           </button>
         </div>
@@ -28,10 +28,8 @@ function PersonCard({ person, onSelect, onAssociate, onViewStudy }) {
       {lastVisit && <p><strong>Last Visit:</strong> {new Date(lastVisit.date).toLocaleDateString()}</p>}
       {study && (
         <div className="study-details">
-          <button className="view-study-btn-card" onClick={(e) => { e.stopPropagation(); onViewStudy(person); }}>
-            <h4>Study Info</h4>
-            <p><strong>Publication:</strong> {study.publication}</p>
-            <p><strong>Lesson:</strong> {study.lesson}</p>
+          <button className="secondary-action-btn" onClick={(e) => { e.stopPropagation(); onViewStudy(person); }}>
+            View Study
           </button>
         </div>
       )}

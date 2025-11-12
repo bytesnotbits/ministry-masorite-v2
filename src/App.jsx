@@ -14,7 +14,7 @@ import HouseDetail from './components/HouseDetail.jsx';
 import TerritoryDetail from './components/TerritoryDetail.jsx';
 import Breadcrumbs from './components/Breadcrumbs.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
-import { executeMerge, handleJsonExport, handleFileImport } from './database-api.js';
+import { handleJsonExport, handleFileImport } from './database-api.js';
 import BibleStudiesPage from './components/BibleStudiesPage.jsx';
 import AddStudyModal from './components/AddStudyModal.jsx';
 import StudyDetail from './components/StudyDetail.jsx';
@@ -61,6 +61,12 @@ function App() {
   const [isEditingHouse, setIsEditingHouse] = useState(false);
   const [cameFromBibleStudies, setCameFromBibleStudies] = useState(false);
   const [cameFromLetterQueue, setCameFromLetterQueue] = useState(false);
+
+  const [isLetterQueueVisible, setIsLetterQueueVisible] = useState(false);
+  const [isLetterTemplatesVisible, setIsLetterTemplatesVisible] = useState(false);
+  const [isLetterWritingVisible, setIsLetterWritingVisible] = useState(false);
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [isBibleStudiesVisible, setIsBibleStudiesVisible] = useState(false);
 
   const [isPhoneCallModalOpen, setIsPhoneCallModalOpen] = useState(false);
   const [selectedHouseForPhoneCall, setSelectedHouseForPhoneCall] = useState(null);
