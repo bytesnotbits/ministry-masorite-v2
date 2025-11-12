@@ -226,6 +226,15 @@ function App() {
     handleCloseMovePersonModal();
   };
 
+  const getStreetWithHouses = useCallback(async (street) => {
+    if (!street) return null;
+    const housesForStreet = await getByIndex('houses', 'streetId', street.id);
+    return {
+      ...street,
+      houses: housesForStreet,
+    };
+  }, []);
+
   const handleHouseSelect = useCallback(async (houseObject) => {
     setSelectedHouse(houseObject);
     if (houseObject) {
@@ -272,11 +281,12 @@ function App() {
 
     if (newIndex !== currentIndex) {
       const newStreet = streetsInTerritory[newIndex];
+      const streetWithHouses = await getStreetWithHouses(newStreet);
       setSelectedStreetId(newStreet.id);
-      setSelectedStreetDetails(newStreet);
+      setSelectedStreetDetails(streetWithHouses);
       setSelectedHouse(null); // Clear selected house when changing street
     }
-  }, [territories, selectedTerritoryId, selectedStreetId]);
+  }, [territories, selectedTerritoryId, selectedStreetId, getStreetWithHouses]);
 
   const handleNavigateHouses = useCallback(async (direction) => {
     if (!selectedStreetId) return;
@@ -391,44 +401,76 @@ Finally, we bundle all of those houses together into a single houses array and a
 This gives our TerritoryList component all the data it will need to calculate the territory-wide stats.
 */  
 const fetchTerritories = async () => {
-    setIsLoading(true); // Explicitly set loading to true when we start.
-
+    setIsLoading(true);
     try {
-      // 1. Get the base list of all territories
-      const territoryData = await getAllFromStore('territories');
+      const response = await fetch('http://localhost:3001/api/territories');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      let enrichedTerritories = await response.json();
 
-      // 2. Create a promise for each territory to go find all its houses
-      const territoriesWithStatsPromises = territoryData.map(async (territory) => {
-        // a. Find all streets in this territory
-        const streetsForTerritory = await getByIndex('streets', 'territoryId', territory.id);
-        
-        // b. For each of those streets, create another promise to get its houses
-        const housePromises = streetsForTerritory.map(street => 
-          getByIndex('houses', 'streetId', street.id)
-        );
+      // --- NEW: Convert integer booleans to true booleans ---
+      enrichedTerritories = enrichedTerritories.map(territory => ({
+        ...territory,
+        houses: territory.houses.map(house => ({
+          ...house,
+          hasMailbox: !!house.hasMailbox,
+          noTrespassing: !!house.noTrespassing,
+          isCurrentlyNH: !!house.isCurrentlyNH,
+          hasGate: !!house.hasGate,
+          isNotInterested: !!house.isNotInterested,
+          letterSent: !!house.letterSent,
+        })),
+      }));
+      // --- END NEW ---
 
-        // c. Wait for all the house lookups for this territory to complete
-        const housesByStreet = await Promise.all(housePromises);
-        
-        // d. Flatten the array of arrays into a single list of all houses
-        const allHousesForTerritory = housesByStreet.flat();
+      // Clear IndexedDB stores before populating to avoid duplicates/stale data
+      await clearAllStores(['territories', 'streets', 'houses']); // Assuming clearAllStores can take specific stores
 
-        // e. Return a new object combining the original territory with its complete list of houses
-        return { ...territory, streets: streetsForTerritory, houses: allHousesForTerritory };
+      // Populate IndexedDB with fetched data
+      for (const territory of enrichedTerritories) {
+        // Store territory without nested streets and houses
+        const { streets, houses, ...territoryToStore } = territory;
+        await addToStore('territories', territoryToStore);
+
+        for (const street of streets) {
+          await addToStore('streets', street);
+        }
+
+        for (const house of houses) {
+          await addToStore('houses', house);
+        }
+      }
+
+      // --- NEW: Nest houses within streets ---
+      const processedTerritories = enrichedTerritories.map(territory => {
+        const housesByStreet = territory.houses.reduce((acc, house) => {
+          if (!acc[house.streetId]) {
+            acc[house.streetId] = [];
+          }
+          acc[house.streetId].push(house);
+          return acc;
+        }, {});
+
+        const streetsWithHouses = territory.streets.map(street => ({
+          ...street,
+          houses: housesByStreet[street.id] || [],
+        }));
+
+        return {
+          ...territory,
+          streets: streetsWithHouses,
+        };
       });
+      // --- END NEW ---
 
-      // 3. Wait for all the territory promises to complete
-      const enrichedTerritories = await Promise.all(territoriesWithStatsPromises);
-
-      // 4. Set the final, enriched data into state
-      setTerritories(enrichedTerritories);
-
+      setTerritories(processedTerritories);
+      return processedTerritories; // Return the processed data
     } catch (error) {
-      console.error("Failed to fetch and process territories:", error);
-      // In a real app, you might want to set an error state here
+      console.error("Failed to fetch territories:", error);
+      return null;
     } finally {
-      // 5. THIS IS THE KEY: This will run after everything else is done.
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   };
 
@@ -588,8 +630,9 @@ const fetchTerritories = async () => {
     handleClosePersonModal();                   // Close the modal
   };
 
-  const handleStreetSelect = async (streetId) => {
-    const street = await getFromStore('streets', streetId);
+  const handleStreetSelect = (streetId) => {
+    const territory = territories.find(t => t.id === selectedTerritoryId);
+    const street = territory.streets.find(s => s.id === streetId);
     setSelectedStreetDetails(street);
     setSelectedStreetId(streetId);
     setCameFromBibleStudies(false);
@@ -597,28 +640,58 @@ const fetchTerritories = async () => {
   };
 
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
-      // NEW: Check if isCurrentlyNH changed to false, reset consecutive count
-      if (selectedHouse && selectedHouse.isCurrentlyNH && !updatedHouseData.isCurrentlyNH) {
-        console.log(`🔄 Contact made! Resetting consecutive NH counter: ${selectedHouse.consecutiveNHVisits || 0} → 0 for house ${updatedHouseData.address}`);
-        updatedHouseData.consecutiveNHVisits = 0;
-      }
+      try {
+        const response = await fetch(`http://localhost:3001/api/houses/${updatedHouseData.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedHouseData),
+        });
 
-      // 1. Save the updated object to the database
-      await updateInStore('houses', updatedHouseData);
+        if (!response.ok) {
+          throw new Error('Failed to update house on the server');
+        }
 
-      // 2. Force the HouseList to update in the background for next time
-      setHouseListKey(prevKey => prevKey + 1);
+        const savedHouse = await response.json();
 
-      // 3. Refresh the territories list to update stats and completion status
-      await fetchTerritories();
+        // Convert integer booleans to true booleans (SQLite returns 0/1)
+        const convertedHouse = {
+          ...savedHouse,
+          hasMailbox: !!savedHouse.hasMailbox,
+          noTrespassing: !!savedHouse.noTrespassing,
+          isCurrentlyNH: !!savedHouse.isCurrentlyNH,
+          hasGate: !!savedHouse.hasGate,
+          isNotInterested: !!savedHouse.isNotInterested,
+          letterSent: !!savedHouse.letterSent,
+        };
 
-      if (stayOnPage) {
-          // If we're staying, just refresh the data for the current view
-          const refreshedHouse = await getFromStore('houses', updatedHouseData.id);
-          setSelectedHouse(refreshedHouse);
-      } else {
-          // If we're not staying (default behavior), go back to the list
+        // The backend has been updated. Now, re-fetch all data to sync the frontend.
+        const freshTerritories = await fetchTerritories();
+
+        // CRITICAL FIX: Update selectedStreetDetails with the refreshed data
+        // This ensures the HouseList has the latest house data when navigating via breadcrumbs
+        if (selectedStreetId && freshTerritories) {
+          const updatedTerritory = freshTerritories.find(t => t.id === selectedTerritoryId);
+          if (updatedTerritory) {
+            const updatedStreet = updatedTerritory.streets.find(s => s.id === selectedStreetId);
+            if (updatedStreet) {
+              setSelectedStreetDetails(updatedStreet);
+            }
+          }
+        }
+
+        if (stayOnPage) {
+          // After re-fetching, the `territories` state is updated, but not in this closure.
+          // We will set the selected house from the immediate response of the PUT request
+          // to keep the detail view open and updated.
+          setSelectedHouse(convertedHouse);
+        } else {
           setSelectedHouse(null);
+        }
+
+      } catch (error) {
+        console.error('Error updating house:', error);
       }
     };
 
@@ -948,8 +1021,8 @@ const fetchTerritories = async () => {
       }
     };
 
-    const handleTerritorySelect = async (territoryId) => {
-      const territory = await getFromStore('territories', territoryId);
+    const handleTerritorySelect = (territoryId) => {
+      const territory = territories.find(t => t.id === territoryId);
       setSelectedTerritoryDetails(territory);
       setSelectedTerritoryId(territoryId);
       setCameFromBibleStudies(false);
@@ -1030,15 +1103,12 @@ const fetchTerritories = async () => {
 
 
 
+              const streetWithHouses = await getStreetWithHouses(street);
               setSelectedTerritoryDetails(territory);
-
-                    setSelectedTerritoryId(territory.id);
-
-                    setSelectedStreetDetails(street);
-
-                    setSelectedStreetId(street.id);
-
-                            await handleHouseSelect(house);
+              setSelectedTerritoryId(territory.id);
+              setSelectedStreetDetails(streetWithHouses);
+              setSelectedStreetId(street.id);
+              await handleHouseSelect(house);
                     
                             setCurrentView('territories');
                             setCameFromBibleStudies(true);
@@ -1056,9 +1126,10 @@ const fetchTerritories = async () => {
     const street = await getFromStore('streets', house.streetId);
     const territory = await getFromStore('territories', street.territoryId);
 
+    const streetWithHouses = await getStreetWithHouses(street);
     setSelectedTerritoryDetails(territory);
     setSelectedTerritoryId(territory.id);
-    setSelectedStreetDetails(street);
+    setSelectedStreetDetails(streetWithHouses);
     setSelectedStreetId(street.id);
     await handleHouseSelect(house);
     setIsLetterQueueVisible(false);
@@ -1141,9 +1212,9 @@ const fetchTerritories = async () => {
       } else if (selectedHouse) {
         currentViewComponent = <HouseDetail people={peopleForSelectedHouse} house={selectedHouse} onSave={handleUpdateHouse} onDelete={handleDeleteHouse} onAddVisit={handleOpenVisitModal} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddPerson={handleAddPerson} onDeletePerson={handleDeletePerson} onEditPerson={handleEditPerson} onDisassociatePerson={handleDisassociatePerson} onMovePerson={handleOpenMovePersonModal} visitListKey={visitListKey} onStartStudy={handleStartStudy} onViewStudy={handleViewStudy} setIsEditingHouse={setIsEditingHouse} />;
       } else if (selectedStreetId) {
-        currentViewComponent = <HouseList streetId={selectedStreetId} onAddHouse={handleOpenAddHouseModal} onHouseSelect={handleHouseSelect} onSaveStreet={handleSaveStreetInline} filters={houseFilters} onFilterChange={setHouseFilters} onLogNH={handleLogNH} onPhoneCall={handleOpenPhoneCallModal} key={houseListKey} />;
+        currentViewComponent = <HouseList street={selectedStreetDetails} onAddHouse={handleOpenAddHouseModal} onHouseSelect={handleHouseSelect} onSaveStreet={handleSaveStreetInline} filters={houseFilters} onFilterChange={setHouseFilters} onLogNH={handleLogNH} onPhoneCall={handleOpenPhoneCallModal} key={houseListKey} />;
       } else if (selectedTerritoryId) {
-        currentViewComponent = <StreetList key={streetListKey} territoryId={selectedTerritoryId} onStreetSelect={handleStreetSelect} onAddStreet={handleOpenAddStreetModal} onSaveTerritory={handleSaveTerritoryInline} onDeleteStreet={handleDeleteStreet} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
+        currentViewComponent = <StreetList key={streetListKey} territory={selectedTerritoryDetails} onStreetSelect={handleStreetSelect} onAddStreet={handleOpenAddStreetModal} onSaveTerritory={handleSaveTerritoryInline} onDeleteStreet={handleDeleteStreet} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
       } else {
         currentViewComponent = <TerritoryList territories={territories} onTerritorySelect={handleTerritorySelect} onAddTerritory={handleOpenAddTerritoryModal} onDeleteTerritory={handleDeleteTerritory} showCompleted={showCompleted} onToggleCompleted={setShowCompleted} />;
       }

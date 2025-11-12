@@ -4,8 +4,8 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('territories', table => {
-    table.increments('id').primary();
-    table.string('name').notNullable();
+    table.integer('id').primary();
+    table.string('number').notNullable();
     table.string('description');
   });
 };

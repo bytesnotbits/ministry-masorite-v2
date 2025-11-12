@@ -175,7 +175,7 @@ export function addToStore(storeName, item) {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(storeName, 'readwrite');
         const store = transaction.objectStore(storeName);
-        const request = store.add(item);
+        const request = store.put(item);
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
     });
@@ -232,8 +232,9 @@ export function getByIndex(storeName, indexName, value) {
     });
 }
 
-export async function clearAllStores() {
-    const storeNames = ['territories', 'streets', 'houses', 'visits', 'people', 'studies', 'studyHistory'];
+export async function clearAllStores(storesToClear) {
+    const allStoreNames = ['territories', 'streets', 'houses', 'visits', 'people', 'studies', 'studyHistory', 'letterCampaigns', 'letters', 'letterTemplates'];
+    const storeNames = storesToClear || allStoreNames;
     const transaction = db.transaction(storeNames, 'readwrite');
     for (const storeName of storeNames) {
         transaction.objectStore(storeName).clear();

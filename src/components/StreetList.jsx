@@ -11,36 +11,8 @@ import LongPressEditField from './LongPressEditField.jsx';
 import './StatIcon.css';
 
 // Accept the new onStreetSelect prop
-function StreetList({ territoryId, onStreetSelect, onAddStreet, onSaveTerritory, showCompleted, onToggleCompleted, onDeleteStreet }) {
-  const [streets, setStreets] = useState([]);
-  const [territoryDetails, setTerritoryDetails] = useState(null);
-
-
-useEffect(() => {
-    const fetchStreetsAndStats = async () => {
-      // 1. Get the territory object (same as before)
-      const territoryObject = await getFromStore('territories', territoryId);
-      setTerritoryDetails(territoryObject);
-
-      // 2. Get the streets for that territory (same as before)
-      const streetData = await getByIndex('streets', 'territoryId', territoryId);
-
-      // 3. NEW: Create a list of promises to fetch houses for EACH street
-      const streetWithStatsPromises = streetData.map(async (street) => {
-        const housesForStreet = await getByIndex('houses', 'streetId', street.id);
-        // Return a new object that combines the original street with its houses
-        return { ...street, houses: housesForStreet };
-      });
-
-      // 4. NEW: Wait for ALL of those promises to finish
-      const streetsWithStats = await Promise.all(streetWithStatsPromises);
-
-      // 5. Set the final, enriched list into state
-      setStreets(streetsWithStats);
-    };
-
-    fetchStreetsAndStats();
-  }, [territoryId]);
+function StreetList({ territory, onStreetSelect, onAddStreet, onSaveTerritory, showCompleted, onToggleCompleted, onDeleteStreet }) {
+  const { streets, ...territoryDetails } = territory;
 
   // Helper function to check if a street is completed
   // A street is completed when ALL houses have isCurrentlyNH = false (no more not-at-homes)
@@ -61,7 +33,6 @@ useEffect(() => {
       [fieldName]: value
     };
     onSaveTerritory(updatedTerritory);
-    setTerritoryDetails(updatedTerritory); // Update local state
   };
 
   if (!territoryDetails) {

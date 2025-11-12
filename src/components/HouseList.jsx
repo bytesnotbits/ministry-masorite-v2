@@ -9,27 +9,8 @@ import FilterBar from './FilterBar.jsx';
 import InlineEditableText from './InlineEditableText.jsx';
 
     // Note the new 'onHouseSelect' prop
-    function HouseList({ streetId, onAddHouse, onHouseSelect, onSaveStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
-        const [houses, setHouses] = useState([]);
-        const [streetDetails, setStreetDetails] = useState(null);
-
-
-    useEffect(() => {
-    const fetchData = async () => {
-        // Fetch the street object itself
-        const streetObject = await getFromStore('streets', streetId);
-        if (streetObject) {
-        setStreetDetails(streetObject);
-        }
-
-        // Fetch the list of houses for this street
-        const houseData = await getByIndex('houses', 'streetId', streetId);
-        houseData.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
-        setHouses(houseData);
-    };
-
-    fetchData();
-    }, [streetId]);
+    function HouseList({ street, onAddHouse, onHouseSelect, onSaveStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
+    const { houses = [], ...streetDetails } = street;
 
     const handleStreetNameSave = (newName) => {
         const updatedStreet = {
@@ -37,7 +18,6 @@ import InlineEditableText from './InlineEditableText.jsx';
             name: newName
         };
         onSaveStreet(updatedStreet);
-        setStreetDetails(updatedStreet); // Update local state
     };
 
     // Apply filters to the houses list
