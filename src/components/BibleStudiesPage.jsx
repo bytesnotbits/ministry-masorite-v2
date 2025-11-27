@@ -4,10 +4,6 @@ import React, { useState, useEffect } from 'react';
 import ViewHeader from './ViewHeader.jsx';
 import PersonCard from './PersonCard.jsx';
 import './BibleStudiesPage.css';
-import React, { useState, useEffect } from 'react';
-import ViewHeader from './ViewHeader.jsx';
-import PersonCard from './PersonCard.jsx';
-import './BibleStudiesPage.css';
 
 function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, onViewStudy, people, studies, visits, territories }) {
   const [bibleStudies, setBibleStudies] = useState([]);
