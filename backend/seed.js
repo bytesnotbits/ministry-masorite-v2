@@ -84,6 +84,51 @@ async function seed() {
       console.log(`Inserted ${peopleToInsert.length} people.`);
     }
 
+    // --- Visits ---
+    const visits = data.data.visits;
+    if (!visits || visits.length === 0) {
+      console.log('No visits found in the JSON file.');
+    } else {
+      await knex('visits').del();
+      console.log('Cleared existing visits.');
+      const visitsToInsert = visits.map(v => ({
+        id: v.id,
+        houseId: v.houseId || null,
+        personId: v.personId || null,
+        date: v.date,
+        notes: v.notes,
+        isNotAtHome: v.isNotAtHome || false,
+        isVisitAttempt: v.isVisitAttempt || false
+      }));
+      // Insert in chunks to avoid SQLite limits if many visits
+      const chunkSize = 50;
+      for (let i = 0; i < visitsToInsert.length; i += chunkSize) {
+        await knex('visits').insert(visitsToInsert.slice(i, i + chunkSize));
+      }
+      console.log(`Inserted ${visitsToInsert.length} visits.`);
+    }
+
+    // --- Studies ---
+    const studies = data.data.studies;
+    if (!studies || studies.length === 0) {
+      console.log('No studies found in the JSON file.');
+    } else {
+      await knex('studies').del();
+      console.log('Cleared existing studies.');
+      const studiesToInsert = studies.map(s => ({
+        id: s.id,
+        personId: s.personId,
+        publication: s.publication,
+        currentLesson: s.currentLesson,
+        lessonProgress: s.lessonProgress,
+        isActive: s.isActive !== undefined ? s.isActive : true,
+        createdAt: s.createdAt,
+        goals: s.goals ? JSON.stringify(s.goals) : null
+      }));
+      await knex('studies').insert(studiesToInsert);
+      console.log(`Inserted ${studiesToInsert.length} studies.`);
+    }
+
   } catch (error) {
     console.error('Error seeding database:', error);
   } finally {
