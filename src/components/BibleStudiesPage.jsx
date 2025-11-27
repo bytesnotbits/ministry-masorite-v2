@@ -4,59 +4,72 @@ import React, { useState, useEffect } from 'react';
 import ViewHeader from './ViewHeader.jsx';
 import PersonCard from './PersonCard.jsx';
 import './BibleStudiesPage.css';
-import { getAllFromStore, getByIndex } from '../database.js';
+import React, { useState, useEffect } from 'react';
+import ViewHeader from './ViewHeader.jsx';
+import PersonCard from './PersonCard.jsx';
+import './BibleStudiesPage.css';
 
-function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, onViewStudy }) {
+function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, onViewStudy, people, studies, visits, territories }) {
   const [bibleStudies, setBibleStudies] = useState([]);
   const [returnVisits, setReturnVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const allPeople = await getAllFromStore('people');
-        const allStudies = await getAllFromStore('studies');
-        const allVisits = await getAllFromStore('visits');
-        const allHouses = await getAllFromStore('houses');
-        const allStreets = await getAllFromStore('streets');
-        const allTerritories = await getAllFromStore('territories');
+    if (!people || !studies || !visits || !territories) return;
 
-        const housesMap = new Map(allHouses.map(h => [h.id, h]));
-        const streetsMap = new Map(allStreets.map(s => [s.id, s]));
-        const territoriesMap = new Map(allTerritories.map(t => [t.id, t]));
+    try {
+      // Flatten territories to get streets and houses maps
+      const allStreets = [];
+      const allHouses = [];
 
-        const enrichedPeople = allPeople.map(person => {
-          const house = housesMap.get(person.houseId);
-          const street = house ? streetsMap.get(house.streetId) : null;
-          const territory = street ? territoriesMap.get(street.territoryId) : null;
-          const study = allStudies.find(s => s.personId === person.id);
-          const visits = allVisits.filter(v => v.personId === person.id || v.houseId === person.houseId);
-          // Sort by date and time (most recent first)
-          const lastVisit = visits.sort((a, b) => {
-            const dateTimeA = `${a.date} ${a.time || '00:00'}`;
-            const dateTimeB = `${b.date} ${b.time || '00:00'}`;
-            return new Date(dateTimeB) - new Date(dateTimeA);
-          })[0];
+      territories.forEach(t => {
+        if (t.streets) {
+          t.streets.forEach(s => {
+            allStreets.push(s);
+            if (s.houses) {
+              s.houses.forEach(h => {
+                allHouses.push(h);
+              });
+            }
+          });
+        }
+      });
 
-          return { ...person, house, street, territory, study, lastVisit };
-        });
+      const housesMap = new Map(allHouses.map(h => [h.id, h]));
+      const streetsMap = new Map(allStreets.map(s => [s.id, s]));
+      const territoriesMap = new Map(territories.map(t => [t.id, t]));
 
-        const studies = enrichedPeople.filter(p => p.study);
-        const rvs = enrichedPeople.filter(p => !p.study && p.isRV);
+      const enrichedPeople = people.map(person => {
+        const house = housesMap.get(person.houseId);
+        const street = house ? streetsMap.get(house.streetId) : null;
+        const territory = street ? territoriesMap.get(street.territoryId) : null;
+        const study = studies.find(s => s.personId === person.id);
+        const personVisits = visits.filter(v => v.personId === person.id || (house && v.houseId === house.id));
 
-        setBibleStudies(studies);
-        setReturnVisits(rvs);
+        // Sort by date and time (most recent first)
+        const lastVisit = personVisits.sort((a, b) => {
+          const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+          const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+          return new Date(dateTimeB) - new Date(dateTimeA);
+        })[0];
 
-      } catch (err) {
-        console.error("Failed to fetch data for BibleStudiesPage:", err);
-        setError("Failed to load data.");
-      } finally {
-        setLoading(false);
-      }
+        return { ...person, house, street, territory, study, lastVisit };
+      });
+
+      const activeStudies = enrichedPeople.filter(p => p.study);
+      const rvs = enrichedPeople.filter(p => !p.study && p.isRV);
+
+      setBibleStudies(activeStudies);
+      setReturnVisits(rvs);
+      setLoading(false);
+
+    } catch (err) {
+      console.error("Failed to process data for BibleStudiesPage:", err);
+      setError("Failed to load data.");
+      setLoading(false);
     }
-    fetchData();
-  }, []);
+  }, [people, studies, visits, territories]);
 
   if (loading) {
     return (
@@ -93,12 +106,12 @@ function BibleStudiesPage({ onBack, onPersonSelect, onAssociate, onAddPerson, on
         {bibleStudies.length > 0 ? (
           <div className="person-card-grid">
             {bibleStudies.map(person => (
-              <PersonCard 
-                key={person.id} 
-                person={person} 
-                onSelect={onPersonSelect} 
-                onAssociate={onAssociate} 
-                onViewStudy={onViewStudy} 
+              <PersonCard
+                key={person.id}
+                person={person}
+                onSelect={onPersonSelect}
+                onAssociate={onAssociate}
+                onViewStudy={onViewStudy}
               />
             ))}
           </div>

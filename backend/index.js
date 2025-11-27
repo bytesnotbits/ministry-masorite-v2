@@ -23,6 +23,26 @@ app.get('/api/people', async (req, res) => {
   }
 });
 
+app.get('/api/visits', async (req, res) => {
+  try {
+    const visits = await knex('visits').select('*').orderBy('date', 'desc');
+    res.json(visits);
+  } catch (error) {
+    console.error('Error fetching visits:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/studies', async (req, res) => {
+  try {
+    const studies = await knex('studies').select('*');
+    res.json(studies);
+  } catch (error) {
+    console.error('Error fetching studies:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/territories', async (req, res) => {
   try {
     const territoryData = await knex('territories').select('*').orderBy('number', 'asc');
@@ -52,7 +72,7 @@ app.put('/api/houses/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updatedHouse = req.body;
-    
+
     delete updatedHouse.id;
 
     const numUpdated = await knex('houses').where({ id }).update(updatedHouse);

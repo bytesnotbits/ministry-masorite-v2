@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import './HouseDetail.css';
 import VisitList from './VisitList.jsx';
 import { getByIndex } from '../database.js';
@@ -9,27 +9,19 @@ import LongPressEditField from './LongPressEditField.jsx';
 import InlineEditableText from './InlineEditableText.jsx';
 
 
-function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse, onQuickLetter }) {
-  const [visits, setVisits] = useState([]);
+function HouseDetail({ house, people, visits, onSave, onDelete, onAddVisit, onDeleteVisit, onEditVisit, onAddPerson, onDeletePerson, onEditPerson, visitListKey, onStartStudy, onViewStudy, onDisassociatePerson, onMovePerson, setIsEditingHouse, onQuickLetter }) {
+  const sortedVisits = useMemo(() => {
+    if (!visits) return [];
+    const sorted = [...visits].sort((a, b) => {
+      const dateTimeA = `${a.date} ${a.time || '00:00'}`;
+      const dateTimeB = `${b.date} ${b.time || '00:00'}`;
+      return new Date(dateTimeA) - new Date(dateTimeB);
+    });
+    return sorted.reverse();
+  }, [visits]);
 
-  useEffect(() => {
-    const fetchVisits = async () => {
-      if (house?.id) {
-        const visitData = await getByIndex('visits', 'houseId', house.id);
-        // Sort by date and time (most recent first)
-        visitData.sort((a, b) => {
-          const dateTimeA = `${a.date} ${a.time || '00:00'}`;
-          const dateTimeB = `${b.date} ${b.time || '00:00'}`;
-          return new Date(dateTimeA) - new Date(dateTimeB);
-        });
-        // Reverse to get newest first
-        visitData.reverse();
-        setVisits(visitData);
-      }
-    };
 
-    fetchVisits();
-  }, [house?.id, visitListKey]);
+
 
 
 
@@ -52,14 +44,14 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
   }
 
   const handleToggleChange = (e) => {
-      const { name, checked } = e.target;
-      const updatedHouse = {
-        ...house,
-        [name]: checked
-      };
-      onSave(updatedHouse, true);
+    const { name, checked } = e.target;
+    const updatedHouse = {
+      ...house,
+      [name]: checked
     };
-  
+    onSave(updatedHouse, true);
+  };
+
   return (
     <div className="house-detail-container">
       <InlineEditableText
@@ -162,7 +154,7 @@ function HouseDetail({ house, people, onSave, onDelete, onAddVisit, onDeleteVisi
       />
 
       <VisitList
-        visits={visits}
+        visits={sortedVisits}
         onDelete={onDeleteVisit}
         onEdit={onEditVisit}
         people={people}

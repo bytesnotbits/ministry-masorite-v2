@@ -48,6 +48,7 @@ function App() {
   const [houseListKey, setHouseListKey] = useState(0);
   const [visitListKey, setVisitListKey] = useState(0);
   const [streetListKey, setStreetListKey] = useState(0);
+  const [peopleListKey, setPeopleListKey] = useState(0); // Add peopleListKey state
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   const [personToEdit, setPersonToEdit] = useState(null);
   const [selectedHouse, setSelectedHouse] = useState(null);
@@ -96,7 +97,7 @@ function App() {
     setSelectedTerritory(null); // Return to the territory list
     await fetchTerritories(); // Re-fetch all territories to show the change
   };
-  
+
   const handleDeleteTerritory = (territory) => {
     const deleteAction = async () => {
       console.log(`🗑️ Deleting territory ${territory.number} (${territory.id})`);
@@ -139,6 +140,8 @@ function App() {
   };
 
   const [studies, setStudies] = useState([]);
+  const [visits, setVisits] = useState([]); // New visits state
+  const [people, setPeople] = useState([]); // New people state
   const [selectedStudy, setSelectedStudy] = useState(null);
   const [personForVisit, setPersonForVisit] = useState(null);
   const [studyVisitListKey, setStudyVisitListKey] = useState(0);
@@ -183,6 +186,7 @@ function App() {
     const updatedPerson = { ...person, houseId };
     await updateInStore('people', updatedPerson);
     handleCloseAssociatePersonModal();
+    setPeopleListKey(prevKey => prevKey + 1); // Refresh people list
     setBibleStudiesPageKey(prevKey => prevKey + 1);
   };
 
@@ -213,15 +217,7 @@ function App() {
     const updatedPerson = { ...person, houseId: newHouseId };
     await updateInStore('people', updatedPerson);
 
-    if (selectedHouse) {
-      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
-      const refreshedStudies = await getAllFromStore('studies');
-      const peopleWithStudyStatus = peopleData.map(p => {
-        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
-        return { ...p, hasStudy: hasStudy };
-      });
-      setPeopleForSelectedHouse(peopleWithStudyStatus);
-    }
+    setPeopleListKey(prevKey => prevKey + 1); // Refresh people list
 
     handleCloseMovePersonModal();
   };
@@ -235,31 +231,24 @@ function App() {
     };
   }, []);
 
-  const handleHouseSelect = useCallback(async (houseObject) => {
-    setSelectedHouse(houseObject);
-    if (houseObject) {
-      // 1. Get the people for the house (same as before)
-      const peopleData = await getByIndex('people', 'houseId', houseObject.id);
-
-      // 2. NEW: Check each person to see if they have a study
+  // EFFECT: Sync peopleForSelectedHouse when dependencies change
+  useEffect(() => {
+    if (selectedHouse) {
+      const peopleData = people.filter(p => p.houseId === selectedHouse.id);
       const peopleWithStudyStatus = peopleData.map(person => {
-        // The .some() method checks if any item in the 'studies' array
-        // meets the condition. It's very efficient.
         const hasStudy = studies.some(study => study.personId === person.id);
-        
-        // Return a new person object with the 'hasStudy' property
         return { ...person, hasStudy: hasStudy };
       });
-
-      // 3. Set the enhanced list of people into state
       setPeopleForSelectedHouse(peopleWithStudyStatus);
-
     } else {
-      // If we are deselecting a house, clear the list (same as before)
       setPeopleForSelectedHouse([]);
     }
+  }, [people, selectedHouse, studies]);
+
+  const handleHouseSelect = useCallback((houseObject) => {
+    setSelectedHouse(houseObject);
     setCameFromBibleStudies(false);
-  }, [studies]);
+  }, []);
 
   const handleNavigateStreets = useCallback(async (direction) => {
     if (!selectedTerritoryId) return;
@@ -317,7 +306,9 @@ function App() {
   useEffect(() => {
     fetchTerritories();
     fetchStudies();
-  }, []);
+    fetchVisits();
+    fetchPeople(); // Fetch people on load
+  }, [visitListKey, peopleListKey]); // Add peopleListKey dependency
 
   // EFFECT 2: This runs whenever `isLoading` changes, to manage the delayed indicator.
   useEffect(() => {
@@ -347,8 +338,8 @@ function App() {
       let newNavProps = {
         prevLabel: '',
         nextLabel: '',
-        onPrevClick: () => {},
-        onNextClick: () => {},
+        onPrevClick: () => { },
+        onNextClick: () => { },
         isPrevDisabled: true,
         isNextDisabled: true,
       };
@@ -394,13 +385,13 @@ function App() {
     calculateNavProps();
   }, [selectedTerritoryId, selectedStreetId, selectedHouse, territories, handleNavigateStreets, handleNavigateHouses]); // Dependencies
 
-/* This function fetches the list of territories and enriches each with its houses 
-Finding all its child streets.
-Then, for all of those streets, we find all their child houses.
-Finally, we bundle all of those houses together into a single houses array and attach it directly to the territory object.
-This gives our TerritoryList component all the data it will need to calculate the territory-wide stats.
-*/  
-const fetchTerritories = async () => {
+  /* This function fetches the list of territories and enriches each with its houses 
+  Finding all its child streets.
+  Then, for all of those streets, we find all their child houses.
+  Finally, we bundle all of those houses together into a single houses array and attach it directly to the territory object.
+  This gives our TerritoryList component all the data it will need to calculate the territory-wide stats.
+  */
+  const fetchTerritories = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3001/api/territories');
@@ -475,11 +466,39 @@ const fetchTerritories = async () => {
   };
 
   const fetchStudies = async () => {
-    const studiesData = await getAllFromStore('studies');
-    setStudies(studiesData);
+    try {
+      const response = await fetch('http://localhost:3001/api/studies');
+      if (!response.ok) throw new Error('Failed to fetch studies');
+      const studiesData = await response.json();
+      setStudies(studiesData);
+    } catch (error) {
+      console.error("Failed to fetch studies:", error);
+    }
   };
 
-  
+  const fetchVisits = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/visits');
+      if (!response.ok) throw new Error('Failed to fetch visits');
+      const visitsData = await response.json();
+      setVisits(visitsData);
+    } catch (error) {
+      console.error("Failed to fetch visits:", error);
+    }
+  };
+
+  const fetchPeople = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/people');
+      if (!response.ok) throw new Error('Failed to fetch people');
+      const peopleData = await response.json();
+      setPeople(peopleData);
+    } catch (error) {
+      console.error("Failed to fetch people:", error);
+    }
+  };
+
+
   // --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---   --- HANDLERS ---
   // Removed handleEditTerritory - territories are now editable inline on StreetList
 
@@ -600,7 +619,7 @@ const fetchTerritories = async () => {
     // Check if we are editing or adding
     if (personToEdit) {
       // --- UPDATE (EDIT) LOGIC ---
-      const updatedPerson = { 
+      const updatedPerson = {
         ...personToEdit, // The original person object
         ...personData    // The new data from the form (just the name for now)
       };
@@ -613,18 +632,8 @@ const fetchTerritories = async () => {
       };
       await addToStore('people', newPerson);
     }
-    
+
     // --- This runs for BOTH adds and updates ---
-    // Re-run the logic from handleHouseSelect to update peopleForSelectedHouse
-    if (selectedHouse) {
-      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
-      const refreshedStudies = await getAllFromStore('studies');
-      const peopleWithStudyStatus = peopleData.map(p => {
-        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
-        return { ...p, hasStudy: hasStudy };
-      });
-      setPeopleForSelectedHouse(peopleWithStudyStatus);
-    }
     setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
     setBibleStudiesPageKey(prevKey => prevKey + 1); // Force the BibleStudiesPage to refresh
     handleClosePersonModal();                   // Close the modal
@@ -640,60 +649,60 @@ const fetchTerritories = async () => {
   };
 
   const handleUpdateHouse = async (updatedHouseData, stayOnPage = false) => {
-      try {
-        const response = await fetch(`http://localhost:3001/api/houses/${updatedHouseData.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updatedHouseData),
-        });
+    try {
+      const response = await fetch(`http://localhost:3001/api/houses/${updatedHouseData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedHouseData),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to update house on the server');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to update house on the server');
+      }
 
-        const savedHouse = await response.json();
+      const savedHouse = await response.json();
 
-        // Convert integer booleans to true booleans (SQLite returns 0/1)
-        const convertedHouse = {
-          ...savedHouse,
-          hasMailbox: !!savedHouse.hasMailbox,
-          noTrespassing: !!savedHouse.noTrespassing,
-          isCurrentlyNH: !!savedHouse.isCurrentlyNH,
-          hasGate: !!savedHouse.hasGate,
-          isNotInterested: !!savedHouse.isNotInterested,
-          letterSent: !!savedHouse.letterSent,
-        };
+      // Convert integer booleans to true booleans (SQLite returns 0/1)
+      const convertedHouse = {
+        ...savedHouse,
+        hasMailbox: !!savedHouse.hasMailbox,
+        noTrespassing: !!savedHouse.noTrespassing,
+        isCurrentlyNH: !!savedHouse.isCurrentlyNH,
+        hasGate: !!savedHouse.hasGate,
+        isNotInterested: !!savedHouse.isNotInterested,
+        letterSent: !!savedHouse.letterSent,
+      };
 
-        // The backend has been updated. Now, re-fetch all data to sync the frontend.
-        const freshTerritories = await fetchTerritories();
+      // The backend has been updated. Now, re-fetch all data to sync the frontend.
+      const freshTerritories = await fetchTerritories();
 
-        // CRITICAL FIX: Update selectedStreetDetails with the refreshed data
-        // This ensures the HouseList has the latest house data when navigating via breadcrumbs
-        if (selectedStreetId && freshTerritories) {
-          const updatedTerritory = freshTerritories.find(t => t.id === selectedTerritoryId);
-          if (updatedTerritory) {
-            const updatedStreet = updatedTerritory.streets.find(s => s.id === selectedStreetId);
-            if (updatedStreet) {
-              setSelectedStreetDetails(updatedStreet);
-            }
+      // CRITICAL FIX: Update selectedStreetDetails with the refreshed data
+      // This ensures the HouseList has the latest house data when navigating via breadcrumbs
+      if (selectedStreetId && freshTerritories) {
+        const updatedTerritory = freshTerritories.find(t => t.id === selectedTerritoryId);
+        if (updatedTerritory) {
+          const updatedStreet = updatedTerritory.streets.find(s => s.id === selectedStreetId);
+          if (updatedStreet) {
+            setSelectedStreetDetails(updatedStreet);
           }
         }
-
-        if (stayOnPage) {
-          // After re-fetching, the `territories` state is updated, but not in this closure.
-          // We will set the selected house from the immediate response of the PUT request
-          // to keep the detail view open and updated.
-          setSelectedHouse(convertedHouse);
-        } else {
-          setSelectedHouse(null);
-        }
-
-      } catch (error) {
-        console.error('Error updating house:', error);
       }
-    };
+
+      if (stayOnPage) {
+        // After re-fetching, the `territories` state is updated, but not in this closure.
+        // We will set the selected house from the immediate response of the PUT request
+        // to keep the detail view open and updated.
+        setSelectedHouse(convertedHouse);
+      } else {
+        setSelectedHouse(null);
+      }
+
+    } catch (error) {
+      console.error('Error updating house:', error);
+    }
+  };
 
   const handleDeleteHouse = async (houseId) => {
     // 1. Delete the item from the database using its ID
@@ -743,8 +752,8 @@ const fetchTerritories = async () => {
     setSelectedStudy(null);
     setMenuOpen(false);
   };
-  
-    const handleExportData = () => {
+
+  const handleExportData = () => {
     handleJsonExport('full'); // We pass 'full' to tell it we want a complete backup
   };
 
@@ -933,7 +942,7 @@ const fetchTerritories = async () => {
   const handleSaveStudy = async (studyData) => {
     // 1. Save the new study to the database
     await addToStore('studies', studyData);
-    
+
     // 2. Ensure the person is marked as an RV
     const person = await getFromStore('people', studyData.personId);
     if (person && !person.isRV) {
@@ -945,90 +954,64 @@ const fetchTerritories = async () => {
     await fetchStudies();
 
     // 4. THE FIX: Manually refresh the people list for the current house
-    if (selectedHouse) {
-      // We re-run the logic from handleHouseSelect right here
-      const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
-      const refreshedStudies = await getAllFromStore('studies'); // Get the absolute latest
-      const peopleWithStudyStatus = peopleData.map(p => {
-        const hasStudy = refreshedStudies.some(s => s.personId === p.id);
-        return { ...p, hasStudy: hasStudy };
-      });
-      setPeopleForSelectedHouse(peopleWithStudyStatus);
-    }
-    
+    // (Handled by useEffect now)
+    setPeopleListKey(prevKey => prevKey + 1);
+
     // 5. Close the modal and notify the user
     handleCloseStudyModal();
     alert(`Study started successfully with ${person.name}!`);
   };
 
-    const handleAddPerson = () => {
-      setIsAddPersonModalOpen(true);
-    };
+  const handleAddPerson = () => {
+    setIsAddPersonModalOpen(true);
+  };
 
-    const handleDeletePerson = async (personId) => {
-      // Show a confirmation dialog to prevent accidental deletion
-      if (window.confirm('Are you sure you want to permanently delete this person?')) {
-        // 1. Delete the person from the database using their ID
-        await deleteFromStore('people', personId);
-        
-        // 2. Re-run the logic from handleHouseSelect to update peopleForSelectedHouse
-        if (selectedHouse) {
-          const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
-          const refreshedStudies = await getAllFromStore('studies');
-          const peopleWithStudyStatus = peopleData.map(p => {
-            const hasStudy = refreshedStudies.some(s => s.personId === p.id);
-            return { ...p, hasStudy: hasStudy };
-          });
-          setPeopleForSelectedHouse(peopleWithStudyStatus);
-        }
-        setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
-      }
-    };
+  const handleDeletePerson = async (personId) => {
+    // Show a confirmation dialog to prevent accidental deletion
+    if (window.confirm('Are you sure you want to permanently delete this person?')) {
+      // 1. Delete the person from the database using their ID
+      await deleteFromStore('people', personId);
 
-    const handleEditPerson = (personObject) => {
-      setPersonToEdit(personObject); // 1. Store the person we want to edit
-      setIsAddPersonModalOpen(true);    // 2. Open the modal
-    };
+      setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
+    }
+  };
 
-    const handleDisassociatePerson = async (person) => {
-      if (window.confirm(`Are you sure you want to disassociate ${person.name} from this house?`)) {
-        // 1. Log the disassociation in the visit history
-        const logEntry = {
-          personId: person.id,
-          date: new Date().toISOString(),
-          notes: `Disassociated from house.`,
-          type: 'SYSTEM',
-        };
-        await addToStore('visits', logEntry);
+  const handleEditPerson = (personObject) => {
+    setPersonToEdit(personObject); // 1. Store the person we want to edit
+    setIsAddPersonModalOpen(true);    // 2. Open the modal
+  };
 
-        // 2. Update the person's houseId to null
-        const updatedPerson = { ...person, houseId: null };
-        await updateInStore('people', updatedPerson);
+  const handleDisassociatePerson = async (person) => {
+    if (window.confirm(`Are you sure you want to disassociate ${person.name} from this house?`)) {
+      // 1. Log the disassociation in the visit history
+      const logEntry = {
+        personId: person.id,
+        date: new Date().toISOString(),
+        notes: `Disassociated from house.`,
+        type: 'SYSTEM',
+      };
+      await addToStore('visits', logEntry);
 
-        // 3. Refresh the PeopleList for the current house
-        if (selectedHouse) {
-          const peopleData = await getByIndex('people', 'houseId', selectedHouse.id);
-          const refreshedStudies = await getAllFromStore('studies');
-          const peopleWithStudyStatus = peopleData.map(p => {
-            const hasStudy = refreshedStudies.some(s => s.personId === p.id);
-            return { ...p, hasStudy: hasStudy };
-          });
-          setPeopleForSelectedHouse(peopleWithStudyStatus);
-        }
+      // 2. Update the person's houseId to null
+      const updatedPerson = { ...person, houseId: null };
+      await updateInStore('people', updatedPerson);
 
-        // 4. Refresh the BibleStudiesPage
-        setBibleStudiesPageKey(prevKey => prevKey + 1);
-      }
-    };
+      // 3. Refresh the PeopleList for the current house
+      setPeopleListKey(prevKey => prevKey + 1);
 
-    const handleTerritorySelect = (territoryId) => {
-      const territory = territories.find(t => t.id === territoryId);
-      setSelectedTerritoryDetails(territory);
-      setSelectedTerritoryId(territoryId);
-      setCameFromBibleStudies(false);
-      setCameFromLetterQueue(false);
-    };
-  
+      // 4. Refresh the BibleStudiesPage
+      setBibleStudiesPageKey(prevKey => prevKey + 1);
+    }
+  };
+
+  const handleTerritorySelect = (territoryId) => {
+    const territory = territories.find(t => t.id === territoryId);
+    setSelectedTerritoryDetails(territory);
+    setSelectedTerritoryId(territoryId);
+    setCameFromBibleStudies(false);
+    setCameFromLetterQueue(false);
+  };
+
   const handleDeleteVisit = async (visitId) => {
     // 1. Get the visit before deleting to check if it's a letter
     const visit = await getFromStore('visits', visitId);
@@ -1086,41 +1069,41 @@ const fetchTerritories = async () => {
     setHouseToAddToQueue(null);
   };
 
-      const handleEditVisit = (visitObject) => {
-      setVisitToEdit(visitObject);      // Store the visit we want to edit
-      setIsAddVisitModalOpen(true); // Open the modal
-    };
-  
-          const handlePersonSelect = async (person) => {
+  const handleEditVisit = (visitObject) => {
+    setVisitToEdit(visitObject);      // Store the visit we want to edit
+    setIsAddVisitModalOpen(true); // Open the modal
+  };
 
-            if (person.houseId) {
+  const handlePersonSelect = async (person) => {
 
-              const house = await getFromStore('houses', person.houseId);
+    if (person.houseId) {
 
-              const street = await getFromStore('streets', house.streetId);
+      const house = await getFromStore('houses', person.houseId);
 
-              const territory = await getFromStore('territories', street.territoryId);
+      const street = await getFromStore('streets', house.streetId);
+
+      const territory = await getFromStore('territories', street.territoryId);
 
 
 
-              const streetWithHouses = await getStreetWithHouses(street);
-              setSelectedTerritoryDetails(territory);
-              setSelectedTerritoryId(territory.id);
-              setSelectedStreetDetails(streetWithHouses);
-              setSelectedStreetId(street.id);
-              await handleHouseSelect(house);
-                    
-                            setCurrentView('territories');
-                            setCameFromBibleStudies(true);
-                      } else {
-                  
-                          setSelectedPerson(person);
-                  
-                          setCurrentView('personDetail');
-                          setCameFromBibleStudies(true);
-                  
-                      }
-                };
+      const streetWithHouses = await getStreetWithHouses(street);
+      setSelectedTerritoryDetails(territory);
+      setSelectedTerritoryId(territory.id);
+      setSelectedStreetDetails(streetWithHouses);
+      setSelectedStreetId(street.id);
+      await handleHouseSelect(house);
+
+      setCurrentView('territories');
+      setCameFromBibleStudies(true);
+    } else {
+
+      setSelectedPerson(person);
+
+      setCurrentView('personDetail');
+      setCameFromBibleStudies(true);
+
+    }
+  };
 
   const handleHouseSelectFromLetterQueue = async (house) => {
     const street = await getFromStore('streets', house.streetId);
@@ -1135,7 +1118,7 @@ const fetchTerritories = async () => {
     setIsLetterQueueVisible(false);
     setIsLetterWritingVisible(false);
     setCameFromLetterQueue(true);
-  };  const handleUpdateStudy = async (updatedStudyData) => {
+  }; const handleUpdateStudy = async (updatedStudyData) => {
     await updateInStore('studies', updatedStudyData);
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: selectedStudy.person }); // Update the currently viewed study
@@ -1189,10 +1172,10 @@ const fetchTerritories = async () => {
   let currentViewComponent;
   switch (currentView) {
     case 'personDetail':
-      currentViewComponent = <PersonDetail person={selectedPerson} onBack={() => navigateTo('bibleStudies')} onAddVisit={handleOpenVisitModal} onAssociate={handleOpenAssociatePersonModal} onViewStudy={handleViewStudy} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} />;
+      currentViewComponent = <PersonDetail person={selectedPerson} onBack={() => navigateTo('bibleStudies')} onAddVisit={handleOpenVisitModal} onAssociate={handleOpenAssociatePersonModal} onViewStudy={handleViewStudy} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} visits={visits} studies={studies} />;
       break;
     case 'bibleStudies':
-      currentViewComponent = <BibleStudiesPage key={bibleStudiesPageKey} onBack={() => navigateTo('territories')} onPersonSelect={handlePersonSelect} onAssociate={handleOpenAssociatePersonModal} onAddPerson={handleAddPerson} onViewStudy={handleViewStudy} />;
+      currentViewComponent = <BibleStudiesPage key={bibleStudiesPageKey} onBack={() => navigateTo('territories')} onPersonSelect={handlePersonSelect} onAssociate={handleOpenAssociatePersonModal} onAddPerson={handleAddPerson} onViewStudy={handleViewStudy} people={people} studies={studies} visits={visits} territories={territories} />;
       break;
     case 'settings':
       currentViewComponent = <SettingsPage onBack={() => navigateTo('territories')} onExport={handleExportData} onImport={handleImportData} onClearAllData={handleClearAllData} />;
@@ -1210,7 +1193,7 @@ const fetchTerritories = async () => {
       if (selectedStudy) {
         currentViewComponent = <StudyDetail study={selectedStudy} onBack={() => setSelectedStudy(null)} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddVisit={handleOpenVisitModal} studyVisitListKey={studyVisitListKey} onUpdateStudy={handleUpdateStudy} />;
       } else if (selectedHouse) {
-        currentViewComponent = <HouseDetail people={peopleForSelectedHouse} house={selectedHouse} onSave={handleUpdateHouse} onDelete={handleDeleteHouse} onAddVisit={handleOpenVisitModal} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddPerson={handleAddPerson} onDeletePerson={handleDeletePerson} onEditPerson={handleEditPerson} onDisassociatePerson={handleDisassociatePerson} onMovePerson={handleOpenMovePersonModal} visitListKey={visitListKey} onStartStudy={handleStartStudy} onViewStudy={handleViewStudy} setIsEditingHouse={setIsEditingHouse} />;
+        currentViewComponent = <HouseDetail people={peopleForSelectedHouse} house={selectedHouse} visits={visits.filter(v => v.houseId === selectedHouse.id)} onSave={handleUpdateHouse} onDelete={handleDeleteHouse} onAddVisit={handleOpenVisitModal} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddPerson={handleAddPerson} onDeletePerson={handleDeletePerson} onEditPerson={handleEditPerson} onDisassociatePerson={handleDisassociatePerson} onMovePerson={handleOpenMovePersonModal} visitListKey={visitListKey} onStartStudy={handleStartStudy} onViewStudy={handleViewStudy} setIsEditingHouse={setIsEditingHouse} />;
       } else if (selectedStreetId) {
         currentViewComponent = <HouseList street={selectedStreetDetails} onAddHouse={handleOpenAddHouseModal} onHouseSelect={handleHouseSelect} onSaveStreet={handleSaveStreetInline} filters={houseFilters} onFilterChange={setHouseFilters} onLogNH={handleLogNH} onPhoneCall={handleOpenPhoneCallModal} key={houseListKey} />;
       } else if (selectedTerritoryId) {
@@ -1220,7 +1203,7 @@ const fetchTerritories = async () => {
       }
       break;
   }
-  
+
   // --- BREADCRUMB LOGIC ---
   let crumbs = [];
 
@@ -1231,8 +1214,8 @@ const fetchTerritories = async () => {
     });
   } else if (selectedPerson) {
     crumbs.push({
-        label: 'Back',
-        onClick: () => handleBreadcrumbClick('territories')
+      label: 'Back',
+      onClick: () => handleBreadcrumbClick('territories')
     });
   } else if (currentView === 'bibleStudies' || currentView === 'letterWriting' || currentView === 'settings') {
     // No breadcrumbs on top-level menu pages
@@ -1261,134 +1244,134 @@ const fetchTerritories = async () => {
 
 
   return ( // --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---   --- RETURN ---
-      <div id="outer-container">
-        <Menu pageWrapId={ "page-wrap" } outerContainerId={ "outer-container" } isOpen={isMenuOpen} onStateChange={(state) => setMenuOpen(state.isOpen)}>
-          <a className="menu-item" onClick={() => navigateTo('bibleStudies')}>RVs / Bible Studies</a>
-          <a className="menu-item" onClick={() => navigateTo('letterWriting')}>Letter Writing</a>
-          <a className="menu-item" onClick={() => navigateTo('settings')}>Settings</a>
-        </Menu>
-        <main id="page-wrap">
-          {/* --- START: NEW LOADING CHECK --- */}
-          {showLoadingIndicator ? (
-              <p>Loading data...</p>
-          ) : (
-            // --- START: This fragment is the single wrapper for the "else" case ---
-            <>
-              {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
-              {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
-              <Breadcrumbs crumbs={crumbs} />
-              {currentViewComponent}
-              
-              {isAddTerritoryModalOpen && (
-                <AddTerritoryModal
-                  onSave={handleSaveTerritory}
-                  onClose={handleCloseTerritoryModal}
-                />
-              )}
-              
-              {isAddStreetModalOpen && (
-                <AddStreetModal
-                  onSave={handleSaveStreet}
-                  onClose={handleCloseStreetModal}
-                />
-              )}
+    <div id="outer-container">
+      <Menu pageWrapId={"page-wrap"} outerContainerId={"outer-container"} isOpen={isMenuOpen} onStateChange={(state) => setMenuOpen(state.isOpen)}>
+        <a className="menu-item" onClick={() => navigateTo('bibleStudies')}>RVs / Bible Studies</a>
+        <a className="menu-item" onClick={() => navigateTo('letterWriting')}>Letter Writing</a>
+        <a className="menu-item" onClick={() => navigateTo('settings')}>Settings</a>
+      </Menu>
+      <main id="page-wrap">
+        {/* --- START: NEW LOADING CHECK --- */}
+        {showLoadingIndicator ? (
+          <p>Loading data...</p>
+        ) : (
+          // --- START: This fragment is the single wrapper for the "else" case ---
+          <>
+            {!selectedTerritoryId && !selectedStudy && <h1>Ministry Masorite v2</h1>}
+            {selectedStudy && <h1>Study with {selectedStudy.person.name}</h1>}
+            <Breadcrumbs crumbs={crumbs} />
+            {currentViewComponent}
 
-              {isAddHouseModalOpen && (
-                <AddHouseModal
-                  onSave={handleSaveHouse}
-                  onClose={handleCloseHouseModal}
-                />
-              )}
-              
-              {isAddVisitModalOpen && (
-                <AddVisitModal
-                  onSave={handleSaveVisit}
-                  onClose={handleCloseVisitModal}
-                  visitToEdit={visitToEdit}
-                  people={peopleForSelectedHouse}
-                  personForVisit={personForVisit}
-                />
-              )}
+            {isAddTerritoryModalOpen && (
+              <AddTerritoryModal
+                onSave={handleSaveTerritory}
+                onClose={handleCloseTerritoryModal}
+              />
+            )}
 
-              {isAddPersonModalOpen && (
-                <AddPersonModal
-                  onSave={handleSavePerson}
-                  onClose={handleClosePersonModal}
-                  personToEdit={personToEdit}
-                />
-              )}
+            {isAddStreetModalOpen && (
+              <AddStreetModal
+                onSave={handleSaveStreet}
+                onClose={handleCloseStreetModal}
+              />
+            )}
 
-              {isPhoneCallModalOpen && selectedHouseForPhoneCall && (
-                <PhoneCallModal
-                  house={selectedHouseForPhoneCall}
-                  onSave={handleSavePhoneCall}
-                  onClose={() => {
-                    setIsPhoneCallModalOpen(false);
-                    setSelectedHouseForPhoneCall(null);
-                  }}
-                />
-              )}
+            {isAddHouseModalOpen && (
+              <AddHouseModal
+                onSave={handleSaveHouse}
+                onClose={handleCloseHouseModal}
+              />
+            )}
 
-              {isAddStudyModalOpen && (
-                <AddStudyModal
-                  onSave={handleSaveStudy} // We will create this function next
-                  onClose={handleCloseStudyModal}
-                  person={personForStudy}
-                />
-              )}
+            {isAddVisitModalOpen && (
+              <AddVisitModal
+                onSave={handleSaveVisit}
+                onClose={handleCloseVisitModal}
+                visitToEdit={visitToEdit}
+                people={peopleForSelectedHouse}
+                personForVisit={personForVisit}
+              />
+            )}
 
-              {isAssociatePersonModalOpen && (
-                <AssociatePersonModal
-                  person={personToAssociate}
-                  onSave={handleAssociatePerson}
-                  onClose={handleCloseAssociatePersonModal}
-                />
-              )}
+            {isAddPersonModalOpen && (
+              <AddPersonModal
+                onSave={handleSavePerson}
+                onClose={handleClosePersonModal}
+                personToEdit={personToEdit}
+              />
+            )}
 
-              {isMovePersonModalOpen && (
-                <MovePersonModal
-                  person={personToMove}
-                  onSave={handleMovePerson}
-                  onClose={handleCloseMovePersonModal}
-                />
-              )}
+            {isPhoneCallModalOpen && selectedHouseForPhoneCall && (
+              <PhoneCallModal
+                house={selectedHouseForPhoneCall}
+                onSave={handleSavePhoneCall}
+                onClose={() => {
+                  setIsPhoneCallModalOpen(false);
+                  setSelectedHouseForPhoneCall(null);
+                }}
+              />
+            )}
 
-              {showLetterQueueConfirm && (
-                <ConfirmDialog
-                  message="Would you like to add this house back to the Letter Queue?"
-                  onYes={handleAddToLetterQueueYes}
-                  onNo={handleAddToLetterQueueNo}
-                  yesText="Yes"
-                  noText="No"
-                />
-              )}
+            {isAddStudyModalOpen && (
+              <AddStudyModal
+                onSave={handleSaveStudy} // We will create this function next
+                onClose={handleCloseStudyModal}
+                person={personForStudy}
+              />
+            )}
 
-              {showConfirmDialog && (
-                <ConfirmDialog
-                  message={confirmMessage}
-                  onYes={handleConfirm}
-                  onNo={handleCancel}
-                  yesText={confirmYesText}
-                  noText={confirmNoText}
-                />
-              )}
-            </>
-            // --- END: This fragment is the single wrapper ---
-          )}
-          {/* --- END: NEW LOADING CHECK --- */}
-          {(!showLoadingIndicator && (selectedStreetId || selectedHouse)) && (
-            <SequentialNavigator
-              prevLabel={sequentialNavProps.prevLabel}
-              nextLabel={sequentialNavProps.nextLabel}
-              onPrevClick={sequentialNavProps.onPrevClick}
-              onNextClick={sequentialNavProps.onNextClick}
-              isPrevDisabled={sequentialNavProps.isPrevDisabled}
-              isNextDisabled={sequentialNavProps.isNextDisabled}
-            />
-          )}
-        </main>
-      </div>
-    );
+            {isAssociatePersonModalOpen && (
+              <AssociatePersonModal
+                person={personToAssociate}
+                onSave={handleAssociatePerson}
+                onClose={handleCloseAssociatePersonModal}
+              />
+            )}
+
+            {isMovePersonModalOpen && (
+              <MovePersonModal
+                person={personToMove}
+                onSave={handleMovePerson}
+                onClose={handleCloseMovePersonModal}
+              />
+            )}
+
+            {showLetterQueueConfirm && (
+              <ConfirmDialog
+                message="Would you like to add this house back to the Letter Queue?"
+                onYes={handleAddToLetterQueueYes}
+                onNo={handleAddToLetterQueueNo}
+                yesText="Yes"
+                noText="No"
+              />
+            )}
+
+            {showConfirmDialog && (
+              <ConfirmDialog
+                message={confirmMessage}
+                onYes={handleConfirm}
+                onNo={handleCancel}
+                yesText={confirmYesText}
+                noText={confirmNoText}
+              />
+            )}
+          </>
+          // --- END: This fragment is the single wrapper ---
+        )}
+        {/* --- END: NEW LOADING CHECK --- */}
+        {(!showLoadingIndicator && (selectedStreetId || selectedHouse)) && (
+          <SequentialNavigator
+            prevLabel={sequentialNavProps.prevLabel}
+            nextLabel={sequentialNavProps.nextLabel}
+            onPrevClick={sequentialNavProps.onPrevClick}
+            onNextClick={sequentialNavProps.onNextClick}
+            isPrevDisabled={sequentialNavProps.isPrevDisabled}
+            isNextDisabled={sequentialNavProps.isNextDisabled}
+          />
+        )}
+      </main>
+    </div>
+  );
 }
 
 export default App;

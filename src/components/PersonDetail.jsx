@@ -3,24 +3,9 @@ import { getByIndex, getFromStore } from '../database.js';
 import ViewHeader from './ViewHeader.jsx';
 import VisitList from './VisitList.jsx';
 
-function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy, onDeleteVisit, onEditVisit }) {
-  const [visits, setVisits] = useState([]);
-  const [study, setStudy] = useState(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      if (person) {
-        const personVisits = await getByIndex('visits', 'personId', person.id);
-        setVisits(personVisits);
-
-        const studies = await getByIndex('studies', 'personId', person.id);
-        if (studies.length > 0) {
-          setStudy(studies[0]);
-        }
-      }
-    }
-    fetchData();
-  }, [person]);
+function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy, onDeleteVisit, onEditVisit, visits, studies }) {
+  const personVisits = visits ? visits.filter(v => v.personId === person?.id) : [];
+  const study = studies ? studies.find(s => s.personId === person?.id) : null;
 
   if (!person) {
     return null;
