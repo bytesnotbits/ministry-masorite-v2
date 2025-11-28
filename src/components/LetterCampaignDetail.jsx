@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getByIndex, getFromStore } from '../database.js';
-import { addLetter, deleteLetter, deleteLetterCampaign, updateLetter } from '../database-api.js';
 import AddLetterModal from './AddLetterModal';
 import EditLetterModal from './EditLetterModal';
 import './LetterCampaignDetail.css';
 
-function LetterCampaignDetail({ campaign, onBack, onDelete, onEdit }) {
+function LetterCampaignDetail({ campaign, onBack, onDelete, onEdit, territories }) {
   const [letters, setLetters] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -13,37 +11,65 @@ function LetterCampaignDetail({ campaign, onBack, onDelete, onEdit }) {
 
   useEffect(() => {
     fetchLetters();
-  }, [campaign]);
+  }, [campaign, territories]);
 
   const fetchLetters = async () => {
-    const allLetters = await getByIndex('letters', 'campaignId', campaign.id);
-    const lettersWithHouses = await Promise.all(allLetters.map(async (letter) => {
-      const house = await getFromStore('houses', letter.houseId);
-      return { ...letter, address: house.address };
-    }));
+    const response = await fetch(`http://localhost:3001/api/letters?campaignId=${campaign.id}`);
+    const allLetters = await response.json();
+
+    // Enrich with house address from territories prop
+    const lettersWithHouses = allLetters.map(letter => {
+      let house = null;
+      if (territories) {
+        for (const t of territories) {
+          for (const s of t.streets) {
+            const h = s.houses.find(h => h.id === letter.houseId);
+            if (h) { house = h; break; }
+          }
+          if (house) break;
+        }
+      }
+      return { ...letter, address: house ? house.address : 'Unknown Address' };
+    });
     setLetters(lettersWithHouses);
   };
 
   const handleSave = async (letter) => {
-    await addLetter({ ...letter, campaignId: campaign.id });
+    // await addLetter({ ...letter, campaignId: campaign.id });
+    await fetch('http://localhost:3001/api/letters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...letter, campaignId: campaign.id })
+    });
     fetchLetters();
   };
 
   const handleUpdate = async (letter) => {
-    await updateLetter(letter);
+    // await updateLetter(letter);
+    await fetch(`http://localhost:3001/api/letters/${letter.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(letter)
+    });
     fetchLetters();
   };
 
   const handleDeleteCampaign = async () => {
     if (window.confirm(`Are you sure you want to delete the "${campaign.name}" campaign?`)) {
-      await deleteLetterCampaign(campaign.id);
+      // await deleteLetterCampaign(campaign.id);
+      await fetch(`http://localhost:3001/api/letter-campaigns/${campaign.id}`, {
+        method: 'DELETE'
+      });
       onBack();
     }
   };
 
   const handleDeleteLetter = async (letterId) => {
     if (window.confirm('Are you sure you want to delete this letter?')) {
-      await deleteLetter(letterId);
+      // await deleteLetter(letterId);
+      await fetch(`http://localhost:3001/api/letters/${letterId}`, {
+        method: 'DELETE'
+      });
       fetchLetters();
     }
   };
@@ -81,6 +107,7 @@ function LetterCampaignDetail({ campaign, onBack, onDelete, onEdit }) {
         <AddLetterModal
           onSave={handleSave}
           onClose={() => setIsAddModalOpen(false)}
+          territories={territories}
         />
       )}
       {isEditModalOpen && (
@@ -88,6 +115,7 @@ function LetterCampaignDetail({ campaign, onBack, onDelete, onEdit }) {
           letter={letterToEdit}
           onSave={handleUpdate}
           onClose={() => setIsEditModalOpen(false)}
+          territories={territories}
         />
       )}
     </div>

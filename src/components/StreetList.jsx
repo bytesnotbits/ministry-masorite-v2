@@ -1,7 +1,6 @@
 // src/components/StreetList.jsx
 
 import { useState, useEffect } from 'react';
-import { getByIndex, getFromStore } from '../database.js';
 import './StreetList.css';
 import ViewHeader from './ViewHeader.jsx';
 import StatIcon from './StatIcon.jsx';
@@ -81,50 +80,50 @@ function StreetList({ territory, onStreetSelect, onAddStreet, onSaveTerritory, s
         {filteredStreets.map(street => {
           const isCompleted = isStreetCompleted(street);
           return (
-        <li
-          key={street.id}
-          className={`street-item ${isCompleted ? 'completed' : ''}`}
-          onClick={() => onStreetSelect(street.id)}
-        >
-          <button
-            className="delete-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteStreet(street);
-            }}
-          >
-            &times;
-          </button>
-          <div className="street-header">
-            <div className="street-name">{street.name}</div>
-            <div className="street-stats">
-              {(() => {
-                const totalHouses = street.houses ? street.houses.length : 0;
-                const visitedHouses = street.houses ? street.houses.filter(h => !h.isCurrentlyNH).length : 0;
-                return `${visitedHouses} of ${totalHouses} Visited`;
-              })()}
-            </div>
-          </div>
+            <li
+              key={street.id}
+              className={`street-item ${isCompleted ? 'completed' : ''}`}
+              onClick={() => onStreetSelect(street.id)}
+            >
+              <button
+                className="delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteStreet(street);
+                }}
+              >
+                &times;
+              </button>
+              <div className="street-header">
+                <div className="street-name">{street.name}</div>
+                <div className="street-stats">
+                  {(() => {
+                    const totalHouses = street.houses ? street.houses.length : 0;
+                    const visitedHouses = street.houses ? street.houses.filter(h => !h.isCurrentlyNH).length : 0;
+                    return `${visitedHouses} of ${totalHouses} Visited`;
+                  })()}
+                </div>
+              </div>
 
-          <div className="street-stats-container">
-            <StatIcon
-              iconName="notAtHome"
-              count={street.houses ? street.houses.filter(h => h.isCurrentlyNH).length : 0}
-            />
-            <StatIcon
-              iconName="notInterested"
-              count={street.houses ? street.houses.filter(h => h.isNotInterested).length : 0}
-            />
-            <StatIcon
-              iconName="gate"
-              count={street.houses ? street.houses.filter(h => h.hasGate).length : 0}
-            />
-            <StatIcon
-              iconName="noTrespassing"
-              count={street.houses ? street.houses.filter(h => h.noTrespassing).length : 0}
-            />
-          </div>
-        </li>
+              <div className="street-stats-container">
+                <StatIcon
+                  iconName="notAtHome"
+                  count={street.houses ? street.houses.filter(h => h.isCurrentlyNH).length : 0}
+                />
+                <StatIcon
+                  iconName="notInterested"
+                  count={street.houses ? street.houses.filter(h => h.isNotInterested).length : 0}
+                />
+                <StatIcon
+                  iconName="gate"
+                  count={street.houses ? street.houses.filter(h => h.hasGate).length : 0}
+                />
+                <StatIcon
+                  iconName="noTrespassing"
+                  count={street.houses ? street.houses.filter(h => h.noTrespassing).length : 0}
+                />
+              </div>
+            </li>
           );
         })}
       </ul>

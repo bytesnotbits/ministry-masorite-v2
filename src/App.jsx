@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'; // We now need useEffect here
 import './App.css';
-import { getAllFromStore, addToStore, updateInStore, deleteFromStore, getByIndex, getFromStore, clearAllStores } from './database.js';
+import { clearAllStores } from './database.js';
 import StreetDetail from './components/StreetDetail.jsx';
 import TerritoryList from './components/TerritoryList.jsx';
 import StreetList from './components/StreetList.jsx';
@@ -101,17 +101,11 @@ function App() {
   const handleDeleteTerritory = (territory) => {
     const deleteAction = async () => {
       console.log(`🗑️ Deleting territory ${territory.number} (${territory.id})`);
-      // This is a full cascading delete. We must delete all children first.
-      const streetsToDelete = await getByIndex('streets', 'territoryId', territory.id);
-      for (const street of streetsToDelete) {
-        const housesToDelete = await getByIndex('houses', 'streetId', street.id);
-        for (const house of housesToDelete) {
-          // Later we'll also delete visits/people here
-          await deleteFromStore('houses', house.id);
-        }
-        await deleteFromStore('streets', street.id);
-      }
-      await deleteFromStore('territories', territory.id); // Finally, delete the territory
+
+      // Call backend API to delete territory (backend handles cascading delete)
+      await fetch(`http://localhost:3001/api/territories/${territory.id}`, {
+        method: 'DELETE'
+      });
 
       // Clear both edit mode and selection to return to TerritoryList
       setSelectedTerritory(null);
@@ -172,20 +166,40 @@ function App() {
   };
 
   const handleAssociatePerson = async (person, houseId) => {
-    const house = await getFromStore('houses', houseId);
-    const street = await getFromStore('streets', house.streetId);
-    const territory = await getFromStore('territories', street.territoryId);
+    // Find house, street, territory from state
+    let house, street, territory;
+    for (const t of territories) {
+      for (const s of t.streets) {
+        const h = s.houses.find(h => h.id === houseId);
+        if (h) { house = h; street = s; territory = t; break; }
+      }
+      if (house) break;
+    }
+
     const logEntry = {
       personId: person.id,
       date: new Date().toISOString(),
       notes: `Associated with house: ${house.address}, ${street.name}, Terr ${territory.number}`,
       type: 'SYSTEM',
     };
-    await addToStore('visits', logEntry);
+    // await addToStore('visits', logEntry);
+    await fetch('http://localhost:3001/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logEntry)
+    });
 
     const updatedPerson = { ...person, houseId };
-    await updateInStore('people', updatedPerson);
+    // await updateInStore('people', updatedPerson);
+    await fetch(`http://localhost:3001/api/people/${updatedPerson.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedPerson)
+    });
+
     handleCloseAssociatePersonModal();
+    await fetchPeople();
+    await fetchVisits();
     setPeopleListKey(prevKey => prevKey + 1); // Refresh people list
     setBibleStudiesPageKey(prevKey => prevKey + 1);
   };
@@ -201,10 +215,25 @@ function App() {
   };
 
   const handleMovePerson = async (person, newHouseId) => {
-    const oldHouse = await getFromStore('houses', person.houseId);
-    const newHouse = await getFromStore('houses', newHouseId);
-    const newStreet = await getFromStore('streets', newHouse.streetId);
-    const newTerritory = await getFromStore('territories', newStreet.territoryId);
+    // Find old house
+    let oldHouse;
+    for (const t of territories) {
+      for (const s of t.streets) {
+        const h = s.houses.find(h => h.id === person.houseId);
+        if (h) { oldHouse = h; break; }
+      }
+      if (oldHouse) break;
+    }
+
+    // Find new house
+    let newHouse, newStreet, newTerritory;
+    for (const t of territories) {
+      for (const s of t.streets) {
+        const h = s.houses.find(h => h.id === newHouseId);
+        if (h) { newHouse = h; newStreet = s; newTerritory = t; break; }
+      }
+      if (newHouse) break;
+    }
 
     const logEntry = {
       personId: person.id,
@@ -212,11 +241,23 @@ function App() {
       notes: `Moved from ${oldHouse.address} to ${newHouse.address}, ${newStreet.name}, Terr ${newTerritory.number}`,
       type: 'SYSTEM',
     };
-    await addToStore('visits', logEntry);
+    // await addToStore('visits', logEntry);
+    await fetch('http://localhost:3001/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logEntry)
+    });
 
     const updatedPerson = { ...person, houseId: newHouseId };
-    await updateInStore('people', updatedPerson);
+    // await updateInStore('people', updatedPerson);
+    await fetch(`http://localhost:3001/api/people/${updatedPerson.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedPerson)
+    });
 
+    await fetchPeople();
+    await fetchVisits();
     setPeopleListKey(prevKey => prevKey + 1); // Refresh people list
 
     handleCloseMovePersonModal();
@@ -415,24 +456,6 @@ function App() {
       }));
       // --- END NEW ---
 
-      // Clear IndexedDB stores before populating to avoid duplicates/stale data
-      await clearAllStores(['territories', 'streets', 'houses']); // Assuming clearAllStores can take specific stores
-
-      // Populate IndexedDB with fetched data
-      for (const territory of enrichedTerritories) {
-        // Store territory without nested streets and houses
-        const { streets, houses, ...territoryToStore } = territory;
-        await addToStore('territories', territoryToStore);
-
-        for (const street of streets) {
-          await addToStore('streets', street);
-        }
-
-        for (const house of houses) {
-          await addToStore('houses', house);
-        }
-      }
-
       // --- NEW: Nest houses within streets ---
       const processedTerritories = enrichedTerritories.map(territory => {
         const housesByStreet = territory.houses.reduce((acc, house) => {
@@ -509,25 +532,34 @@ function App() {
   };
 
   const handleSaveTerritoryInline = async (updatedTerritoryData) => {
-    await updateInStore('territories', updatedTerritoryData);
+    // await updateInStore('territories', updatedTerritoryData);
+    await fetch(`http://localhost:3001/api/territories/${updatedTerritoryData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedTerritoryData)
+    });
     await fetchTerritories(); // Refresh the list
   };
 
   const handleSaveStreetInline = async (updatedStreetData) => {
-    await updateInStore('streets', updatedStreetData);
+    // await updateInStore('streets', updatedStreetData);
+    await fetch(`http://localhost:3001/api/streets/${updatedStreetData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedStreetData)
+    });
     setStreetListKey(prevKey => prevKey + 1); // Refresh the list
+    await fetchTerritories(); // Refresh territories to update stats
   };
 
   const handleDeleteStreet = (street) => {
     const deleteAction = async () => {
       console.log(`🗑️ Deleting street ${street.name} (${street.id})`);
-      // This is a "cascading" delete. We must delete the children before the parent.
-      const housesToDelete = await getByIndex('houses', 'streetId', street.id);
-      for (const house of housesToDelete) {
-        // In the future, we would also delete visits/people associated with each house here.
-        await deleteFromStore('houses', house.id);
-      }
-      await deleteFromStore('streets', street.id); // Now delete the street itself
+
+      // Call backend API to delete street (backend handles cascading delete)
+      await fetch(`http://localhost:3001/api/streets/${street.id}`, {
+        method: 'DELETE'
+      });
 
       // Clear both edit mode and selection to return to StreetList
       setSelectedStreet(null);
@@ -548,7 +580,12 @@ function App() {
   };
 
   const handleSaveTerritory = async (newTerritory, shouldClose = true) => {
-    await addToStore('territories', newTerritory); // Save to the database
+    // await addToStore('territories', newTerritory); // Save to the database
+    await fetch('http://localhost:3001/api/territories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTerritory)
+    });
     await fetchTerritories(); // Re-fetch the list to include the new one
     if (shouldClose) {
       setIsAddTerritoryModalOpen(false); // Close the modal only if requested
@@ -565,7 +602,12 @@ function App() {
     };
 
     // 2. Save the complete street object to the database
-    await addToStore('streets', newStreet);
+    // await addToStore('streets', newStreet);
+    await fetch('http://localhost:3001/api/streets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newStreet)
+    });
 
     // 3. Re-fetch the territories and refresh the street list
     await fetchTerritories();
@@ -585,7 +627,12 @@ function App() {
     };
 
     // 2. Save the complete house object to the database
-    await addToStore('houses', newHouse);
+    // await addToStore('houses', newHouse);
+    await fetch('http://localhost:3001/api/houses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newHouse)
+    });
 
     // 3. Refresh territories list and force the HouseList to re-render
     await fetchTerritories();
@@ -623,17 +670,28 @@ function App() {
         ...personToEdit, // The original person object
         ...personData    // The new data from the form (just the name for now)
       };
-      await updateInStore('people', updatedPerson);
+      // await updateInStore('people', updatedPerson);
+      await fetch(`http://localhost:3001/api/people/${updatedPerson.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPerson)
+      });
     } else {
       // --- ADD (CREATE) LOGIC ---
       const newPerson = {
         ...personData,
         houseId: selectedHouse ? selectedHouse.id : null,
       };
-      await addToStore('people', newPerson);
+      // await addToStore('people', newPerson);
+      await fetch('http://localhost:3001/api/people', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPerson)
+      });
     }
 
     // --- This runs for BOTH adds and updates ---
+    await fetchPeople(); // Refresh people list from API
     setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
     setBibleStudiesPageKey(prevKey => prevKey + 1); // Force the BibleStudiesPage to refresh
     handleClosePersonModal();                   // Close the modal
@@ -706,7 +764,10 @@ function App() {
 
   const handleDeleteHouse = async (houseId) => {
     // 1. Delete the item from the database using its ID
-    await deleteFromStore('houses', houseId);
+    // await deleteFromStore('houses', houseId);
+    await fetch(`http://localhost:3001/api/houses/${houseId}`, {
+      method: 'DELETE'
+    });
 
     // 2. Clear the selected house to return to the HouseList view
     setSelectedHouse(null);
@@ -814,7 +875,12 @@ function App() {
         ...visitToEdit,
         ...visitData
       };
-      await updateInStore('visits', updatedVisit);
+      // await updateInStore('visits', updatedVisit);
+      await fetch(`http://localhost:3001/api/visits/${updatedVisit.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedVisit)
+      });
     } else {
       // --- ADD (CREATE) LOGIC ---
       let newVisit;
@@ -840,11 +906,25 @@ function App() {
         return;
       }
 
-      await addToStore('visits', newVisit);
+      // await addToStore('visits', newVisit);
+      await fetch('http://localhost:3001/api/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVisit)
+      });
 
       // --- NEW: Track consecutive NH visits ---
       if (houseId && visitData.type !== 'LETTER') {
-        const house = await getFromStore('houses', houseId);
+        // Find house in territories state
+        let house = null;
+        for (const t of territories) {
+          for (const s of t.streets) {
+            const h = s.houses.find(h => h.id === houseId);
+            if (h) { house = h; break; }
+          }
+          if (house) break;
+        }
+
         if (house && house.isCurrentlyNH) {
           // House is still marked as NH, increment the counter
           const newCount = (house.consecutiveNHVisits || 0) + 1;
@@ -852,13 +932,20 @@ function App() {
             ...house,
             consecutiveNHVisits: newCount
           };
-          await updateInStore('houses', updatedHouse);
+          // await updateInStore('houses', updatedHouse);
+          await fetch(`http://localhost:3001/api/houses/${updatedHouse.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedHouse)
+          });
           console.log(`📊 Consecutive NH visits incremented: ${house.consecutiveNHVisits || 0} → ${newCount} for house ${house.address}`);
+          await fetchTerritories(); // Refresh territories to update house state
         }
       }
     }
 
     // --- This runs for both adds and updates ---
+    await fetchVisits(); // Refresh visits from API
     setVisitListKey(prevKey => prevKey + 1); // Refresh HouseDetail
     setStudyVisitListKey(prevKey => prevKey + 1); // Refresh StudyDetail
     setIsAddVisitModalOpen(false); // Close the modal
@@ -886,21 +973,36 @@ function App() {
       houseId: house.id,
     };
 
-    await addToStore('visits', visitData);
+    // await addToStore('visits', visitData);
+    await fetch('http://localhost:3001/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(visitData)
+    });
 
     // Track consecutive NH visits if house is marked as NH
     if (house.isCurrentlyNH) {
-      const freshHouse = await getFromStore('houses', house.id);
-      const newCount = (freshHouse.consecutiveNHVisits || 0) + 1;
+      // const freshHouse = await getFromStore('houses', house.id);
+      // Use the house passed in, assuming it's relatively fresh, or rely on the fact that we just need to increment
+      // Actually, better to use the one from territories to be safe, or just increment what we have.
+      // Since we are in the handler, `house` comes from the UI.
+      const newCount = (house.consecutiveNHVisits || 0) + 1;
       const updatedHouse = {
-        ...freshHouse,
+        ...house,
         consecutiveNHVisits: newCount
       };
-      await updateInStore('houses', updatedHouse);
+      // await updateInStore('houses', updatedHouse);
+      await fetch(`http://localhost:3001/api/houses/${updatedHouse.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedHouse)
+      });
       console.log(`📊 Consecutive NH visits incremented for ${house.address}`);
+      await fetchTerritories(); // Refresh territories
     }
 
     // Refresh the house list
+    await fetchVisits();
     setHouseListKey(prevKey => prevKey + 1);
     setVisitListKey(prevKey => prevKey + 1);
   };
@@ -918,21 +1020,42 @@ function App() {
       houseId: houseId,
     };
 
-    await addToStore('visits', newVisit);
+    // await addToStore('visits', newVisit);
+    await fetch('http://localhost:3001/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newVisit)
+    });
 
     // Track consecutive NH visits if house is marked as NH
-    const house = await getFromStore('houses', houseId);
+    // const house = await getFromStore('houses', houseId);
+    let house = null;
+    for (const t of territories) {
+      for (const s of t.streets) {
+        const h = s.houses.find(h => h.id === houseId);
+        if (h) { house = h; break; }
+      }
+      if (house) break;
+    }
+
     if (house && house.isCurrentlyNH) {
       const newCount = (house.consecutiveNHVisits || 0) + 1;
       const updatedHouse = {
         ...house,
         consecutiveNHVisits: newCount
       };
-      await updateInStore('houses', updatedHouse);
+      // await updateInStore('houses', updatedHouse);
+      await fetch(`http://localhost:3001/api/houses/${updatedHouse.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedHouse)
+      });
       console.log(`📊 Consecutive NH visits incremented for ${house.address}`);
+      await fetchTerritories();
     }
 
     // Close modal and refresh lists
+    await fetchVisits();
     setIsPhoneCallModalOpen(false);
     setSelectedHouseForPhoneCall(null);
     setHouseListKey(prevKey => prevKey + 1);
@@ -941,17 +1064,30 @@ function App() {
 
   const handleSaveStudy = async (studyData) => {
     // 1. Save the new study to the database
-    await addToStore('studies', studyData);
+    // await addToStore('studies', studyData);
+    await fetch('http://localhost:3001/api/studies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(studyData)
+    });
 
     // 2. Ensure the person is marked as an RV
-    const person = await getFromStore('people', studyData.personId);
+    // const person = await getFromStore('people', studyData.personId);
+    const person = people.find(p => p.id === studyData.personId);
     if (person && !person.isRV) {
-      person.isRV = true; // Directly modify the object we already have
-      await updateInStore('people', person);
+      // person.isRV = true; // Directly modify the object we already have
+      // await updateInStore('people', person);
+      const updatedPerson = { ...person, isRV: true };
+      await fetch(`http://localhost:3001/api/people/${updatedPerson.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPerson)
+      });
     }
 
     // 3. Re-fetch the studies to update the app's state
     await fetchStudies();
+    await fetchPeople(); // Refresh people to show RV status
 
     // 4. THE FIX: Manually refresh the people list for the current house
     // (Handled by useEffect now)
@@ -970,8 +1106,12 @@ function App() {
     // Show a confirmation dialog to prevent accidental deletion
     if (window.confirm('Are you sure you want to permanently delete this person?')) {
       // 1. Delete the person from the database using their ID
-      await deleteFromStore('people', personId);
+      // await deleteFromStore('people', personId);
+      await fetch(`http://localhost:3001/api/people/${personId}`, {
+        method: 'DELETE'
+      });
 
+      await fetchPeople(); // Refresh people list
       setPeopleListKey(prevKey => prevKey + 1); // Force the PeopleList to refresh
     }
   };
@@ -990,13 +1130,25 @@ function App() {
         notes: `Disassociated from house.`,
         type: 'SYSTEM',
       };
-      await addToStore('visits', logEntry);
+      // await addToStore('visits', logEntry);
+      await fetch('http://localhost:3001/api/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logEntry)
+      });
 
       // 2. Update the person's houseId to null
       const updatedPerson = { ...person, houseId: null };
-      await updateInStore('people', updatedPerson);
+      // await updateInStore('people', updatedPerson);
+      await fetch(`http://localhost:3001/api/people/${updatedPerson.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPerson)
+      });
 
       // 3. Refresh the PeopleList for the current house
+      await fetchPeople();
+      await fetchVisits();
       setPeopleListKey(prevKey => prevKey + 1);
 
       // 4. Refresh the BibleStudiesPage
@@ -1014,7 +1166,8 @@ function App() {
 
   const handleDeleteVisit = async (visitId) => {
     // 1. Get the visit before deleting to check if it's a letter
-    const visit = await getFromStore('visits', visitId);
+    // const visit = await getFromStore('visits', visitId);
+    const visit = visits.find(v => v.id === visitId);
 
     if (!visit) {
       console.error('Visit not found');
@@ -1024,11 +1177,22 @@ function App() {
     // Show a confirmation dialog before deleting
     if (window.confirm('Are you sure you want to permanently delete this visit?')) {
       // 2. Delete the visit from the database using its ID
-      await deleteFromStore('visits', visitId);
+      // await deleteFromStore('visits', visitId);
+      await fetch(`http://localhost:3001/api/visits/${visitId}`, {
+        method: 'DELETE'
+      });
 
       // 3. If this was a LETTER visit, ask if they want to add house back to Letter Queue
       if (visit.type === 'LETTER' && visit.houseId) {
-        const house = await getFromStore('houses', visit.houseId);
+        // const house = await getFromStore('houses', visit.houseId);
+        let house = null;
+        for (const t of territories) {
+          for (const s of t.streets) {
+            const h = s.houses.find(h => h.id === visit.houseId);
+            if (h) { house = h; break; }
+          }
+          if (house) break;
+        }
 
         if (house) {
           // Store house and show custom Yes/No dialog
@@ -1038,6 +1202,7 @@ function App() {
       }
 
       // 4. Increment the key to force the component to re-fetch and show the updated list
+      await fetchVisits();
       setVisitListKey(prevKey => prevKey + 1);
     }
   };
@@ -1050,7 +1215,12 @@ function App() {
         letterSent: false,
         lastLetterDate: null
       };
-      await updateInStore('houses', updatedHouse);
+      // await updateInStore('houses', updatedHouse);
+      await fetch(`http://localhost:3001/api/houses/${updatedHouse.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedHouse)
+      });
 
       // Refresh territories to update the stats
       await fetchTerritories();
@@ -1119,7 +1289,12 @@ function App() {
     setIsLetterWritingVisible(false);
     setCameFromLetterQueue(true);
   }; const handleUpdateStudy = async (updatedStudyData) => {
-    await updateInStore('studies', updatedStudyData);
+    // await updateInStore('studies', updatedStudyData);
+    await fetch(`http://localhost:3001/api/studies/${updatedStudyData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedStudyData)
+    });
     await fetchStudies(); // Re-fetch all studies to update the UI
     setSelectedStudy({ ...updatedStudyData, person: selectedStudy.person }); // Update the currently viewed study
   };
@@ -1181,17 +1356,17 @@ function App() {
       currentViewComponent = <SettingsPage onBack={() => navigateTo('territories')} onExport={handleExportData} onImport={handleImportData} onClearAllData={handleClearAllData} />;
       break;
     case 'letterWriting':
-      currentViewComponent = <LetterCampaignList onBack={() => navigateTo('territories')} onOpenLetterQueue={() => setCurrentView('letterQueue')} onOpenLetterTemplates={() => setCurrentView('letterTemplates')} />;
+      currentViewComponent = <LetterCampaignList onBack={() => navigateTo('territories')} onOpenLetterQueue={() => setCurrentView('letterQueue')} onOpenLetterTemplates={() => setCurrentView('letterTemplates')} territories={territories} />;
       break;
     case 'letterQueue':
-      currentViewComponent = <LetterQueue onBack={() => setCurrentView('letterWriting')} onHouseSelect={handleHouseSelectFromLetterQueue} />;
+      currentViewComponent = <LetterQueue onBack={() => setCurrentView('letterWriting')} onHouseSelect={handleHouseSelectFromLetterQueue} territories={territories} />;
       break;
     case 'letterTemplates':
       currentViewComponent = <LetterTemplates onBack={() => setCurrentView('letterWriting')} />;
       break;
     default:
       if (selectedStudy) {
-        currentViewComponent = <StudyDetail study={selectedStudy} onBack={() => setSelectedStudy(null)} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddVisit={handleOpenVisitModal} studyVisitListKey={studyVisitListKey} onUpdateStudy={handleUpdateStudy} />;
+        currentViewComponent = <StudyDetail study={selectedStudy} onBack={() => setSelectedStudy(null)} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddVisit={handleOpenVisitModal} studyVisitListKey={studyVisitListKey} onUpdateStudy={handleUpdateStudy} visits={visits} />;
       } else if (selectedHouse) {
         currentViewComponent = <HouseDetail people={peopleForSelectedHouse} house={selectedHouse} visits={visits.filter(v => v.houseId === selectedHouse.id)} onSave={handleUpdateHouse} onDelete={handleDeleteHouse} onAddVisit={handleOpenVisitModal} onDeleteVisit={handleDeleteVisit} onEditVisit={handleEditVisit} onAddPerson={handleAddPerson} onDeletePerson={handleDeletePerson} onEditPerson={handleEditPerson} onDisassociatePerson={handleDisassociatePerson} onMovePerson={handleOpenMovePersonModal} visitListKey={visitListKey} onStartStudy={handleStartStudy} onViewStudy={handleViewStudy} setIsEditingHouse={setIsEditingHouse} />;
       } else if (selectedStreetId) {
@@ -1325,6 +1500,7 @@ function App() {
                 person={personToAssociate}
                 onSave={handleAssociatePerson}
                 onClose={handleCloseAssociatePersonModal}
+                territories={territories}
               />
             )}
 
@@ -1333,6 +1509,7 @@ function App() {
                 person={personToMove}
                 onSave={handleMovePerson}
                 onClose={handleCloseMovePersonModal}
+                territories={territories}
               />
             )}
 

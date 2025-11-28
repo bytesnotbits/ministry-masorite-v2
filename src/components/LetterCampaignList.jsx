@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getLetterCampaigns, addLetterCampaign, updateLetterCampaign } from '../database-api.js';
 import AddLetterCampaignModal from './AddLetterCampaignModal';
 import EditLetterCampaignModal from './EditLetterCampaignModal';
 import LetterCampaignDetail from './LetterCampaignDetail';
 import './LetterCampaignList.css';
 
-function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates }) {
+function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates, territories }) {
   const [campaigns, setCampaigns] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -17,17 +16,26 @@ function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates }
   }, []);
 
   const fetchCampaigns = async () => {
-    const allCampaigns = await getLetterCampaigns();
+    const response = await fetch('http://localhost:3001/api/letter-campaigns');
+    const allCampaigns = await response.json();
     setCampaigns(allCampaigns);
   };
 
   const handleSave = async (campaign) => {
-    await addLetterCampaign(campaign);
+    await fetch('http://localhost:3001/api/letter-campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(campaign)
+    });
     fetchCampaigns();
   };
 
   const handleUpdate = async (campaign) => {
-    await updateLetterCampaign(campaign);
+    await fetch(`http://localhost:3001/api/letter-campaigns/${campaign.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(campaign)
+    });
     fetchCampaigns();
   };
 
@@ -45,7 +53,7 @@ function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates }
   };
 
   if (selectedCampaign) {
-    return <LetterCampaignDetail campaign={selectedCampaign} onBack={handleBack} onEdit={() => handleEdit(selectedCampaign)} />;
+    return <LetterCampaignDetail campaign={selectedCampaign} onBack={handleBack} onEdit={() => handleEdit(selectedCampaign)} territories={territories} />;
   }
 
   return (

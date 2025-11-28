@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAllFromStore } from '../database.js';
 
-function EditLetterModal({ letter, onSave, onClose }) {
+function EditLetterModal({ letter, onSave, onClose, territories }) {
   const [houseId, setHouseId] = useState(letter.houseId);
   const [houses, setHouses] = useState([]);
   const [templateId, setTemplateId] = useState(letter.templateId);
@@ -10,15 +9,26 @@ function EditLetterModal({ letter, onSave, onClose }) {
   useEffect(() => {
     fetchHouses();
     fetchTemplates();
-  }, []);
+  }, [territories]);
 
-  const fetchHouses = async () => {
-    const allHouses = await getAllFromStore('houses');
-    setHouses(allHouses);
+  const fetchHouses = () => {
+    if (territories) {
+      const allHouses = [];
+      territories.forEach(t => {
+        t.streets.forEach(s => {
+          s.houses.forEach(h => {
+            allHouses.push({ ...h, address: h.address });
+          });
+        });
+      });
+      setHouses(allHouses);
+    }
   };
 
   const fetchTemplates = async () => {
-    const allTemplates = await getAllFromStore('letterTemplates');
+    // const allTemplates = await getAllFromStore('letterTemplates');
+    const response = await fetch('http://localhost:3001/api/letter-templates');
+    const allTemplates = await response.json();
     setTemplates(allTemplates);
   };
 

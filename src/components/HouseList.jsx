@@ -1,15 +1,14 @@
 // src/components/HouseList.jsx
 
 import { useState, useEffect } from 'react';
-import { getByIndex, getFromStore } from '../database.js';
 import './HouseList.css';
 import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';
 import FilterBar from './FilterBar.jsx';
 import InlineEditableText from './InlineEditableText.jsx';
 
-    // Note the new 'onHouseSelect' prop
-    function HouseList({ street, onAddHouse, onHouseSelect, onSaveStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
+// Note the new 'onHouseSelect' prop
+function HouseList({ street, onAddHouse, onHouseSelect, onSaveStreet, filters, onFilterChange, onLogNH, onPhoneCall }) {
     const { houses = [], ...streetDetails } = street;
 
     const handleStreetNameSave = (newName) => {
@@ -56,7 +55,7 @@ import InlineEditableText from './InlineEditableText.jsx';
                 <button className="primary-action-btn" onClick={onAddHouse}>
                     + Add New House
                 </button>
-                </ViewHeader>
+            </ViewHeader>
 
             <FilterBar
                 filters={filters}
@@ -65,55 +64,55 @@ import InlineEditableText from './InlineEditableText.jsx';
             />
 
             <ul className="house-list">
-            {filteredHouses.map(house => {
-                const isCompleted = !house.isCurrentlyNH; // House is completed when not at home is false
-                return (
-                <li
-                    key={house.id}
-                    className={`house-item ${isCompleted ? 'completed' : ''}`}
-                    >
-                    <div className="house-card-content" onClick={() => onHouseSelect(house)}>
-                        <div className="house-address">{house.address}</div>
-
-                        {/* --- START: Icon Logic --- */}
-                        <div className="house-status-tags">
-                            {house.isCurrentlyNH && <Icon name="notAtHome" className="house-tag-icon icon-nh" />}
-                            {house.isNotInterested && <Icon name="notInterested" className="house-tag-icon icon-ni" />}
-                            {house.hasMailbox && <Icon name="mailbox" className="house-tag-icon icon-mailbox" />}
-                            {house.noTrespassing && <Icon name="noTrespassing" className="house-tag-icon icon-no-trespassing" />}
-                            {house.hasGate && <Icon name="gate" className="house-tag-icon icon-gate" />}
-                        </div>
-                        {/* --- END: Icon Logic --- */}
-                    </div>
-
-                    {/* --- START: Action Buttons --- */}
-                    <div className="house-action-buttons">
-                        <button
-                            className="btn-log-nh"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onLogNH(house);
-                            }}
+                {filteredHouses.map(house => {
+                    const isCompleted = !house.isCurrentlyNH; // House is completed when not at home is false
+                    return (
+                        <li
+                            key={house.id}
+                            className={`house-item ${isCompleted ? 'completed' : ''}`}
                         >
-                            Log 'NH'
-                        </button>
-                        <button
-                            className="btn-phone-call"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onPhoneCall(house);
-                            }}
-                        >
-                            Phone Call
-                        </button>
-                    </div>
-                    {/* --- END: Action Buttons --- */}
-                </li>
-                );
-            })}
+                            <div className="house-card-content" onClick={() => onHouseSelect(house)}>
+                                <div className="house-address">{house.address}</div>
+
+                                {/* --- START: Icon Logic --- */}
+                                <div className="house-status-tags">
+                                    {house.isCurrentlyNH && <Icon name="notAtHome" className="house-tag-icon icon-nh" />}
+                                    {house.isNotInterested && <Icon name="notInterested" className="house-tag-icon icon-ni" />}
+                                    {house.hasMailbox && <Icon name="mailbox" className="house-tag-icon icon-mailbox" />}
+                                    {house.noTrespassing && <Icon name="noTrespassing" className="house-tag-icon icon-no-trespassing" />}
+                                    {house.hasGate && <Icon name="gate" className="house-tag-icon icon-gate" />}
+                                </div>
+                                {/* --- END: Icon Logic --- */}
+                            </div>
+
+                            {/* --- START: Action Buttons --- */}
+                            <div className="house-action-buttons">
+                                <button
+                                    className="btn-log-nh"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onLogNH(house);
+                                    }}
+                                >
+                                    Log 'NH'
+                                </button>
+                                <button
+                                    className="btn-phone-call"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onPhoneCall(house);
+                                    }}
+                                >
+                                    Phone Call
+                                </button>
+                            </div>
+                            {/* --- END: Action Buttons --- */}
+                        </li>
+                    );
+                })}
             </ul>
         </div>
-        );
-    }
+    );
+}
 
 export default HouseList;

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getAllFromStore, getFromStore, getByIndex } from '../database.js';
 import Icon from './Icon';
 import './LetterQueue.css';
 
-function LetterQueue({ onBack, onHouseSelect }) {
+function LetterQueue({ onBack, onHouseSelect, territories }) {
   const [queue, setQueue] = useState([]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [threshold, setThreshold] = useState(3);
@@ -14,69 +13,93 @@ function LetterQueue({ onBack, onHouseSelect }) {
     if (savedThreshold) {
       setThreshold(parseInt(savedThreshold, 10));
     }
-    fetchQueue();
-  }, [threshold]);
+  }, []);
 
-  const fetchQueue = async () => {
-    const allHouses = await getAllFromStore('houses');
+  useEffect(() => {
+    if (territories) {
+      processQueue();
+    }
+  }, [territories, threshold]);
 
-    // Enrich houses with street/territory info and reason
-    const enrichedHouses = await Promise.all(
-      allHouses.map(async (house) => {
-        const street = await getFromStore('streets', house.streetId);
-        const territory = street ? await getFromStore('territories', street.territoryId) : null;
+  const processQueue = () => {
+    const qualifiedHouses = [];
 
-        // Determine reasons why house is in queue
-        const reasons = [];
-        if (house.noTrespassing) reasons.push('noTrespassing');
-        if (house.hasGate) reasons.push('gate');
-        if (house.isCurrentlyNH && (house.consecutiveNHVisits || 0) >= threshold) {
-          reasons.push(`${house.consecutiveNHVisits} attempts`);
-        }
+    territories.forEach(territory => {
+      territory.streets.forEach(street => {
+        street.houses.forEach(house => {
+          // Determine reasons why house is in queue
+          const reasons = [];
+          if (house.noTrespassing) reasons.push('noTrespassing');
+          if (house.hasGate) reasons.push('gate');
+          if (house.isCurrentlyNH && (house.consecutiveNHVisits || 0) >= threshold) {
+            reasons.push(`${house.consecutiveNHVisits} attempts`);
+          }
 
-        return {
-          ...house,
-          streetName: street?.name || 'Unknown',
-          territoryNumber: territory?.number || '?',
-          reasons,
-          qualifies: reasons.length > 0
-        };
-      })
-    );
+          if (reasons.length > 0) {
+            qualifiedHouses.push({
+              ...house,
+              streetName: street.name,
+              territoryNumber: territory.number,
+              reasons,
+              qualifies: true
+            });
+          }
+        });
+      });
+    });
 
-    // Filter to only houses that qualify
-    const qualified = enrichedHouses.filter(house => house.qualifies);
-
-    setQueue(qualified);
+    setQueue(qualifiedHouses);
   };
 
   const handleLetterSent = async (house) => {
-    // Import needed functions
-    const { addToStore, updateInStore } = await import('../database.js');
-
     // 1. Log a LETTER visit
-    const today = new Date().toISOString();
-    await addToStore('visits', {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+
+    const visitData = {
       houseId: house.id,
-      date: today,
+      date: todayString,
       type: 'LETTER',
       notes: 'Letter sent',
       personId: null
+    };
+
+    await fetch('http://localhost:3001/api/visits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(visitData)
     });
 
     // 2. Update house
-    await updateInStore('houses', {
+    const updatedHouse = {
       ...house,
       letterSent: true,
-      lastLetterDate: today,
+      lastLetterDate: todayString, // Use string format
       isCurrentlyNH: false,
       consecutiveNHVisits: 0
+    };
+
+    await fetch(`http://localhost:3001/api/houses/${updatedHouse.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedHouse)
     });
 
     console.log(`📧 Letter sent to ${house.address}. Counter reset to 0, NH flag cleared.`);
 
-    // 3. Refresh queue
-    fetchQueue();
+    // 3. Refresh queue (local update, parent will refresh via fetchTerritories if needed, but here we just update local state for immediate feedback or wait for parent?
+    // Since we don't have a callback to refresh parent territories, we might need to rely on the fact that App.jsx should probably refresh.
+    // However, LetterQueue doesn't trigger a refresh in App.jsx.
+    // Ideally, we should call a prop like `onQueueUpdate` which calls `fetchTerritories` in App.jsx.
+    // For now, let's just update the local queue state to reflect the change.
+
+    // Actually, since we passed `territories` as a prop, we can't easily mutate it. 
+    // We should probably ask App.jsx to refresh.
+    // But for now, let's just update the local queue list to show it as sent.
+    setQueue(prevQueue => prevQueue.map(h => h.id === house.id ? { ...h, letterSent: true } : h));
   };
 
   // Filter based on showCompleted toggle

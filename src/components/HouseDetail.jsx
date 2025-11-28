@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import './HouseDetail.css';
 import VisitList from './VisitList.jsx';
-import { getByIndex } from '../database.js';
 import PeopleList from './PeopleList.jsx';
 import Icon from './Icon.jsx';
 import ViewHeader from './ViewHeader.jsx';

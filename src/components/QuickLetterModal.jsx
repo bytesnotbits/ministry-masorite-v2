@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { getAllFromStore } from '../database.js';
 
 function QuickLetterModal({ house, onSave, onClose }) {
   const [templateId, setTemplateId] = useState('');
@@ -10,7 +9,9 @@ function QuickLetterModal({ house, onSave, onClose }) {
   }, []);
 
   const fetchTemplates = async () => {
-    const allTemplates = await getAllFromStore('letterTemplates');
+    // const allTemplates = await getAllFromStore('letterTemplates');
+    const response = await fetch('http://localhost:3001/api/letter-templates');
+    const allTemplates = await response.json();
     setTemplates(allTemplates);
   };
 

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getByIndex, getFromStore } from '../database.js';
 import ViewHeader from './ViewHeader.jsx';
 import VisitList from './VisitList.jsx';
 

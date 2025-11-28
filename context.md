@@ -54,22 +54,26 @@ The project is currently undergoing a migration from a local-only IndexedDB arch
 ### Completed Steps:
 1.  **Backend Setup**: A new `backend` directory has been created with a Node.js and Express.js server.
 2.  **Database Integration**: The backend is connected to a SQLite database using Knex.js for query building and migrations.
-3.  **Database Schema**: Migrations have been created for `territories`, `streets`, `houses`, and `people` tables, preserving the relationships from the original data model.
-4.  **Data Seeding**: A `seed.js` script has been created to read the `public/ministry_scribe_full_backup 10-13-25 0935.json` file and populate the new database tables.
-5.  **API Development**:
-    - The `GET /api/territories` endpoint now serves the full, enriched territory data, including nested streets and houses.
-    - A `GET /api/people` endpoint has been created.
-6.  **Frontend Refactoring (Read Operations)**:
-    - `App.jsx` now fetches the main territory data from the `/api/territories` endpoint instead of IndexedDB.
-    - The `TerritoryList`, `StreetList`, and `HouseList` components have been refactored into "dumb" components that receive data as props, removing their internal data-fetching logic.
-    - Navigation from territories to streets, and from streets to houses, is now working with the backend data.
+3.  **Database Schema**: Migrations have been created for `territories`, `streets`, `houses`, `people`, `visits`, and `studies` tables, preserving the relationships from the original data model.
+4.  **Data Seeding**: A `seed.js` script has been created to read the `public/ministry_scribe_full_backup 10-13-25 0935.json` file and populate all database tables including visits and studies.
+5.  **API Development (Read Operations)**:
+    - `GET /api/territories` - Returns enriched territory data with nested streets and houses
+    - `GET /api/people` - Returns all people
+    - `GET /api/visits` - Returns all visits
+    - `GET /api/studies` - Returns all studies
+    - `PUT /api/houses/:id` - Updates house data (write operation)
+6.  **Frontend Refactoring (Read Operations - COMPLETE)**:
+    - `App.jsx` now fetches `territories`, `people`, `visits`, and `studies` from the backend API on load.
+    - All components (`TerritoryList`, `StreetList`, `HouseList`, `HouseDetail`, `BibleStudiesPage`, `PersonDetail`) have been refactored to receive data as props instead of fetching from IndexedDB.
+    - Auto-refresh logic implemented: data is re-fetched from the API when `visitListKey` or `peopleListKey` changes.
+    - House updates are persisted to the backend via `PUT /api/houses/:id`.
 7.  **CSP Configuration**: A Content Security Policy has been added to `index.html` to allow the frontend to communicate with the backend in the development environment.
 
 ### Next Steps:
-1.  Migrate the remaining "read" operations for `people`, `visits`, and `studies`.
-2.  Migrate all "write" operations (add, update, delete) for all data types to use backend API endpoints instead of IndexedDB.
-3.  Create the necessary `POST`, `PUT`, and `DELETE` endpoints in the backend.
-4.  Remove the old IndexedDB-related code (`database.js`, `database-api.js`, and calls to them in the components).
+1.  Migrate all remaining "write" operations (add, update, delete) for territories, streets, houses, people, visits, and studies to use backend API endpoints instead of IndexedDB.
+2.  Create the necessary `POST`, `PUT`, and `DELETE` endpoints in the backend for all data types.
+3.  Remove the old IndexedDB-related code (`database.js`, `database-api.js`, and calls to them in the components).
+4.  Test the complete migration to ensure data persists correctly across reloads.
 
 ## Development Commands
 - **Frontend**: `npm run dev` - Start dev server

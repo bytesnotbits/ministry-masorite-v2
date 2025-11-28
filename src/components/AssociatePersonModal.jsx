@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getAllFromStore, getByIndex } from '../database.js';
 import './AssociatePersonModal.css';
 
-function AssociatePersonModal({ person, onSave, onClose }) {
-  const [territories, setTerritories] = useState([]);
+function AssociatePersonModal({ person, onSave, onClose, territories }) {
   const [streets, setStreets] = useState([]);
   const [houses, setHouses] = useState([]);
   const [selectedTerritoryId, setSelectedTerritoryId] = useState('');
@@ -11,36 +9,26 @@ function AssociatePersonModal({ person, onSave, onClose }) {
   const [selectedHouseId, setSelectedHouseId] = useState('');
 
   useEffect(() => {
-    async function fetchTerritories() {
-      const allTerritories = await getAllFromStore('territories');
-      setTerritories(allTerritories);
-    }
-    fetchTerritories();
-  }, []);
+    // Territories are passed as prop, no need to fetch
+  }, [territories]);
 
   useEffect(() => {
-    async function fetchStreets() {
-      if (selectedTerritoryId) {
-        const streetsForTerritory = await getByIndex('streets', 'territoryId', selectedTerritoryId);
-        setStreets(streetsForTerritory);
-      } else {
-        setStreets([]);
-      }
+    if (selectedTerritoryId && territories) {
+      const territory = territories.find(t => t.id === selectedTerritoryId);
+      setStreets(territory ? territory.streets : []);
+    } else {
+      setStreets([]);
     }
-    fetchStreets();
-  }, [selectedTerritoryId]);
+  }, [selectedTerritoryId, territories]);
 
   useEffect(() => {
-    async function fetchHouses() {
-      if (selectedStreetId) {
-        const housesForStreet = await getByIndex('houses', 'streetId', selectedStreetId);
-        setHouses(housesForStreet);
-      } else {
-        setHouses([]);
-      }
+    if (selectedStreetId && streets) {
+      const street = streets.find(s => s.id === selectedStreetId);
+      setHouses(street ? street.houses : []);
+    } else {
+      setHouses([]);
     }
-    fetchHouses();
-  }, [selectedStreetId]);
+  }, [selectedStreetId, streets]);
 
   const handleSave = () => {
     if (selectedHouseId) {
@@ -52,7 +40,7 @@ function AssociatePersonModal({ person, onSave, onClose }) {
     <div className="modal-backdrop">
       <div className="modal-content">
         <h2>Associate {person.name} with a House</h2>
-        
+
         <label htmlFor="territory-select">Territory</label>
         <select id="territory-select" value={selectedTerritoryId} onChange={e => setSelectedTerritoryId(Number(e.target.value))}>
           <option value="">Select a Territory</option>

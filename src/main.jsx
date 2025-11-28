@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { initDB, getAllFromStore, clearAllStores } from './database.js';
+import { initDB, getAllFromStore } from './database.js';
 import { executeMerge } from './database-api.js';
 
 const BACKUP_FILE_NAME = 'ministry_scribe_full_backup 10-13-25 0935.json';
@@ -18,7 +18,7 @@ async function main() {
     const territories = await getAllFromStore('territories');
     if (territories.length === 0) {
       console.log("Database is empty. Attempting to load from backup file...");
-      
+
       const response = await fetch(`/${BACKUP_FILE_NAME}`);
       if (!response.ok) {
         throw new Error(`Could not fetch backup file: ${response.statusText}`);

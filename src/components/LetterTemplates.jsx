@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { getLetterTemplates, addLetterTemplate, deleteLetterTemplate, updateLetterTemplate } from '../database-api.js';
 import AddLetterTemplateModal from './AddLetterTemplateModal';
 import EditLetterTemplateModal from './EditLetterTemplateModal';
 import './LetterTemplates.css';
@@ -15,23 +14,38 @@ function LetterTemplates({ onBack }) {
   }, []);
 
   const fetchTemplates = async () => {
-    const allTemplates = await getLetterTemplates();
+    // const allTemplates = await getLetterTemplates();
+    const response = await fetch('http://localhost:3001/api/letter-templates');
+    const allTemplates = await response.json();
     setTemplates(allTemplates);
   };
 
   const handleSave = async (template) => {
-    await addLetterTemplate(template);
+    // await addLetterTemplate(template);
+    await fetch('http://localhost:3001/api/letter-templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(template)
+    });
     fetchTemplates();
   };
 
   const handleUpdate = async (template) => {
-    await updateLetterTemplate(template);
+    // await updateLetterTemplate(template);
+    await fetch(`http://localhost:3001/api/letter-templates/${template.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(template)
+    });
     fetchTemplates();
   };
 
   const handleDelete = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
-      await deleteLetterTemplate(templateId);
+      // await deleteLetterTemplate(templateId);
+      await fetch(`http://localhost:3001/api/letter-templates/${templateId}`, {
+        method: 'DELETE'
+      });
       fetchTemplates();
     }
   };
