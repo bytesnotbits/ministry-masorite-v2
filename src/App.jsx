@@ -560,13 +560,23 @@ function App() {
   };
 
   const handleSaveTerritoryInline = async (updatedTerritoryData) => {
-    // await updateInStore('territories', updatedTerritoryData);
-    await fetch(`http://localhost:3001/api/territories/${updatedTerritoryData.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedTerritoryData)
-    });
-    await fetchTerritories(); // Refresh the list
+    try {
+      const response = await fetch(`http://localhost:3001/api/territories/${updatedTerritoryData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTerritoryData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update territory');
+      }
+
+      await fetchTerritories(); // Refresh the list
+    } catch (error) {
+      console.error('Error updating territory:', error);
+      alert(`Failed to update territory: ${error.message}`);
+    }
   };
 
   const handleSaveStreetInline = async (updatedStreetData) => {

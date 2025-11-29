@@ -18,7 +18,6 @@ function AddTerritoryModal({ onSave, onClose }) {
     const newTerritory = {
       number: number,
       description: description,
-      createdAt: new Date().toISOString(),
     };
 
     // Call the function passed down from the parent with closeModal flag
@@ -41,7 +40,7 @@ function AddTerritoryModal({ onSave, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>Add New Territory</h3>
-        
+
         <label htmlFor="territory-number">Territory Number</label>
         <input
           ref={inputRef}
