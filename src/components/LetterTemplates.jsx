@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AddLetterTemplateModal from './AddLetterTemplateModal';
 import EditLetterTemplateModal from './EditLetterTemplateModal';
+import { getLetterTemplates, addLetterTemplate, updateLetterTemplate, deleteLetterTemplate } from '../database-api';
 import './LetterTemplates.css';
 
 function LetterTemplates({ onBack }) {
@@ -14,39 +15,40 @@ function LetterTemplates({ onBack }) {
   }, []);
 
   const fetchTemplates = async () => {
-    // const allTemplates = await getLetterTemplates();
-    const response = await fetch('http://localhost:3001/api/letter-templates');
-    const allTemplates = await response.json();
-    setTemplates(allTemplates);
+    try {
+      const allTemplates = await getLetterTemplates();
+      setTemplates(allTemplates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
   };
 
   const handleSave = async (template) => {
-    // await addLetterTemplate(template);
-    await fetch('http://localhost:3001/api/letter-templates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(template)
-    });
-    fetchTemplates();
+    try {
+      await addLetterTemplate(template);
+      fetchTemplates();
+    } catch (error) {
+      console.error("Error saving template:", error);
+    }
   };
 
   const handleUpdate = async (template) => {
-    // await updateLetterTemplate(template);
-    await fetch(`http://localhost:3001/api/letter-templates/${template.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(template)
-    });
-    fetchTemplates();
+    try {
+      await updateLetterTemplate(template);
+      fetchTemplates();
+    } catch (error) {
+      console.error("Error updating template:", error);
+    }
   };
 
   const handleDelete = async (templateId) => {
     if (window.confirm('Are you sure you want to delete this template?')) {
-      // await deleteLetterTemplate(templateId);
-      await fetch(`http://localhost:3001/api/letter-templates/${templateId}`, {
-        method: 'DELETE'
-      });
-      fetchTemplates();
+      try {
+        await deleteLetterTemplate(templateId);
+        fetchTemplates();
+      } catch (error) {
+        console.error("Error deleting template:", error);
+      }
     }
   };
 

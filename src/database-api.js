@@ -1,7 +1,43 @@
-import { addToStore, getAllFromStore, getFromStore, getByIndex, deleteFromStore, clearAllStores, updateInStore } from './database.js';
+import { clearAllStores } from './database.js';
 import jsPDF from 'jspdf';
 
 // --- START: NEW JSON EXPORT/IMPORT SYSTEM ---
+
+export const getStudyHistory = async (studyId) => {
+    let url = `${API_URL}/study-history`;
+    if (studyId) url += `?studyId=${studyId}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch study history');
+    return response.json();
+};
+
+export const addStudyHistory = async (entry) => {
+    const response = await fetch(`${API_URL}/study-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+    });
+    if (!response.ok) throw new Error('Failed to create study history entry');
+    return response.json();
+};
+
+export const updateStudyHistory = async (entry) => {
+    const response = await fetch(`${API_URL}/study-history/${entry.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+    });
+    if (!response.ok) throw new Error('Failed to update study history entry');
+    return response.json();
+};
+
+export const deleteStudyHistory = async (id) => {
+    const response = await fetch(`${API_URL}/study-history/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete study history entry');
+    return response.json();
+};
 
 export async function bundleDataForExport(scope = 'full', id = null) {
     const bundle = {
@@ -27,52 +63,71 @@ export async function bundleDataForExport(scope = 'full', id = null) {
 
     if (scope === 'full') {
         // For a full backup, simply get ALL data from each store. This is more robust.
-        bundle.data.territories = await getAllFromStore('territories');
-        bundle.data.streets = await getAllFromStore('streets');
-        bundle.data.houses = await getAllFromStore('houses');
-        bundle.data.people = await getAllFromStore('people');
-        bundle.data.visits = await getAllFromStore('visits');
-        bundle.data.studies = await getAllFromStore('studies');
-        bundle.data.studyHistory = await getAllFromStore('studyHistory');
-        bundle.data.letterCampaigns = await getAllFromStore('letterCampaigns');
-        bundle.data.letters = await getAllFromStore('letters');
-        bundle.data.letterTemplates = await getAllFromStore('letterTemplates');
+        bundle.data.territories = await getTerritories();
+        bundle.data.streets = await getStreets();
+        bundle.data.houses = await getHouses();
+        bundle.data.people = await getPeople();
+        bundle.data.visits = await getVisits();
+        bundle.data.studies = await getStudies();
+        bundle.data.studyHistory = await getStudyHistory();
+
+        // Fetch letter data from backend API
+        bundle.data.letterCampaigns = await getLetterCampaigns();
+        bundle.data.letters = await getLetters();
+        bundle.data.letterTemplates = await getLetterTemplates();
 
     } else if (scope === 'territory' && id) {
-        const territory = await getFromStore('territories', id);
+        // Partial export logic needs more complex backend filtering or in-memory filtering
+        // For now, let's just fetch all and filter in memory to be safe and quick
+        const allTerritories = await getTerritories();
+        const territory = allTerritories.find(t => t.id === id);
         if (!territory) throw new Error("Territory not found.");
         bundle.data.territories.push(territory);
 
-        const streets = await getByIndex('streets', 'territoryId', id);
+        const allStreets = await getStreets();
+        const streets = allStreets.filter(s => s.territoryId === id);
         bundle.data.streets = streets;
-        const streetIds = streets.map(s => s.id);
 
-        for (const streetId of streetIds) {
-            const houses = await getByIndex('houses', 'streetId', streetId);
-            bundle.data.houses.push(...houses);
-            const houseIds = houses.map(h => h.id);
-            for (const houseId of houseIds) {
-                bundle.data.people.push(...await getByIndex('people', 'houseId', houseId));
-                bundle.data.visits.push(...await getByIndex('visits', 'houseId', houseId));
-                bundle.data.letters.push(...await getByIndex('letters', 'houseId', houseId));
-            }
-        }
+        const allHouses = await getHouses();
+        const streetIds = streets.map(s => s.id);
+        const houses = allHouses.filter(h => streetIds.includes(h.streetId));
+        bundle.data.houses = houses;
+
+        const houseIds = houses.map(h => h.id);
+
+        const allPeople = await getPeople();
+        bundle.data.people = allPeople.filter(p => houseIds.includes(p.houseId));
+
+        const allVisits = await getVisits();
+        bundle.data.visits = allVisits.filter(v => houseIds.includes(v.houseId));
+
+        const allLetters = await getLetters();
+        bundle.data.letters = allLetters.filter(l => houseIds.includes(l.houseId));
+
     } else if (scope === 'street' && id) {
-        const street = await getFromStore('streets', id);
+        const allStreets = await getStreets();
+        const street = allStreets.find(s => s.id === id);
         if (!street) throw new Error("Street not found.");
         bundle.data.streets.push(street);
 
-        const territory = await getFromStore('territories', street.territoryId);
-        if(territory) bundle.data.territories.push(territory);
+        const allTerritories = await getTerritories();
+        const territory = allTerritories.find(t => t.id === street.territoryId);
+        if (territory) bundle.data.territories.push(territory);
 
-        const houses = await getByIndex('houses', 'streetId', id);
-        bundle.data.houses.push(...houses);
+        const allHouses = await getHouses();
+        const houses = allHouses.filter(h => h.streetId === id);
+        bundle.data.houses = houses;
+
         const houseIds = houses.map(h => h.id);
-        for (const houseId of houseIds) {
-            bundle.data.people.push(...await getByIndex('people', 'houseId', houseId));
-            bundle.data.visits.push(...await getByIndex('visits', 'houseId', houseId));
-            bundle.data.letters.push(...await getByIndex('letters', 'houseId', houseId));
-        }
+
+        const allPeople = await getPeople();
+        bundle.data.people = allPeople.filter(p => houseIds.includes(p.houseId));
+
+        const allVisits = await getVisits();
+        bundle.data.visits = allVisits.filter(v => houseIds.includes(v.houseId));
+
+        const allLetters = await getLetters();
+        bundle.data.letters = allLetters.filter(l => houseIds.includes(l.houseId));
     }
 
     return bundle;
@@ -94,7 +149,7 @@ export async function handleJsonExport(scope = 'full', id = null) {
 
         const dateTimeString = `${year}-${month}-${day}_${hours}-${minutes}`;
         // --- END: DATE/TIME LOGIC ---
-        
+
         let filename = `mm_full_backup_${dateTimeString}.json`;
 
         if (scope === 'territory') {
@@ -140,10 +195,10 @@ export async function handleJsonExport(scope = 'full', id = null) {
 export function handleFileImport(event, callback) {
     const fileInput = event.target;
     const file = fileInput.files[0];
-    
+
     // CRITICAL FIX: Clear the input immediately to prevent reload loops
     fileInput.value = '';
-    
+
     if (!file) return;
 
     const reader = new FileReader();
@@ -171,11 +226,11 @@ export function handleFileImport(event, callback) {
             console.error("Import Error:", error);
         }
     };
-    
+
     reader.onerror = () => {
         alert('Failed to read the file. Please try again.');
     };
-    
+
     reader.readAsText(file);
 }
 
@@ -191,19 +246,19 @@ async function processPartialImport(bundle, callback) {
 
     const existingTerritories = await getAllFromStore('territories');
     const conflict = existingTerritories.find(t => t.number === importedTerritory.number);
-    
+
     if (conflict) {
         // Show conflict modal
         document.getElementById('conflict-territory-number').textContent = conflict.number;
         const confirmBtn = document.getElementById('modal-import-confirm-btn');
-        
+
         // Store data on the button
         confirmBtn.setAttribute('data-bundle', JSON.stringify(bundle));
         confirmBtn.setAttribute('data-conflict', JSON.stringify(conflict));
-        
+
         // Store callback globally
         window.tempImportCallback = callback;
-        
+
         // Show the modal
         document.getElementById('import-conflict-modal').classList.remove('hidden');
     } else {
@@ -243,8 +298,14 @@ export async function executeMerge(data, existingTerritory = null) {
         for (const territory of data.territories) {
             const oldId = territory.id;
             delete territory.id;
-            const newId = await addToStore('territories', territory);
-            idMaps.territories.set(oldId, newId);
+            const response = await fetch(`${API_URL}/territories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(territory)
+            });
+            if (!response.ok) throw new Error('Failed to create territory');
+            const created = await response.json();
+            idMaps.territories.set(oldId, created.id);
         }
     }
 
@@ -253,15 +314,21 @@ export async function executeMerge(data, existingTerritory = null) {
         const oldId = street.id;
         delete street.id;
         // Ensure territoryId is mapped, or default to null if mapping fails
-        street.territoryId = idMaps.territories.get(street.territoryId) || null; 
+        street.territoryId = idMaps.territories.get(street.territoryId) || null;
         if (!street.territoryId) {
             console.warn('Orphaned street found and skipped during import:', street);
             continue; // Skip streets that can't be linked
         }
-        const newId = await addToStore('streets', street);
-        idMaps.streets.set(oldId, newId);
+        const response = await fetch(`${API_URL}/streets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(street)
+        });
+        if (!response.ok) throw new Error('Failed to create street');
+        const created = await response.json();
+        idMaps.streets.set(oldId, created.id);
     }
-    
+
     // 3. Process Houses (and link them to new Street IDs)
     for (const house of data.houses) {
         const oldId = house.id;
@@ -272,7 +339,7 @@ export async function executeMerge(data, existingTerritory = null) {
             console.warn('Orphaned house found and skipped during import:', house);
             continue; // Skip houses that can't be linked
         }
-        
+
         // CRITICAL: Ensure all boolean fields are present, especially for old imported data
         if (house.isNotInterested === undefined) house.isNotInterested = false;
         if (house.isCurrentlyNH === undefined) house.isCurrentlyNH = true; // Default to true if missing
@@ -281,8 +348,14 @@ export async function executeMerge(data, existingTerritory = null) {
         if (house.noTrespassing === undefined) house.noTrespassing = false;
         if (house.consecutiveNHVisits === undefined) house.consecutiveNHVisits = 0;
 
-        const newId = await addToStore('houses', house);
-        idMaps.houses.set(oldId, newId);
+        const response = await fetch(`${API_URL}/houses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(house)
+        });
+        if (!response.ok) throw new Error('Failed to create house');
+        const created = await response.json();
+        idMaps.houses.set(oldId, created.id);
     }
 
     // 4. Process People (linking to new House IDs or as unattached)
@@ -297,9 +370,15 @@ export async function executeMerge(data, existingTerritory = null) {
             if (person.houseId === null || newHouseId) {
                 delete person.id;
                 person.houseId = newHouseId || null; // Assign new ID or keep it null
-                
-                const newPersonId = await addToStore('people', person);
-                idMaps.people.set(oldPersonId, newPersonId); // Map old person ID to new
+
+                const response = await fetch(`${API_URL}/people`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(person)
+                });
+                if (!response.ok) throw new Error('Failed to create person');
+                const created = await response.json();
+                idMaps.people.set(oldPersonId, created.id);
             }
         }
     }
@@ -312,7 +391,12 @@ export async function executeMerge(data, existingTerritory = null) {
             if (newHouseId) {
                 delete visit.id;
                 visit.houseId = newHouseId;
-                await addToStore('visits', visit);
+                const response = await fetch(`${API_URL}/visits`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(visit)
+                });
+                if (!response.ok) throw new Error('Failed to create visit');
             }
         }
     }
@@ -321,15 +405,21 @@ export async function executeMerge(data, existingTerritory = null) {
         for (const study of data.studies) {
             const oldPersonId = study.personId;
             const newPersonId = idMaps.people.get(oldPersonId);
-            
+
             // Only import studies for people who were successfully imported.
             if (newPersonId) {
                 const oldStudyId = study.id;
                 delete study.id;
                 study.personId = newPersonId;
-                
-                const newStudyId = await addToStore('studies', study);
-                idMaps.studies.set(oldStudyId, newStudyId);
+
+                const response = await fetch(`${API_URL}/studies`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(study)
+                });
+                if (!response.ok) throw new Error('Failed to create study');
+                const created = await response.json();
+                idMaps.studies.set(oldStudyId, created.id);
             }
         }
     }
@@ -339,12 +429,17 @@ export async function executeMerge(data, existingTerritory = null) {
         for (const session of data.studyHistory) {
             const oldStudyId = session.studyId;
             const newStudyId = idMaps.studies.get(oldStudyId);
-            
+
             // Only import history for studies that were successfully imported.
             if (newStudyId) {
                 delete session.id;
                 session.studyId = newStudyId;
-                await addToStore('studyHistory', session);
+                const response = await fetch(`${API_URL}/study-history`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(session)
+                });
+                if (!response.ok) throw new Error('Failed to create study history');
             }
         }
     }
@@ -354,8 +449,14 @@ export async function executeMerge(data, existingTerritory = null) {
         for (const campaign of data.letterCampaigns) {
             const oldId = campaign.id;
             delete campaign.id;
-            const newId = await addToStore('letterCampaigns', campaign);
-            idMaps.letterCampaigns.set(oldId, newId);
+            const response = await fetch(`${API_URL}/letter-campaigns`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(campaign)
+            });
+            if (!response.ok) throw new Error('Failed to create letter campaign');
+            const created = await response.json();
+            idMaps.letterCampaigns.set(oldId, created.id);
         }
     }
 
@@ -370,7 +471,12 @@ export async function executeMerge(data, existingTerritory = null) {
                 delete letter.id;
                 letter.houseId = newHouseId;
                 letter.campaignId = newCampaignId || null;
-                await addToStore('letters', letter);
+                const response = await fetch(`${API_URL}/letters`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(letter)
+                });
+                if (!response.ok) throw new Error('Failed to create letter');
             }
         }
     }
@@ -379,7 +485,12 @@ export async function executeMerge(data, existingTerritory = null) {
     if (data.letterTemplates) {
         for (const template of data.letterTemplates) {
             delete template.id;
-            await addToStore('letterTemplates', template);
+            const response = await fetch(`${API_URL}/letter-templates`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template)
+            });
+            if (!response.ok) throw new Error('Failed to create letter template');
         }
     }
 }
@@ -388,27 +499,30 @@ export async function executeMerge(data, existingTerritory = null) {
 export async function executeOverwrite(bundle, conflict) {
     // Find the territory ID in the current DB that matches the conflict number
     // We must use the stored ID (`conflict.id`) for deletion, not the imported ID.
-    
-    const streetsToDelete = await getByIndex('streets', 'territoryId', conflict.id);
-    for (const street of streetsToDelete) {
-        const housesToDelete = await getByIndex('houses', 'streetId', street.id);
-        for (const house of housesToDelete) {
-            const visits = await getByIndex('visits', 'houseId', house.id);
-            for(const visit of visits) await deleteFromStore('visits', visit.id);
-            const people = await getByIndex('people', 'houseId', house.id);
-            for(const person of people) await deleteFromStore('people', person.id);
-            await deleteFromStore('houses', house.id);
-        }
-        await deleteFromStore('streets', street.id);
-    }
-    await deleteFromStore('territories', conflict.id);
+
+    // Delete the territory via backend API (cascading delete is handled by the backend)
+    const response = await fetch(`${API_URL}/territories/${conflict.id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete territory');
     await executeMerge(bundle.data);
 }
 
 
 export async function handleExportPDF(streetId) {
-    const street = await getFromStore('streets', streetId);
-    const houses = (await getByIndex('houses', 'streetId', streetId)).sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true, sensitivity: 'base' }));
+    // Fetch street from backend
+    const response = await fetch(`${API_URL}/streets/${streetId}`);
+    if (!response.ok) throw new Error('Failed to fetch street');
+    const street = await response.json();
+
+    // Fetch houses for this street from backend
+    const housesResponse = await fetch(`${API_URL}/houses`);
+    if (!housesResponse.ok) throw new Error('Failed to fetch houses');
+    const allHouses = await housesResponse.json();
+    const houses = allHouses
+        .filter(h => h.streetId === streetId)
+        .sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true, sensitivity: 'base' }));
+
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text(`Street Report: ${street.name}`, 14, 22);
@@ -438,12 +552,12 @@ export async function searchAllData(searchText) {
         houseIds: new Set()
     };
 
-    // 1. Get all the data we need
-    const allTerritories = await getAllFromStore('territories');
-    const allStreets = await getAllFromStore('streets');
-    const allHouses = await getAllFromStore('houses');
-    const allPeople = await getAllFromStore('people');
-    const allVisits = await getAllFromStore('visits');
+    // 1. Get all the data we need (from backend now)
+    const allTerritories = await getTerritories();
+    const allStreets = await getStreets();
+    const allHouses = await getHouses();
+    const allPeople = await getPeople();
+    const allVisits = await getVisits();
 
     // 2. Create maps for easy lookups to find parent IDs
     const houseToStreetMap = new Map(allHouses.map(h => [h.id, h.streetId]));
@@ -465,7 +579,7 @@ export async function searchAllData(searchText) {
     // 3. Search through each data type
     // Search Territories (Top Level)
     for (const territory of allTerritories) {
-        if (territory.number.toLowerCase().includes(lowerCaseSearch) || territory.description.toLowerCase().includes(lowerCaseSearch)) {
+        if (territory.number.toString().toLowerCase().includes(lowerCaseSearch) || (territory.description && territory.description.toLowerCase().includes(lowerCaseSearch))) {
             matches.territoryIds.add(territory.id);
         }
     }
@@ -503,17 +617,111 @@ export async function searchAllData(searchText) {
 }
 
 // --- Letter Writing ---
-export const getLetterCampaigns = () => getAllFromStore('letterCampaigns');
-export const addLetterCampaign = (campaign) => addToStore('letterCampaigns', campaign);
-export const updateLetterCampaign = (campaign) => updateInStore('letterCampaigns', campaign);
-export const deleteLetterCampaign = (id) => deleteFromStore('letterCampaigns', id);
+// --- Letter Writing ---
+const API_URL = 'http://localhost:3001/api';
 
-export const getLetters = () => getAllFromStore('letters');
-export const addLetter = (letter) => addToStore('letters', letter);
-export const updateLetter = (letter) => updateInStore('letters', letter);
-export const deleteLetter = (id) => deleteFromStore('letters', id);
+export const getLetterCampaigns = async () => {
+    const response = await fetch(`${API_URL}/letter-campaigns`);
+    if (!response.ok) throw new Error('Failed to fetch campaigns');
+    return response.json();
+};
 
-export const getLetterTemplates = () => getAllFromStore('letterTemplates');
-export const addLetterTemplate = (template) => addToStore('letterTemplates', template);
-export const updateLetterTemplate = (template) => updateInStore('letterTemplates', template);
-export const deleteLetterTemplate = (id) => deleteFromStore('letterTemplates', id);
+export const addLetterCampaign = async (campaign) => {
+    const response = await fetch(`${API_URL}/letter-campaigns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaign)
+    });
+    if (!response.ok) throw new Error('Failed to create campaign');
+    return response.json();
+};
+
+export const updateLetterCampaign = async (campaign) => {
+    const response = await fetch(`${API_URL}/letter-campaigns/${campaign.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaign)
+    });
+    if (!response.ok) throw new Error('Failed to update campaign');
+    return response.json();
+};
+
+export const deleteLetterCampaign = async (id) => {
+    const response = await fetch(`${API_URL}/letter-campaigns/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete campaign');
+    return response.json();
+};
+
+export const getLetters = async (campaignId, houseId) => {
+    let url = `${API_URL}/letters?`;
+    if (campaignId) url += `campaignId=${campaignId}&`;
+    if (houseId) url += `houseId=${houseId}&`;
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch letters');
+    return response.json();
+};
+
+export const addLetter = async (letter) => {
+    const response = await fetch(`${API_URL}/letters`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(letter)
+    });
+    if (!response.ok) throw new Error('Failed to create letter');
+    return response.json();
+};
+
+export const updateLetter = async (letter) => {
+    const response = await fetch(`${API_URL}/letters/${letter.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(letter)
+    });
+    if (!response.ok) throw new Error('Failed to update letter');
+    return response.json();
+};
+
+export const deleteLetter = async (id) => {
+    const response = await fetch(`${API_URL}/letters/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete letter');
+    return response.json();
+};
+
+export const getLetterTemplates = async () => {
+    const response = await fetch(`${API_URL}/letter-templates`);
+    if (!response.ok) throw new Error('Failed to fetch templates');
+    return response.json();
+};
+
+export const addLetterTemplate = async (template) => {
+    const response = await fetch(`${API_URL}/letter-templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template)
+    });
+    if (!response.ok) throw new Error('Failed to create template');
+    return response.json();
+};
+
+export const updateLetterTemplate = async (template) => {
+    const response = await fetch(`${API_URL}/letter-templates/${template.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(template)
+    });
+    if (!response.ok) throw new Error('Failed to update template');
+    return response.json();
+};
+
+export const deleteLetterTemplate = async (id) => {
+    const response = await fetch(`${API_URL}/letter-templates/${id}`, {
+        method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to delete template');
+    return response.json();
+};

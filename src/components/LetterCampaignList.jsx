@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AddLetterCampaignModal from './AddLetterCampaignModal';
 import EditLetterCampaignModal from './EditLetterCampaignModal';
 import LetterCampaignDetail from './LetterCampaignDetail';
+import { getLetterCampaigns, addLetterCampaign, updateLetterCampaign } from '../database-api';
 import './LetterCampaignList.css';
 
 function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates, territories }) {
@@ -16,27 +17,30 @@ function LetterCampaignList({ onBack, onOpenLetterQueue, onOpenLetterTemplates, 
   }, []);
 
   const fetchCampaigns = async () => {
-    const response = await fetch('http://localhost:3001/api/letter-campaigns');
-    const allCampaigns = await response.json();
-    setCampaigns(allCampaigns);
+    try {
+      const allCampaigns = await getLetterCampaigns();
+      setCampaigns(allCampaigns);
+    } catch (error) {
+      console.error("Error fetching campaigns:", error);
+    }
   };
 
   const handleSave = async (campaign) => {
-    await fetch('http://localhost:3001/api/letter-campaigns', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(campaign)
-    });
-    fetchCampaigns();
+    try {
+      await addLetterCampaign(campaign);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error saving campaign:", error);
+    }
   };
 
   const handleUpdate = async (campaign) => {
-    await fetch(`http://localhost:3001/api/letter-campaigns/${campaign.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(campaign)
-    });
-    fetchCampaigns();
+    try {
+      await updateLetterCampaign(campaign);
+      fetchCampaigns();
+    } catch (error) {
+      console.error("Error updating campaign:", error);
+    }
   };
 
   const handleCampaignClick = (campaign) => {

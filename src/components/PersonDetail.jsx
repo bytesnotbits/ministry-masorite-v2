@@ -33,7 +33,7 @@ function PersonDetail({ person, onBack, onAddVisit, onAssociate, onViewStudy, on
 
       <div className="visit-history-section">
         <h3>Visit History</h3>
-        <VisitList visits={visits} onAddVisit={() => onAddVisit(person)} onDelete={onDeleteVisit} onEdit={onEditVisit} people={[person]} />
+        <VisitList visits={personVisits} onAddVisit={() => onAddVisit(person)} onDelete={onDeleteVisit} onEdit={onEditVisit} people={[person]} />
       </div>
     </div>
   );

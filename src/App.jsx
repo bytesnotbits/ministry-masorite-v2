@@ -93,7 +93,11 @@ function App() {
   };
 
   const handleUpdateTerritory = async (updatedTerritoryData) => {
-    await updateInStore('territories', updatedTerritoryData);
+    await fetch(`http://localhost:3001/api/territories/${updatedTerritoryData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedTerritoryData)
+    });
     setSelectedTerritory(null); // Return to the territory list
     await fetchTerritories(); // Re-fetch all territories to show the change
   };
@@ -263,14 +267,17 @@ function App() {
     handleCloseMovePersonModal();
   };
 
-  const getStreetWithHouses = useCallback(async (street) => {
+  const getStreetWithHouses = useCallback((street) => {
     if (!street) return null;
-    const housesForStreet = await getByIndex('houses', 'streetId', street.id);
-    return {
-      ...street,
-      houses: housesForStreet,
-    };
-  }, []);
+    // Since territories state already has nested houses, we can just return the street if it comes from there.
+    // However, if 'street' is just a partial object, we might need to find it in the state.
+    // For safety, let's try to find it in the territories state.
+    for (const t of territories) {
+      const foundStreet = t.streets.find(s => s.id === street.id);
+      if (foundStreet) return foundStreet;
+    }
+    return street;
+  }, [territories]);
 
   // EFFECT: Sync peopleForSelectedHouse when dependencies change
   useEffect(() => {
@@ -291,13 +298,13 @@ function App() {
     setCameFromBibleStudies(false);
   }, []);
 
-  const handleNavigateStreets = useCallback(async (direction) => {
+  const handleNavigateStreets = useCallback((direction) => {
     if (!selectedTerritoryId) return;
 
     const currentTerritory = territories.find(t => t.id === selectedTerritoryId);
-    if (!currentTerritory) return;
+    if (!currentTerritory || !currentTerritory.streets) return;
 
-    const streetsInTerritory = await getByIndex('streets', 'territoryId', currentTerritory.id);
+    const streetsInTerritory = [...currentTerritory.streets];
     streetsInTerritory.sort((a, b) => a.name.localeCompare(b.name)); // Ensure consistent order
 
     const currentIndex = streetsInTerritory.findIndex(s => s.id === selectedStreetId);
@@ -311,17 +318,26 @@ function App() {
 
     if (newIndex !== currentIndex) {
       const newStreet = streetsInTerritory[newIndex];
-      const streetWithHouses = await getStreetWithHouses(newStreet);
+      const streetWithHouses = getStreetWithHouses(newStreet);
       setSelectedStreetId(newStreet.id);
       setSelectedStreetDetails(streetWithHouses);
       setSelectedHouse(null); // Clear selected house when changing street
     }
   }, [territories, selectedTerritoryId, selectedStreetId, getStreetWithHouses]);
 
-  const handleNavigateHouses = useCallback(async (direction) => {
+  const handleNavigateHouses = useCallback((direction) => {
     if (!selectedStreetId) return;
 
-    const housesInStreet = await getByIndex('houses', 'streetId', selectedStreetId);
+    // Find the street in the territories state to get its houses
+    let housesInStreet = [];
+    for (const t of territories) {
+      const s = t.streets.find(st => st.id === selectedStreetId);
+      if (s && s.houses) {
+        housesInStreet = [...s.houses];
+        break;
+      }
+    }
+
     housesInStreet.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true })); // Sort by address
 
     const currentIndex = housesInStreet.findIndex(h => h.id === selectedHouse?.id);
@@ -335,9 +351,9 @@ function App() {
 
     if (newIndex !== currentIndex) {
       const newHouse = housesInStreet[newIndex];
-      await handleHouseSelect(newHouse); // Use existing handler to set selectedHouse and fetch people
+      handleHouseSelect(newHouse); // Use existing handler to set selectedHouse and fetch people
     }
-  }, [selectedStreetId, selectedHouse, handleHouseSelect]);
+  }, [selectedStreetId, selectedHouse, handleHouseSelect, territories]);
 
 
 
@@ -375,7 +391,7 @@ function App() {
 
   // EFFECT 3: Calculate sequential navigation properties
   useEffect(() => {
-    const calculateNavProps = async () => {
+    const calculateNavProps = () => {
       let newNavProps = {
         prevLabel: '',
         nextLabel: '',
@@ -404,7 +420,15 @@ function App() {
         }
       } else if (selectedHouse) { // Navigating houses within a street
         if (selectedStreetId) { // Ensure we have a selected street
-          const housesInStreet = await getByIndex('houses', 'streetId', selectedStreetId);
+          // Find houses from state
+          let housesInStreet = [];
+          for (const t of territories) {
+            const s = t.streets.find(st => st.id === selectedStreetId);
+            if (s && s.houses) {
+              housesInStreet = [...s.houses];
+              break;
+            }
+          }
           housesInStreet.sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
 
           const currentIndex = housesInStreet.findIndex(h => h.id === selectedHouse.id);
@@ -526,7 +550,11 @@ function App() {
   // Removed handleEditTerritory - territories are now editable inline on StreetList
 
   const handleUpdateStreet = async (updatedStreetData) => {
-    await updateInStore('streets', updatedStreetData);
+    await fetch(`http://localhost:3001/api/streets/${updatedStreetData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedStreetData)
+    });
     setSelectedStreet(null); // Go back to the list
     setStreetListKey(prevKey => prevKey + 1); // Refresh the list
   };
@@ -1247,24 +1275,27 @@ function App() {
   const handlePersonSelect = async (person) => {
 
     if (person.houseId) {
+      // Find house, street, territory from state
+      let house, street, territory;
+      for (const t of territories) {
+        for (const s of t.streets) {
+          const h = s.houses.find(h => h.id === person.houseId);
+          if (h) { house = h; street = s; territory = t; break; }
+        }
+        if (house) break;
+      }
 
-      const house = await getFromStore('houses', person.houseId);
+      if (house && street && territory) {
+        const streetWithHouses = getStreetWithHouses(street);
+        setSelectedTerritoryDetails(territory);
+        setSelectedTerritoryId(territory.id);
+        setSelectedStreetDetails(streetWithHouses);
+        setSelectedStreetId(street.id);
+        handleHouseSelect(house);
 
-      const street = await getFromStore('streets', house.streetId);
-
-      const territory = await getFromStore('territories', street.territoryId);
-
-
-
-      const streetWithHouses = await getStreetWithHouses(street);
-      setSelectedTerritoryDetails(territory);
-      setSelectedTerritoryId(territory.id);
-      setSelectedStreetDetails(streetWithHouses);
-      setSelectedStreetId(street.id);
-      await handleHouseSelect(house);
-
-      setCurrentView('territories');
-      setCameFromBibleStudies(true);
+        setCurrentView('territories');
+        setCameFromBibleStudies(true);
+      }
     } else {
 
       setSelectedPerson(person);
@@ -1276,18 +1307,24 @@ function App() {
   };
 
   const handleHouseSelectFromLetterQueue = async (house) => {
-    const street = await getFromStore('streets', house.streetId);
-    const territory = await getFromStore('territories', street.territoryId);
+    // Find street and territory from state
+    let street, territory;
+    for (const t of territories) {
+      const s = t.streets.find(s => s.id === house.streetId);
+      if (s) { street = s; territory = t; break; }
+    }
 
-    const streetWithHouses = await getStreetWithHouses(street);
-    setSelectedTerritoryDetails(territory);
-    setSelectedTerritoryId(territory.id);
-    setSelectedStreetDetails(streetWithHouses);
-    setSelectedStreetId(street.id);
-    await handleHouseSelect(house);
-    setIsLetterQueueVisible(false);
-    setIsLetterWritingVisible(false);
-    setCameFromLetterQueue(true);
+    if (street && territory) {
+      const streetWithHouses = getStreetWithHouses(street);
+      setSelectedTerritoryDetails(territory);
+      setSelectedTerritoryId(territory.id);
+      setSelectedStreetDetails(streetWithHouses);
+      setSelectedStreetId(street.id);
+      handleHouseSelect(house);
+      setIsLetterQueueVisible(false);
+      setIsLetterWritingVisible(false);
+      setCameFromLetterQueue(true);
+    }
   }; const handleUpdateStudy = async (updatedStudyData) => {
     // await updateInStore('studies', updatedStudyData);
     await fetch(`http://localhost:3001/api/studies/${updatedStudyData.id}`, {

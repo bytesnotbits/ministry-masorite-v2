@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getLetterTemplates } from '../database-api';
 
 function QuickLetterModal({ house, onSave, onClose }) {
   const [templateId, setTemplateId] = useState('');
@@ -9,10 +10,12 @@ function QuickLetterModal({ house, onSave, onClose }) {
   }, []);
 
   const fetchTemplates = async () => {
-    // const allTemplates = await getAllFromStore('letterTemplates');
-    const response = await fetch('http://localhost:3001/api/letter-templates');
-    const allTemplates = await response.json();
-    setTemplates(allTemplates);
+    try {
+      const allTemplates = await getLetterTemplates();
+      setTemplates(allTemplates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
   };
 
   const handleSave = () => {
